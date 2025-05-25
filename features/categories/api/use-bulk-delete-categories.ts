@@ -1,6 +1,6 @@
-import { toast } from "sonner";
-import { InferRequestType, InferResponseType } from "hono";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { InferRequestType, InferResponseType } from "hono";
+import { toast } from "sonner";
 
 import { client } from "@/lib/hono";
 
@@ -22,12 +22,12 @@ export const useBulkDeleteCategories = () => {
       return await response.json();
     },
     onSuccess: () => {
-      toast.success("Category deleted");
+      toast.success("Categories deleted.");
       queryClient.invalidateQueries({ queryKey: ["categories"] });
-      // TODO: Also invalidate summary 
+      queryClient.invalidateQueries({ queryKey: ["summary"] });
     },
     onError: () => {
-      toast.error("Failed to delete categories");
+      toast.error("Failed to delete categories.");
     },
   });
 

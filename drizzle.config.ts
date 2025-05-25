@@ -7,6 +7,7 @@ export default defineConfig({
   schema: "./db/schema.ts",
   dialect: "postgresql",
   dbCredentials: {
+    database: "aureo",
     url: process.env.DATABASE_URL!,
   },
   verbose: true,

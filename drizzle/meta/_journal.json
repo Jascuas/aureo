@@ -1,33 +1,12 @@
 {
-  "version": "6",
+  "version": "7",
   "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "6",
-      "when": 1716670071961,
-      "tag": "0000_brainy_warbound",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1716670794981,
-      "tag": "0001_familiar_paibok",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1717515800125,
-      "tag": "0002_milky_onslaught",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1717800929015,
-      "tag": "0003_romantic_vulture",
+      "version": "7",
+      "when": 1745165135491,
+      "tag": "0000_milky_spencer_smythe",
       "breakpoints": true
     }
   ]

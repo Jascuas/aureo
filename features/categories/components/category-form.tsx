@@ -1,26 +1,27 @@
-import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Trash } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { insertCategorySchema } from "@/db/schema";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { insertCategorySchema } from "@/db/schema";
 
 const formSchema = insertCategorySchema.pick({
   name: true,
 });
 
-type FormValues = z.input<typeof formSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
-type Props = {
+type CategoryFormProps = {
   id?: string;
   defaultValues?: FormValues;
   onSubmit: (values: FormValues) => void;
@@ -34,45 +35,46 @@ export const CategoryForm = ({
   onSubmit,
   onDelete,
   disabled,
-}: Props) => {
+}: CategoryFormProps) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: defaultValues,
+    defaultValues,
   });
 
   const handleSubmit = (values: FormValues) => {
-    onSubmit(values)
+    onSubmit(values);
   };
 
   const handleDelete = () => {
     onDelete?.();
   };
-
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
+        autoCapitalize="off"
+        autoComplete="off"
         className="space-y-4 pt-4"
       >
         <FormField
           name="name"
           control={form.control}
+          disabled={disabled}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Name</FormLabel>
+
               <FormControl>
-                <Input
-                  disabled={disabled}
-                  placeholder="e.g Food, Travel, etc."
-                  {...field}
-                />
+                <Input placeholder="e.g. Food, Travel, etc." {...field} />
               </FormControl>
+
+              <FormMessage />
             </FormItem>
           )}
         />
 
         <Button className="w-full" disabled={disabled}>
-          {id ? "Save Changes" : "Create Category"}
+          {id ? "Save changes" : "Create category"}
         </Button>
 
         {!!id && (
@@ -83,7 +85,7 @@ export const CategoryForm = ({
             className="w-full"
             variant="outline"
           >
-            <Trash className="size-4 mr-2" />
+            <Trash className="mr-2 size-4" />
             Delete category
           </Button>
         )}

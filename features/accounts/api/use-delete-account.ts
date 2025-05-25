@@ -1,34 +1,35 @@
-import { toast } from "sonner"
-import { InferRequestType, InferResponseType } from "hono"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { InferResponseType } from "hono";
+import { toast } from "sonner";
 
-import { client } from "@/lib/hono"
+import { client } from "@/lib/hono";
 
-type ResponseType = InferResponseType<typeof client.api.accounts[":id"]["$delete"]>
+type ResponseType = InferResponseType<
+  (typeof client.api.accounts)[":id"]["$delete"]
+>;
 
 export const useDeleteAccount = (id?: string) => {
-    const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
-    const mutation = useMutation<
-        ResponseType,
-        Error
-    >({
-        mutationFn: async (json) => {
-            const response = await client.api.accounts[":id"]["$delete"]({ 
-                param: { id },
-            })
-            return await response.json()
-        },
-        onSuccess: () => {
-            toast.success("Account deleted")
-            queryClient.invalidateQueries({ queryKey:  ["accounts", { id }] })
-            queryClient.invalidateQueries({ queryKey:  ["accounts"] })
-            //TODO: Invalidate sumary and transactions
-        },
-        onError: () => {
-            toast.error("Failed to delete account")
-        },
-    })
+  const mutation = useMutation<ResponseType, Error>({
+    mutationFn: async () => {
+      const response = await client.api.accounts[":id"]["$delete"]({
+        param: { id },
+      });
 
-    return mutation
-}
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast.success("Account deleted.");
+      queryClient.invalidateQueries({ queryKey: ["account", { id }] });
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["summary"] });
+    },
+    onError: () => {
+      toast.error("Failed to delete account.");
+    },
+  });
+
+  return mutation;
+};

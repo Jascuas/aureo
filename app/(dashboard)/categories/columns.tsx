@@ -1,15 +1,19 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown } from "lucide-react"
-import { Checkbox } from "@/components/ui/checkbox"
+import { ColumnDef } from "@tanstack/react-table";
+import { InferResponseType } from "hono";
+import { ArrowUpDown } from "lucide-react";
 
-import { InferResponseType } from "hono"
-import { client } from "@/lib/hono"
-import { Actions } from "./actions"
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { client } from "@/lib/hono";
 
-export type ResponseType = InferResponseType<typeof client.api.accounts.$get, 200>["data"][0]
+import { Actions } from "./actions";
+
+export type ResponseType = InferResponseType<
+  typeof client.api.categories.$get,
+  200
+>["data"][0];
 
 export const columns: ColumnDef<ResponseType>[] = [
   {
@@ -45,11 +49,25 @@ export const columns: ColumnDef<ResponseType>[] = [
           Name
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
+    },
+  },
+  {
+    accessorKey: "parentName",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Parent Category
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
     },
   },
   {
     id: "actions",
-    cell: ({ row }) => <Actions id={row.original.id}/>
+    cell: ({ row }) => <Actions id={row.original.id} />,
   },
-]
+];

@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import {
   Sheet,
   SheetContent,
@@ -5,50 +7,49 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useNewAccount } from "../hooks/use-new-accounts";
-import { AccountForm } from "./account-form";
 import { insertAccountSchema } from "@/db/schema";
-import { z } from "zod";
-import { useCreateAccount } from "../api/use-create-account";
+import { useCreateAccount } from "@/features/accounts/api/use-create-account";
+import { useNewAccount } from "@/features/accounts/hooks/use-new-account";
+
+import { AccountForm } from "./account-form";
 
 const formSchema = insertAccountSchema.pick({
   name: true,
 });
 
-type FormValues = z.input<typeof formSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
-const NewAccountSheet = () => {
+export const NewAccountSheet = () => {
   const { isOpen, onClose } = useNewAccount();
-
   const mutation = useCreateAccount();
 
   const onSubmit = (values: FormValues) => {
     mutation.mutate(values, {
-        onSuccess: () => {
-            onClose()
-        }
-    })
+      onSuccess: () => {
+        onClose();
+      },
+    });
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
+    <Sheet open={isOpen || mutation.isPending} onOpenChange={onClose}>
       <SheetContent className="space-y-4">
         <SheetHeader>
           <SheetTitle>New Account</SheetTitle>
+
           <SheetDescription>
             Create a new account to track your transactions.
           </SheetDescription>
         </SheetHeader>
+
         <AccountForm
-          onSubmit={onSubmit}
-          disabled={mutation.isPending}
           defaultValues={{
             name: "",
           }}
+          onSubmit={onSubmit}
+          disabled={mutation.isPending}
         />
       </SheetContent>
     </Sheet>
   );
 };
-
-export default NewAccountSheet;

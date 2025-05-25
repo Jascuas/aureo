@@ -1,6 +1,6 @@
-import { toast } from "sonner";
-import { InferRequestType, InferResponseType } from "hono";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { InferRequestType, InferResponseType } from "hono";
+import { toast } from "sonner";
 
 import { client } from "@/lib/hono";
 
@@ -22,12 +22,12 @@ export const useBulkCreateTransactions = () => {
       return await response.json();
     },
     onSuccess: () => {
-      toast.success("Transaction created");
+      toast.success("Transaction(s) created.");
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      // TODO: Also invalidate summary 
+      queryClient.invalidateQueries({ queryKey: ["summary"] });
     },
     onError: () => {
-      toast.error("Failed to create Transaction");
+      toast.error("Failed to create transaction(s).");
     },
   });
 
