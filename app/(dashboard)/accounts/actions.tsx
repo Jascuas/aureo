@@ -1,5 +1,7 @@
 "use client";
 
+import { Edit, MoreHorizontal, Trash } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,7 +12,6 @@ import {
 import { useDeleteAccount } from "@/features/accounts/api/use-delete-account";
 import { useOpenAccount } from "@/features/accounts/hooks/use-open-account";
 import { useConfirm } from "@/hooks/use-confirm";
-import { Edit, MoreHorizontal, Trash } from "lucide-react";
 
 type Props = {
   id: string;

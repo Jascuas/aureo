@@ -1,14 +1,14 @@
 import { relations } from "drizzle-orm";
 import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { AnyPgColumn } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-
-import { AnyPgColumn } from "drizzle-orm/pg-core";
 
 export const accounts = pgTable("accounts", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   userId: text("user_id").notNull(),
+  balance: integer("balance"),
 });
 
 export const accountsRelations = relations(accounts, ({ many }) => ({
@@ -51,6 +51,9 @@ export const transactions = pgTable("transactions", {
   categoryId: text("category_id").references(() => categories.id, {
     onDelete: "set null",
   }),
+  transactionTypeId: text("transaction_type_id")
+    .references(() => transactionTypes.id)
+    .notNull(),
 });
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({
@@ -66,4 +69,9 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
 
 export const insertTransactionSchema = createInsertSchema(transactions, {
   date: z.coerce.date(),
+});
+
+export const transactionTypes = pgTable("transaction_types", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull().unique(),
 });

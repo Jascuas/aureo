@@ -6,19 +6,18 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
+  YAxis,
 } from "recharts";
 
 import { CustomTooltip } from "@/components/custom-tooltip";
+import { AreaSeries, TransactionOrBalance } from "@/lib/types";
 
 type BarVariantProps = {
-  data: {
-    date: string;
-    income: number;
-    expenses: number;
-  }[];
+  data: TransactionOrBalance;
+  series: AreaSeries[];
 };
 
-export const BarVariant = ({ data }: BarVariantProps) => {
+export const BarVariant = ({ data, series }: BarVariantProps) => {
   return (
     <ResponsiveContainer width="100%" height={350}>
       <BarChart data={data}>
@@ -35,14 +34,27 @@ export const BarVariant = ({ data }: BarVariantProps) => {
           tickMargin={16}
         />
 
+        <YAxis
+          style={{
+            fontSize: "12px",
+          }}
+          tickMargin={16}
+        />
+
         <Tooltip
+          cursor={{ fill: "rgba(255,255,255,0.1)" }}
           content={({ active, payload }) => (
             <CustomTooltip active={active} payload={payload} />
           )}
         />
-
-        <Bar dataKey="income" fill="#3d82f6" className="drop-shadow-sm" />
-        <Bar dataKey="expenses" fill="#f43f5e" className="drop-shadow-sm" />
+        {series.map(({ key, color }) => (
+          <Bar
+            key={key}
+            dataKey={key}
+            fill={color}
+            className="drop-shadow-sm"
+          />
+        ))}
       </BarChart>
     </ResponsiveContainer>
   );

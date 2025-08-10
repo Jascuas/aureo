@@ -1,21 +1,14 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { FaPiggyBank } from "react-icons/fa";
-import { FaArrowTrendUp, FaArrowTrendDown } from "react-icons/fa6";
+import { FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
 
-import { useGetSummary } from "@/features/summary/api/use-get-summary";
-import { formatDateRange } from "@/lib/utils";
+import { useGetOverview } from "@/features/summary/api/use-get-overview";
 
 import { DataCard, DataCardLoading } from "./data-card";
 
 export const DataGrid = () => {
-  const { data, isLoading } = useGetSummary();
-  const searchParams = useSearchParams();
-  const to = searchParams.get("to") || undefined;
-  const from = searchParams.get("from") || undefined;
-
-  const dateRangeLabel = formatDateRange({ to, from });
+  const { data, isLoading } = useGetOverview();
 
   if (isLoading)
     return (
@@ -29,30 +22,33 @@ export const DataGrid = () => {
   return (
     <div className="mb-8 grid grid-cols-1 gap-8 pb-2 lg:grid-cols-3">
       <DataCard
-        title="Remaining"
-        value={data?.remainingAmount}
-        percentageChange={data?.remainingChange}
+        title="Balance"
+        value={data?.balance.amount}
+        valueChange={data?.balance.changeAmount}
+        percentageChange={data?.balance.changePtc}
         icon={FaPiggyBank}
         variant="default"
-        dateRange={dateRangeLabel}
+        dateRange={data?.lastPeriodBalance}
       />
 
       <DataCard
         title="Income"
-        value={data?.incomeAmount}
-        percentageChange={data?.incomeChange}
+        value={data?.income.amount}
+        valueChange={data?.income.changeAmount}
+        percentageChange={data?.income.changePtc}
         icon={FaArrowTrendUp}
         variant="success"
-        dateRange={dateRangeLabel}
+        dateRange={data?.lastPeriod}
       />
 
       <DataCard
         title="Expenses"
-        value={data?.expensesAmount}
-        percentageChange={data?.expensesChange}
+        value={data?.expenses.amount}
+        valueChange={data?.expenses.changeAmount}
+        percentageChange={data?.expenses.changePtc}
         icon={FaArrowTrendDown}
         variant="danger"
-        dateRange={dateRangeLabel}
+        dateRange={data?.lastPeriod}
       />
     </div>
   );

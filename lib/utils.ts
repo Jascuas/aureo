@@ -1,7 +1,15 @@
 import { type ClassValue, clsx } from "clsx";
+import {
+  eachDayOfInterval,
+  format,
+  isSameDay,
+  isValid,
+  parseISO,
+  startOfMonth,
+  startOfWeek,
+  subDays,
+} from "date-fns";
 import { twMerge } from "tailwind-merge";
-import { eachDayOfInterval, format, isSameDay, subDays } from "date-fns";
-import { parseISO, isValid } from "date-fns";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -16,9 +24,9 @@ export function convertAmountToMilliunits(amount: number) {
 }
 
 export function formatCurrency(value: number) {
-  return Intl.NumberFormat("en-us", {
+  return Intl.NumberFormat("es-ES", {
     style: "currency",
-    currency: "USD",
+    currency: "EUR",
     minimumFractionDigits: 2,
   }).format(value);
 }
@@ -38,7 +46,7 @@ export function fillMissingDays(
     expenses: number;
   }[],
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ) {
   if (activeDays.length === 0) return [];
 
@@ -84,7 +92,7 @@ export function formatDateRange(period?: Period) {
   const toDate = toValidDate(period?.to, defaultTo);
 
   if (period?.from && period?.to) {
-    return `${format(fromDate, "LLL dd")} - ${format(toDate, "LLL dd, y")}`;
+    return `${format(fromDate, "LLL dd, y")} - ${format(toDate, "LLL dd, y")}`;
   }
 
   if (period?.from) {
@@ -92,40 +100,81 @@ export function formatDateRange(period?: Period) {
   }
   return `${format(defaultFrom, "LLL dd")} - ${format(defaultTo, "LLL dd, y")}`;
 }
-/*
-
-export function formatDateRange(period?: Period) {
-  const defaultTo = new Date();
-  const defaultFrom = subDays(defaultTo, 30);
-
-  if (!period?.from) {
-    return `${format(defaultFrom, "LLL dd")} - ${format(
-      defaultTo,
-      "LLL dd, y"
-    )}`;
-  }
-
-  if (period?.to) {
-    return `${format(period.from, "LLL dd")} - ${format(
-      period.to,
-      "LLL dd, y"
-    )}`;
-  }
-
-  return format(period.from, "LLL dd, y");
-}
-
-*/
 
 export function formatPercentage(
   value: number,
-  options: { addPrefix?: boolean } = { addPrefix: false }
+  options: { addPrefix?: boolean } = { addPrefix: false },
 ) {
-  const result = new Intl.NumberFormat("en-US", {
+  const result = new Intl.NumberFormat("es-ES", {
     style: "percent",
+    minimumFractionDigits: 2,
   }).format(value / 100);
 
   if (options.addPrefix && value > 0) return `+${result}`;
 
   return result;
 }
+
+export function formatDate(date: Date | string) {
+  return format(date, "LLL dd, y");
+}
+
+type Reducers<T> = {
+  [K in keyof T]?: (acc: T[K], val: T[K]) => T[K];
+};
+
+export interface HasDate {
+  date: string;
+}
+
+export function groupByPeriod<T extends HasDate>(
+  data: T[],
+  group: "day" | "week" | "month",
+  reducers: Reducers<T>,
+): T[] {
+  if (!data.length) return [];
+
+  const bucket = new Map<string, T>();
+
+  for (const item of data) {
+    const parsed = parseISO(item.date);
+    const key =
+      group === "week"
+        ? format(startOfWeek(parsed, { weekStartsOn: 1 }), "yyyy-MM-dd")
+        : group === "month"
+          ? format(startOfMonth(parsed), "yyyy-MM-dd")
+          : format(parsed, "yyyy-MM-dd");
+
+    const current =
+      bucket.get(key) ??
+      (Object.fromEntries(
+        Object.keys(reducers).map((f) => [f, 0]),
+      ) as unknown as T & { date: string });
+
+    current.date = key;
+
+    for (const field in reducers) {
+      const fn = reducers[field];
+      if (fn) {
+        const k = field as keyof T;
+        current[k as Extract<keyof T, string>] = fn(
+          current[k as Extract<keyof T, string>],
+          item[k as Extract<keyof T, string>],
+        );
+      }
+    }
+
+    bucket.set(key, current);
+  }
+
+  return [...bucket.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export const txReducers = {
+  income: (a = 0, v = 0) => a + v,
+  expenses: (a = 0, v = 0) => a + v,
+};
+
+export const balReducers = {
+  balance: (_prev: number, latest: number) => latest,
+};

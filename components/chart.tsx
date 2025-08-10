@@ -1,91 +1,77 @@
-import {
-  AreaChart,
-  BarChart3,
-  FileSearch,
-  LineChart,
-  Loader2,
-} from "lucide-react";
-import { useState } from "react";
+import { FileSearch, Loader2 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useChartControls } from "@/hooks/use-chart-controls";
+import { useGroupedData } from "@/hooks/use-group-by-period";
+import { TransactionOrBalance } from "@/lib/types";
 
 import { AreaVariant } from "./area-variant";
 import { BarVariant } from "./bar-variant";
-import { LineVariant } from "./line-variant";
+import { GenericSelect } from "./ui/generic-select";
 
-type ChartProps = {
-  data?: {
-    date: string;
-    income: number;
-    expenses: number;
-  }[];
-};
+interface ChartProps {
+  data?: TransactionOrBalance;
+}
 
 export const Chart = ({ data = [] }: ChartProps) => {
-  type ChartType = "area" | "bar" | "line";
-  const [chartType, setChartType] = useState<ChartType>("area");
+  const {
+    chartType,
+    groupBy,
+    dataType,
+    series,
+    groupOptions,
+    chartOptions,
+    dataTypeOptions,
+    onChartTypeChange,
+    onGroupChange,
+    onDataTypeChange,
+  } = useChartControls();
 
-  const onTypeChange = (type: ChartType) => {
-    setChartType(type);
-  };
+  const groupedData = useGroupedData(data ?? [], groupBy);
+
   return (
     <Card className="border-none drop-shadow-sm">
       <CardHeader className="flex justify-between space-y-2 lg:flex-row lg:items-center lg:space-y-0">
         <CardTitle className="line-clamp-1 text-xl">Transactions</CardTitle>
-        <Select defaultValue={chartType} onValueChange={onTypeChange}>
-          <SelectTrigger className="h-9 rounded-md px-3 lg:w-auto">
-            <SelectValue placeholder="Chart type" />
-          </SelectTrigger>
+        <GenericSelect
+          value={chartType}
+          options={chartOptions}
+          placeholder="Chart type"
+          onChange={onChartTypeChange}
+        />
 
-          <SelectContent>
-            <SelectItem value="area">
-              <div className="flex items-center">
-                <AreaChart className="mr-2 size-4 shrink-0" />
+        <GenericSelect
+          value={groupBy}
+          options={groupOptions}
+          placeholder="Group by"
+          onChange={onGroupChange}
+        />
 
-                <p className="line-clamp-1">Area chart</p>
-              </div>
-            </SelectItem>
-
-            <SelectItem value="line">
-              <div className="flex items-center">
-                <LineChart className="mr-2 size-4 shrink-0" />
-
-                <p className="line-clamp-1">Line chart</p>
-              </div>
-            </SelectItem>
-
-            <SelectItem value="bar">
-              <div className="flex items-center">
-                <BarChart3 className="mr-2 size-4 shrink-0" />
-
-                <p className="line-clamp-1">Bar chart</p>
-              </div>
-            </SelectItem>
-          </SelectContent>
-        </Select>
+        <GenericSelect
+          value={dataType}
+          options={dataTypeOptions}
+          placeholder="Chart type"
+          onChange={onDataTypeChange}
+        />
       </CardHeader>
 
       <CardContent>
         {data.length === 0 ? (
           <div className="flex h-[350px] w-full flex-col items-center justify-center gap-y-4">
-            <FileSearch className="size-6 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
+            <FileSearch className="text-muted-foreground size-6" />
+            <p className="text-muted-foreground text-sm">
               No data for this period.
             </p>
           </div>
         ) : (
           <>
-            {chartType === "area" && <AreaVariant data={data} />}
-            {chartType === "bar" && <BarVariant data={data} />}
-            {chartType === "line" && <LineVariant data={data} />}
+            {chartType === "area" && (
+              <AreaVariant data={groupedData} series={series} />
+            )}
+            {chartType === "bar" && (
+              <BarVariant data={groupedData} series={series} />
+            )}
           </>
         )}
       </CardContent>

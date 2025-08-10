@@ -2,9 +2,10 @@ import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { createId } from "@paralleldrive/cuid2";
 import { and, eq, inArray } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { Hono } from "hono";
 import { z } from "zod";
-import { alias } from "drizzle-orm/pg-core";
+
 import { db } from "@/db/drizzle";
 import { categories, insertCategorySchema } from "@/db/schema";
 

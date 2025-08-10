@@ -1,20 +1,16 @@
 "use client";
-import { FileSearch, Loader2, PieChart, Radar, Target } from "lucide-react";
+import { FileSearch, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Option } from "@/components/ui/generic-select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CategoryChartType } from "@/lib/types";
 
 import { PieVariant } from "./pie-variant";
 import { RadarVariant } from "./radar-variant";
 import { RadialVariant } from "./radial-variant";
+import { GenericSelect } from "./ui/generic-select";
 
 type SpendingPieProps = {
   data?: {
@@ -27,53 +23,31 @@ export const SpendingPie = ({ data = [] }: SpendingPieProps) => {
   type ChartType = "pie" | "radar" | "radial";
   const [chartType, setChartType] = useState<ChartType>("pie");
 
-  const onTypeChange = (type: ChartType) => {
-    setChartType(type);
-  };
+  const chartOptions: Option<CategoryChartType>[] = [
+    { value: "pie", label: "Pie chart" },
+    { value: "radar", label: "Radar chart" },
+    { value: "radial", label: "Radial chart" },
+  ];
+
   return (
     <Card className="border-none drop-shadow-sm">
       <CardHeader className="flex justify-between space-y-2 lg:flex-row lg:items-center lg:space-y-0">
         <CardTitle className="line-clamp-1 text-xl">Categories</CardTitle>
 
-        <Select defaultValue={chartType} onValueChange={onTypeChange}>
-          <SelectTrigger className="h-9 rounded-md px-3 lg:w-auto">
-            <SelectValue placeholder="Chart type" />
-          </SelectTrigger>
-
-          <SelectContent>
-            <SelectItem value="pie">
-              <div className="flex items-center">
-                <PieChart className="mr-2 size-4 shrink-0" />
-
-                <p className="line-clamp-1">Pie chart</p>
-              </div>
-            </SelectItem>
-
-            <SelectItem value="radar">
-              <div className="flex items-center">
-                <Radar className="mr-2 size-4 shrink-0" />
-
-                <p className="line-clamp-1">Radar chart</p>
-              </div>
-            </SelectItem>
-
-            <SelectItem value="radial">
-              <div className="flex items-center">
-                <Target className="mr-2 size-4 shrink-0" />
-
-                <p className="line-clamp-1">Radial chart</p>
-              </div>
-            </SelectItem>
-          </SelectContent>
-        </Select>
+        <GenericSelect
+          value={chartType}
+          options={chartOptions}
+          placeholder="Chart type"
+          onChange={setChartType}
+        />
       </CardHeader>
 
       <CardContent>
         {data.length === 0 ? (
           <div className="flex h-[350px] w-full flex-col items-center justify-center gap-y-4">
-            <FileSearch className="size-6 text-muted-foreground" />
+            <FileSearch className="text-muted-foreground size-6" />
 
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               No data for this period.
             </p>
           </div>

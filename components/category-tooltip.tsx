@@ -19,8 +19,8 @@ export const CategoryTooltip = ({ active, payload }: CategoryTooltipProps) => {
   const value = payload[0].value as number;
 
   return (
-    <div className="overflow-hidden rounded-sm border bg-white shadow-sm">
-      <div className="bg-muted p-2 px-3 text-sm text-muted-foreground">
+    <div className="dark:bg-background overflow-hidden rounded-sm border bg-white shadow-sm">
+      <div className="bg-muted text-muted-foreground p-2 px-3 text-sm">
         {name}
       </div>
 
@@ -31,7 +31,7 @@ export const CategoryTooltip = ({ active, payload }: CategoryTooltipProps) => {
           <div className="flex items-center gap-x-2">
             <div className="size-1.5 rounded-full bg-rose-500" aria-hidden />
 
-            <p className="text-sm text-muted-foreground">Expenses</p>
+            <p className="text-muted-foreground text-sm">Expenses</p>
           </div>
 
           <p className="text-right text-sm font-medium">

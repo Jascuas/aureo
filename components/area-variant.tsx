@@ -6,50 +6,36 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
+  YAxis,
 } from "recharts";
+
+import { AreaSeries, TransactionOrBalance } from "@/lib/types";
 
 import { CustomTooltip } from "./custom-tooltip";
 
 type AreaVariantProps = {
-  data: {
-    date: string;
-    income: number;
-    expenses: number;
-  }[];
+  data: TransactionOrBalance;
+  series: AreaSeries[];
 };
 
-// this is samarth wow
-
-export const AreaVariant = ({ data }: AreaVariantProps) => {
+export const AreaVariant = ({ data, series }: AreaVariantProps) => {
   return (
     <ResponsiveContainer width="100%" height={350}>
       <AreaChart data={data}>
         <CartesianGrid strokeDasharray="3 3" />
-        <defs>
-          <linearGradient id="income" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="2%" stopColor="#3d82f6" stopOpacity={0.8} />
-            <stop offset="98%" stopColor="#3d82f6" stopOpacity={0} />
-          </linearGradient>
-
-          <linearGradient id="expenses" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="2%" stopColor="#f43f5e" stopOpacity={0.8} />
-            <stop offset="98%" stopColor="#f43f5e" stopOpacity={0} />
-          </linearGradient>
-        </defs>
 
         <XAxis
           axisLine={false}
           tickLine={false}
           dataKey="date"
-          tickFormatter={(value) => {
-            const dateValue = new Date(value); // Convert to Date object
-            if (!isNaN(dateValue.getTime())) {
-              // Check for valid date
-              return format(dateValue, "dd MMM");
-            }
-            console.error("Invalid date value:", value);
-            return ""; // Return empty or a fallback string
+          tickFormatter={(value) => format(value, "dd MMM")}
+          style={{
+            fontSize: "12px",
           }}
+          tickMargin={16}
+        />
+
+        <YAxis
           style={{
             fontSize: "12px",
           }}
@@ -62,25 +48,27 @@ export const AreaVariant = ({ data }: AreaVariantProps) => {
           )}
         />
 
-        <Area
-          type="monotone"
-          dataKey="income"
-          stackId="income"
-          strokeWidth={2}
-          stroke="#3d82f6"
-          fill="url(#income)"
-          className="drop-shadow-sm"
-        />
+        <defs>
+          {series.map(({ key, color }) => (
+            <linearGradient key={key} id={key} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={color} stopOpacity={0.8} />
+              <stop offset="95%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+          ))}
+        </defs>
 
-        <Area
-          type="monotone"
-          dataKey="expenses"
-          stackId="expenses"
-          strokeWidth={2}
-          stroke="#f43f5e"
-          fill="url(#expenses)"
-          className="drop-shadow-sm"
-        />
+        {series.map(({ key, color }) => (
+          <Area
+            key={key}
+            type="monotone"
+            dataKey={key}
+            stackId={key}
+            strokeWidth={2}
+            stroke={color}
+            fill={`url(#${key})`}
+            className="drop-shadow-sm"
+          />
+        ))}
       </AreaChart>
     </ResponsiveContainer>
   );

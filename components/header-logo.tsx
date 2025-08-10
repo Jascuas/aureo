@@ -1,15 +1,30 @@
-import Image from "next/image";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
 
-export const HeaderLogo = () => {
+type HeaderLogoProps = {
+  size?: "small" | "large";
+};
+
+const sizeMap = {
+  small: { width: 128, height: Math.round(128 / 3.08), sizes: "128px" },
+  medium: { width: 192, height: Math.round(192 / 3.08), sizes: "192px" },
+  large: { width: 256, height: Math.round(256 / 3.08), sizes: "256px" },
+};
+
+export const HeaderLogo = ({ size = "small" }: HeaderLogoProps) => {
+  const { width, height, sizes } = sizeMap[size];
   return (
     <Link href="/">
       <div className="hidden items-center lg:flex">
-        {/* <Image src="/logo.svg" alt="Finance logo" height={42} width={42} /> */}
-        <p className=" text-3xl font-semibold text-[#FFD700]">A</p>
-        <p className=" text-2xl font-semibold text-black dark:text-white">
-          ureo
-        </p>
+        <Image
+          src="/logo.png"
+          alt="Logo"
+          width={width}
+          height={height}
+          sizes={sizes}
+          priority
+        />
       </div>
     </Link>
   );
