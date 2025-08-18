@@ -58,7 +58,12 @@ export function fillMissingDays(
   const transactionsByDay = allDays.map((day) => {
     const found = activeDays.find((d) => isSameDay(d.date, day));
 
-    if (found) return found;
+    if (found)
+      return {
+        date: day,
+        income: convertAmountFromMilliunits(found.income),
+        expenses: convertAmountFromMilliunits(found.expenses),
+      };
     else {
       return {
         date: day,
@@ -170,11 +175,8 @@ export function groupByPeriod<T extends HasDate>(
   return [...bucket.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 
-export const txReducers = {
+export const overtimeReducers = {
   income: (a = 0, v = 0) => a + v,
   expenses: (a = 0, v = 0) => a + v,
-};
-
-export const balReducers = {
   balance: (_prev: number, latest: number) => latest,
 };

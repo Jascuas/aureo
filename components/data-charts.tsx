@@ -11,28 +11,20 @@ export const DataCharts = () => {
   const { data: categoryData, isLoading: isLoadingCategory } =
     useGetCategorySummary();
 
-  if (isLoading || isLoadingCategory) {
-    return (
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-6">
-        <div className="col-span-1 lg:col-span-3 xl:col-span-4">
-          <ChartLoading />
-        </div>
-
-        <div className="col-span-1 lg:col-span-3 xl:col-span-2">
-          <SpendingPieLoading />
-        </div>
-      </div>
-    );
-  }
+  const isLoadingAny = isLoading || isLoadingCategory;
 
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-6">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-6 lg:gap-8">
       <div className="col-span-1 lg:col-span-3 xl:col-span-4">
-        <Chart data={data} />
+        {isLoadingAny ? <ChartLoading /> : <Chart data={data} />}
       </div>
 
       <div className="col-span-1 lg:col-span-3 xl:col-span-2">
-        <SpendingPie data={categoryData} />
+        {isLoadingAny ? (
+          <SpendingPieLoading />
+        ) : (
+          <SpendingPie data={categoryData} />
+        )}
       </div>
     </div>
   );

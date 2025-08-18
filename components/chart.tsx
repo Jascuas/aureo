@@ -3,60 +3,53 @@ import { FileSearch, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useChartControls } from "@/hooks/use-chart-controls";
-import { useGroupedData } from "@/hooks/use-group-by-period";
-import { TransactionOrBalance } from "@/lib/types";
+import { OverTimeData } from "@/lib/types";
+import { groupByPeriod, overtimeReducers } from "@/lib/utils";
 
 import { AreaVariant } from "./area-variant";
-import { BarVariant } from "./bar-variant";
 import { GenericSelect } from "./ui/generic-select";
 
 interface ChartProps {
-  data?: TransactionOrBalance;
+  data?: OverTimeData;
 }
 
 export const Chart = ({ data = [] }: ChartProps) => {
   const {
-    chartType,
     groupBy,
     dataType,
     series,
     groupOptions,
-    chartOptions,
     dataTypeOptions,
-    onChartTypeChange,
     onGroupChange,
     onDataTypeChange,
   } = useChartControls();
 
-  const groupedData = useGroupedData(data ?? [], groupBy);
+  const groupedData = groupByPeriod(data ?? [], groupBy, overtimeReducers);
 
   return (
     <Card className="border-none drop-shadow-sm">
-      <CardHeader className="flex justify-between space-y-2 lg:flex-row lg:items-center lg:space-y-0">
-        <CardTitle className="line-clamp-1 text-xl">Transactions</CardTitle>
-        <GenericSelect
-          value={chartType}
-          options={chartOptions}
-          placeholder="Chart type"
-          onChange={onChartTypeChange}
-        />
+      <CardHeader className="flex justify-between space-y-2 p-4 pb-4 lg:flex-row lg:items-center lg:space-y-0 lg:p-6">
+        <CardTitle className="line-clamp-1 text-lg lg:text-2xl">
+          Transactions
+        </CardTitle>
+        <div className="flex items-center gap-x-2">
+          <GenericSelect
+            value={groupBy}
+            options={groupOptions}
+            placeholder="Group by"
+            onChange={onGroupChange}
+          />
 
-        <GenericSelect
-          value={groupBy}
-          options={groupOptions}
-          placeholder="Group by"
-          onChange={onGroupChange}
-        />
-
-        <GenericSelect
-          value={dataType}
-          options={dataTypeOptions}
-          placeholder="Chart type"
-          onChange={onDataTypeChange}
-        />
+          <GenericSelect
+            value={dataType}
+            options={dataTypeOptions}
+            placeholder="Chart type"
+            onChange={onDataTypeChange}
+          />
+        </div>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="p-4 pt-0 lg:p-6">
         {data.length === 0 ? (
           <div className="flex h-[350px] w-full flex-col items-center justify-center gap-y-4">
             <FileSearch className="text-muted-foreground size-6" />
@@ -65,14 +58,7 @@ export const Chart = ({ data = [] }: ChartProps) => {
             </p>
           </div>
         ) : (
-          <>
-            {chartType === "area" && (
-              <AreaVariant data={groupedData} series={series} />
-            )}
-            {chartType === "bar" && (
-              <BarVariant data={groupedData} series={series} />
-            )}
-          </>
+          <AreaVariant data={groupedData} series={series} />
         )}
       </CardContent>
     </Card>

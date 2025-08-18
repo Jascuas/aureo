@@ -31,8 +31,10 @@ export const SpendingPie = ({ data = [] }: SpendingPieProps) => {
 
   return (
     <Card className="border-none drop-shadow-sm">
-      <CardHeader className="flex justify-between space-y-2 lg:flex-row lg:items-center lg:space-y-0">
-        <CardTitle className="line-clamp-1 text-xl">Categories</CardTitle>
+      <CardHeader className="flex justify-between space-y-2 p-4 pb-4 lg:flex-row lg:items-center lg:space-y-0 lg:p-6">
+        <CardTitle className="line-clamp-1 text-lg lg:text-2xl">
+          Categories
+        </CardTitle>
 
         <GenericSelect
           value={chartType}
@@ -42,7 +44,7 @@ export const SpendingPie = ({ data = [] }: SpendingPieProps) => {
         />
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="p-4 pt-0 lg:p-6">
         {data.length === 0 ? (
           <div className="flex h-[350px] w-full flex-col items-center justify-center gap-y-4">
             <FileSearch className="text-muted-foreground size-6" />

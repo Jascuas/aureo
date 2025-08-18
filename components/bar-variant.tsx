@@ -10,10 +10,10 @@ import {
 } from "recharts";
 
 import { CustomTooltip } from "@/components/custom-tooltip";
-import { AreaSeries, TransactionOrBalance } from "@/lib/types";
+import { AreaSeries, OverTimeData } from "@/lib/types";
 
 type BarVariantProps = {
-  data: TransactionOrBalance;
+  data: OverTimeData;
   series: AreaSeries[];
 };
 
@@ -44,7 +44,7 @@ export const BarVariant = ({ data, series }: BarVariantProps) => {
         <Tooltip
           cursor={{ fill: "rgba(255,255,255,0.1)" }}
           content={({ active, payload }) => (
-            <CustomTooltip active={active} payload={payload} />
+            <CustomTooltip active={active} payload={payload} series={series} />
           )}
         />
         {series.map(({ key, color }) => (

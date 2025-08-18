@@ -9,12 +9,12 @@ import {
   YAxis,
 } from "recharts";
 
-import { AreaSeries, TransactionOrBalance } from "@/lib/types";
+import { AreaSeries } from "@/lib/types";
 
 import { CustomTooltip } from "./custom-tooltip";
 
 type AreaVariantProps = {
-  data: TransactionOrBalance;
+  data: unknown[];
   series: AreaSeries[];
 };
 
@@ -40,11 +40,16 @@ export const AreaVariant = ({ data, series }: AreaVariantProps) => {
             fontSize: "12px",
           }}
           tickMargin={16}
+          tickCount={5}
+          tickLine={false}
+          type="number"
+          domain={["dataMin", "auto"]}
+          allowDataOverflow={true}
         />
 
         <Tooltip
           content={({ active, payload }) => (
-            <CustomTooltip active={active} payload={payload} />
+            <CustomTooltip active={active} payload={payload} series={series} />
           )}
         />
 
@@ -62,7 +67,6 @@ export const AreaVariant = ({ data, series }: AreaVariantProps) => {
             key={key}
             type="monotone"
             dataKey={key}
-            stackId={key}
             strokeWidth={2}
             stroke={color}
             fill={`url(#${key})`}

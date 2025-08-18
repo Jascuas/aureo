@@ -21,7 +21,7 @@ const boxVariant = cva("shrink-0 rounded-md p-3", {
   },
 });
 
-const iconVariant = cva("size-6", {
+const iconVariant = cva("size-4", {
   variants: {
     variant: {
       default: "fill-blue-500",
@@ -66,18 +66,18 @@ export const DataCard = ({
 
   return (
     <Card className="border-none drop-shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between gap-x-4">
-        <div className="space-y-2">
-          <CardTitle className="line-clamp-1 text-2xl">{title}</CardTitle>
-        </div>
+      <CardHeader className="flex flex-row items-center justify-between p-4 pb-0 lg:p-6">
+        <CardTitle className="mb-0 line-clamp-1 text-lg lg:text-2xl">
+          {title}
+        </CardTitle>
 
         <div className={cn(boxVariant({ variant }))}>
           <Icon className={cn(iconVariant({ variant }))} />
         </div>
       </CardHeader>
 
-      <CardContent>
-        <h1 className="mb-2 line-clamp-1 flex gap-3 text-2xl font-bold break-words">
+      <CardContent className="p-4 pt-0 lg:p-6">
+        <h1 className="line-clamp-1 flex gap-3 text-base font-bold break-words lg:text-2xl">
           <CountUp
             preserveValue
             start={0}
@@ -88,7 +88,7 @@ export const DataCard = ({
           />
           <span
             className={cn(
-              "line-clamp-1 flex items-center gap-2 text-xs",
+              "line-clamp-1 flex items-center gap-2 text-xs lg:text-xs",
               changeColorClass,
             )}
           >
