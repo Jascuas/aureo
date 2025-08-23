@@ -1,7 +1,7 @@
 import {
+  Legend,
   RadialBar,
   RadialBarChart,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 

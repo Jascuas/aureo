@@ -3,13 +3,13 @@
 import {
   ColumnDef,
   ColumnFiltersState,
-  Row,
-  SortingState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  Row,
+  SortingState,
   useReactTable,
 } from "@tanstack/react-table";
 import { Trash } from "lucide-react";
