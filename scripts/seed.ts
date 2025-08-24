@@ -82,7 +82,7 @@ const generateTransactionPerDay = (day: Date) => {
     const isExpense = Math.random() > 0.6; // 60% chance of being an expense
     const amount = generateRandomAmount(category);
     const formattedAmount = convertAmountToMilliunits(
-      isExpense ? -amount : amount
+      isExpense ? -amount : amount,
     ); // negative for expenses
 
     SEED_TRANSACTIONS.push({
@@ -93,6 +93,7 @@ const generateTransactionPerDay = (day: Date) => {
       amount: formattedAmount,
       payee: "Merchant",
       notes: "Random transaction",
+      transactionTypeId: isExpense ? "expense" : "income",
     });
   }
 };

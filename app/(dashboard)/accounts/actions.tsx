@@ -17,10 +17,10 @@ type Props = {
   id: string;
 };
 export const Actions = ({ id }: Props) => {
-  const { onOpen, onClose } = useOpenAccount();
+  const { onOpen } = useOpenAccount();
   const [ConfirmDialog, confirm] = useConfirm(
     "Are u sure?",
-    "You are about to delete this account."
+    "You are about to delete this account.",
   );
 
   const deleteMutation = useDeleteAccount(id);
@@ -44,14 +44,14 @@ export const Actions = ({ id }: Props) => {
             onClick={() => onOpen(id)}
             disabled={deleteMutation.isPending}
           >
-            <Edit className="size-4 mr-2" />
+            <Edit className="mr-2 size-4" />
             Edit
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={handleDelete}
             disabled={deleteMutation.isPending}
           >
-            <Trash className="size-4 mr-2" />
+            <Trash className="mr-2 size-4" />
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>

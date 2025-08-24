@@ -63,7 +63,7 @@ export const TransactionForm = ({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
-
+  // TODO ADD TRANSACTION TYPE
   const handleSubmit = (values: FormValues) => {
     const amount = parseFloat(values.amount);
     const amountInMilliunits = convertAmountToMilliunits(amount);
@@ -71,6 +71,7 @@ export const TransactionForm = ({
     onSubmit({
       ...values,
       amount: amountInMilliunits,
+      transactionTypeId: "",
     });
   };
 

@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { JSX, useRef, useState } from "react";
 
 import { Select } from "@/components/select";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
 
 export const useSelectAccount = (): [
   () => JSX.Element,
-  () => Promise<unknown>
+  () => Promise<unknown>,
 ] => {
   const accountQuery = useGetAccounts();
   const accountMutation = useCreateAccount();
@@ -35,7 +35,7 @@ export const useSelectAccount = (): [
     resolve: (value: string | undefined) => void;
   } | null>(null);
 
-  const selectValue = useRef<string>();
+  const selectValue = useRef<string>("");
 
   const confirm = () =>
     new Promise((resolve) => {
@@ -68,7 +68,7 @@ export const useSelectAccount = (): [
           placeholder="Select an account"
           options={accountOptions}
           onCreate={onCreateAccount}
-          onChange={(value) => (selectValue.current = value)}
+          onChange={(value) => (selectValue.current = value ?? "")}
           disabled={accountQuery.isLoading || accountMutation.isPending}
         />
 
