@@ -66,7 +66,7 @@ export const client = hc<AppType>(process.env.NEXT_PUBLIC_APP_URL!);
 })
 ```
 
-## Validación Zod
+## Zod Validation
 
 ```typescript
 // Query params
@@ -88,14 +88,14 @@ z.object({
 });
 ```
 
-## Auth (4 capas)
+## Auth (4 layers)
 
 1. **Global middleware** (middleware.ts)
 2. **Route middleware** (clerkMiddleware())
 3. **Explicit check** (if !auth?.userId)
 4. **Row-level** (.where(eq(table.userId, auth.userId)))
 
-### Auth para recursos sin userId directo
+### Auth for resources without direct userId
 
 ```typescript
 // Via JOIN
@@ -109,6 +109,6 @@ z.object({
 // ❌ SELECT *
 const data = await db.select().from(accounts);
 
-// ✅ Select específico
+// ✅ Specific select
 const data = await db.select({ id: accounts.id, name: accounts.name });
 ```

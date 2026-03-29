@@ -1,59 +1,59 @@
-# Features Pendientes - Aureo
+# Pending Features - Aureo
 
 ## 🚧 Transaction Type Selector
 
-**Estado**: Schema OK, UI NO
+**Status**: Schema OK, UI NO
 
-- Tabla `transactionTypes`: "Income", "Expense", "Refund"
-- Form hardcodea `transactionTypeId: ""`
-- **TODO**: Endpoint GET + hook + `<GenericSelect>` en form
+- Table `transactionTypes`: "Income", "Expense", "Refund"
+- Form hardcodes `transactionTypeId: ""`
+- **TODO**: GET endpoint + hook + `<GenericSelect>` in form
 
-**Ubicación**: `features/transactions/components/transaction-form.tsx:66`
+**Location**: `features/transactions/components/transaction-form.tsx:66`
 
 ## 🚧 Category Parent Selector
 
-**Estado**: Schema soporta jerarquía, UI NO
+**Status**: Schema supports hierarchy, UI NO
 
-- `categories.parentId` permite parent-child
-- Form solo acepta `name`
-- **TODO**: Hook tree structure + selector opcional + UI jerarquía
+- `categories.parentId` allows parent-child
+- Form only accepts `name`
+- **TODO**: Hook tree structure + optional selector + hierarchy UI
 
-**Ubicación**: `features/categories/components/category-form.tsx`
+**Location**: `features/categories/components/category-form.tsx`
 
-## 🚧 Transferencias entre Cuentas
+## 🚧 Account Transfers
 
-**Estado**: NO implementado
+**Status**: NOT implemented
 
-**Diseño**:
+**Design**:
 
-1. Nueva tabla `transaction_pairs` (link debit/credit transactions)
-2. Nuevo transaction type "Transfer"
-3. Endpoint `POST /api/transactions/transfer` (DB transaction atómica)
-4. Form: selectores fromAccount/toAccount + AmountInput positivo
+1. New table `transaction_pairs` (link debit/credit transactions)
+2. New transaction type "Transfer"
+3. Endpoint `POST /api/transactions/transfer` (atomic DB transaction)
+4. Form: fromAccount/toAccount selectors + positive AmountInput
 
-**Impacto**: DB migration + nuevo endpoint + nuevo form
+**Impact**: DB migration + new endpoint + new form
 
 ## 🚧 Plaid Integration
 
-Conectar bancos reales, importar transacciones automáticamente.
-**Prioridad**: Baja
+Connect real banks, auto-import transactions.
+**Priority**: Low
 
 ## 🚧 Lemon Squeezy Integration
 
-Monetización, subscripciones, billing.
-**Prioridad**: Media
+Monetization, subscriptions, billing.
+**Priority**: Medium
 
 ## 🐛 Known Issues
 
-1. **Balance Initialization**: NULL al crear cuenta (no crítico)
-2. **Transaction Type Hardcoded**: FK constraint falla
-3. **Cascade Delete**: ¿Soft delete? ¿Archivar?
+1. **Balance Initialization**: NULL when creating account (not critical)
+2. **Transaction Type Hardcoded**: FK constraint fails
+3. **Cascade Delete**: Soft delete? Archive?
 
-## ✨ Ideas Futuro
+## ✨ Future Ideas
 
 - Recurring transactions (cron job)
-- Budgets por categoría + alertas
-- Multi-currency + conversiones
-- Reports PDF + Excel export
+- Budgets per category + alerts
+- Multi-currency + conversions
+- PDF + Excel export reports
 - Mobile app (React Native)
 - AI categorization (payee → category)

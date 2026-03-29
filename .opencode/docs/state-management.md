@@ -4,7 +4,7 @@ Zustand (UI) + React Query (server).
 
 ## Zustand (UI State)
 
-Solo para modales open/close.
+Only for modal open/close.
 
 ### Pattern: New Entity
 
@@ -114,16 +114,16 @@ export const useCreateAccount = () => {
 };
 ```
 
-Similar para: `useEditAccount(id)`, `useDeleteAccount(id)`, `useBulkDelete`
+Similar for: `useEditAccount(id)`, `useDeleteAccount(id)`, `useBulkDelete`
 
 ## Invalidation Strategy
 
-**NO optimistic updates** - solo invalidation.
+**NO optimistic updates** - only invalidation.
 
 ```typescript
 // Create/Edit/Delete Account
 invalidateQueries(["accounts"]);
-invalidateQueries(["transactions"]); // Dependen de accounts
+invalidateQueries(["transactions"]); // Depend on accounts
 invalidateQueries(["summary"]);
 
 // Create/Edit/Delete Transaction
@@ -132,6 +132,6 @@ invalidateQueries(["summary"]);
 
 // Create/Edit/Delete Category
 invalidateQueries(["categories"]);
-invalidateQueries(["transactions"]); // Muestran category
+invalidateQueries(["transactions"]); // Show category
 invalidateQueries(["summary"]);
 ```

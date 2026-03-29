@@ -2,18 +2,18 @@
 
 PostgreSQL + Drizzle ORM.
 
-## Tablas
+## Tables
 
 ### accounts
 
 ```typescript
 {
   (id, name, userId, balance);
-} // balance en milliunits
+} // balance in milliunits
 ```
 
 - Relations: transactions (1:N, CASCADE DELETE)
-- Balance por triggers de DB
+- Balance managed by DB triggers
 
 ### categories
 
@@ -24,7 +24,7 @@ PostgreSQL + Drizzle ORM.
 ```
 
 - Relations: transactions (1:N, SET NULL), parent/children (self-ref)
-- ⚠️ UI parent selector NO implementada
+- ⚠️ UI parent selector NOT implemented
 
 ### transactions
 
@@ -34,7 +34,7 @@ PostgreSQL + Drizzle ORM.
 }
 ```
 
-- amount en milliunits
+- amount in milliunits
 - accountId (CASCADE), categoryId (SET NULL), transactionTypeId (required)
 
 ### transactionTypes
@@ -45,9 +45,9 @@ PostgreSQL + Drizzle ORM.
 } // "Income", "Expense", "Refund"
 ```
 
-- ⚠️ UI selector NO implementada
+- ⚠️ UI selector NOT implemented
 
-## Relaciones
+## Relations
 
 ```
 users (Clerk)
@@ -59,7 +59,7 @@ users (Clerk)
         └─→ transactions
 ```
 
-## Validación Zod
+## Zod Validation
 
 ```typescript
 // db/schema.ts
@@ -76,8 +76,8 @@ zValidator("json", insertAccountSchema.omit({ id: true }));
 ## Migrations
 
 ```bash
-npm run db:generate  # Generar
-npm run db:migrate   # Ejecutar
+npm run db:generate  # Generate
+npm run db:migrate   # Execute
 npm run db:studio    # UI (localhost:5000)
 ```
 
@@ -91,7 +91,7 @@ const id = createId(); // text format
 ## Row-Level Security
 
 ```typescript
-// Directo
+// Direct
 .where(eq(accounts.userId, auth.userId))
 
 // Via JOIN (transactions)
@@ -109,6 +109,6 @@ amount: convertAmountToMilliunits(100); // 100 → 100000
 convertAmountFromMilliunits(data.amount); // 100000 → 100
 ```
 
-## ⚠️ CRÍTICO
+## ⚠️ CRITICAL
 
-**Balances**: NUNCA calcular en código. Triggers de DB lo manejan.
+**Balances**: NEVER calculate in code. DB triggers handle them.

@@ -1,43 +1,43 @@
 # Aureo Form Builder
 
-Genera forms con validación Zod + React Hook Form.
+Generates forms with Zod + React Hook Form validation.
 
-## Cuándo Usar Este Skill
+## When to Use This Skill
 
-✅ **USA cuando**:
+✅ **USE when**:
 
-- Crear form completo para CRUD (create + edit + delete) de una entidad
-- Generar form + new sheet + edit sheet + zustand stores (conjunto completo)
-- Implementar validación compleja con Zod + React Hook Form
-- Necesitas form con loading states, disabled states, confirm dialogs
-- Form usa campos estándar: Input, Textarea, DatePicker, Select, AmountInput
+- Creating complete form for CRUD (create + edit + delete) of an entity
+- Generating form + new sheet + edit sheet + zustand stores (complete set)
+- Implementing complex validation with Zod + React Hook Form
+- Need form with loading states, disabled states, confirm dialogs
+- Form uses standard fields: Input, Textarea, DatePicker, Select, AmountInput
 
-❌ **NO USES cuando**:
+❌ **DON'T USE when**:
 
-- Solo necesitas un form simple sin sheets → escribe directo sin skill
-- Form tiene lógica de negocio muy custom → implementa manualmente
-- Solo editas form existente (no crear desde cero) → edita archivo directo
+- You only need a simple form without sheets → write directly without skill
+- Form has very custom business logic → implement manually
+- Only editing existing form (not creating from scratch) → edit file directly
 
-## Estructura (3 archivos)
+## Structure (3 files)
 
 **1. Form**: `features/[entity]/components/[entity]-form.tsx`
 
 - Props: `id?, defaultValues?, onSubmit, onDelete?, disabled?`
 - React Hook Form + zodResolver
-- Mostrar delete button solo si `id` existe
+- Show delete button only if `id` exists
 
 **2. New Sheet**: `new-[entity]-sheet.tsx`
 
 - Zustand hook: `useNew[Entity]()`
 - Mutation hook: `useCreate[Entity]()`
-- Loading state: `Loader2` durante `isPending`
+- Loading state: `Loader2` during `isPending`
 
 **3. Edit Sheet**: `edit-[entity]-sheet.tsx`
 
-- Zustand hook: `useOpen[Entity]()` (con `id`)
+- Zustand hook: `useOpen[Entity]()` (with `id`)
 - Query: `useGet[Entity](id)`
 - Mutations: `useEdit + useDelete`
-- Confirm dialog: `useConfirm` para delete
+- Confirm dialog: `useConfirm` for delete
 - Loading states: query + mutations
 
 ## Zustand Stores
@@ -53,7 +53,7 @@ export const useNewEntity = create<NewState>((set) => ({
 }));
 ```
 
-**use-open-[entity].ts**: Igual + `id?: string` + `onOpen: (id: string) => void`
+**use-open-[entity].ts**: Same + `id?: string` + `onOpen: (id: string) => void`
 
 ## Field Types
 
@@ -61,7 +61,7 @@ export const useNewEntity = create<NewState>((set) => ({
 **Textarea**: `<Textarea {...field} value={field.value ?? ""} />`  
 **DatePicker**: `<DatePicker value={field.value} onChange={field.onChange} />`  
 **Select**: `<GenericSelect options={} value={} onChange={} onCreate={} />`  
-**Amount**: `<AmountInput {...field} />` (ver `lib/utils.ts` para conversión milliunits)
+**Amount**: `<AmountInput {...field} />` (see `lib/utils.ts` for milliunits conversion)
 
 ## Checklist
 
@@ -70,6 +70,6 @@ export const useNewEntity = create<NewState>((set) => ({
 - Edit sheet + edit/delete mutations + confirm dialog
 - Zustand stores (new + open)
 - Loading/disabled states
-- Toast notifications (en mutation hooks)
+- Toast notifications (in mutation hooks)
 
-Referencia completa: Ver `features/accounts/components/` y `state-management.md`
+Complete reference: See `features/accounts/components/` and `state-management.md`

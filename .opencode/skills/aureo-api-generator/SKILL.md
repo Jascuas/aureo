@@ -1,22 +1,22 @@
 # Aureo API Generator
 
-Genera endpoints API CRUD con Hono.js siguiendo patterns de Aureo.
+Generates CRUD API endpoints with Hono.js following Aureo patterns.
 
-## Cuándo Usar Este Skill
+## When to Use This Skill
 
-✅ **USA cuando**:
+✅ **USE when**:
 
-- Crear nuevo recurso API con operaciones CRUD (GET list/single, POST, PATCH, DELETE)
-- Añadir bulk-delete a recurso existente
-- Generar endpoint que requiere autenticación con Clerk (user-owned resources)
-- Implementar validación con Zod en endpoints
-- Crear API que sigue pattern: Hono + clerkMiddleware + zValidator + Drizzle
+- Creating new API resource with CRUD operations (GET list/single, POST, PATCH, DELETE)
+- Adding bulk-delete to existing resource
+- Generating endpoint requiring Clerk authentication (user-owned resources)
+- Implementing Zod validation in endpoints
+- Creating API following pattern: Hono + clerkMiddleware + zValidator + Drizzle
 
-❌ **NO USES cuando**:
+❌ **DON'T USE when**:
 
-- Solo necesitas un endpoint (no CRUD completo) → escribe directo sin skill
-- API pública sin autenticación → este skill asume Clerk auth
-- Lógica de negocio compleja más allá de CRUD → implementa manualmente
+- You only need one endpoint (not full CRUD) → write directly without skill
+- Public API without authentication → this skill assumes Clerk auth
+- Complex business logic beyond CRUD → implement manually
 
 ## Output
 
@@ -44,7 +44,7 @@ const app = new Hono()
 export default app;
 ```
 
-Ver patterns completos en `.opencode/docs/api-patterns.md`
+See complete patterns in `.opencode/docs/api-patterns.md`
 
 ### 2. React Query Hooks
 
@@ -58,7 +58,7 @@ export const useDelete[Resource] = (id) => useMutation({ ... });
 export const useBulkDelete[Resource]s = () => useMutation({ ... });
 ```
 
-Ver patterns completos en `.opencode/docs/state-management.md`
+See complete patterns in `.opencode/docs/state-management.md`
 
 ## Customizations
 
@@ -93,12 +93,12 @@ zValidator(
 
 ## Checklist
 
-- [ ] Endpoint en `app/api/[[...route]]/[resource].ts`
-- [ ] Import en `route.ts`: `.route("/[resource]s", [resource])`
-- [ ] Hooks en `features/[resource]/api/`
+- [ ] Endpoint in `app/api/[[...route]]/[resource].ts`
+- [ ] Import in `route.ts`: `.route("/[resource]s", [resource])`
+- [ ] Hooks in `features/[resource]/api/`
 - [ ] 100% Zod validation
-- [ ] Auth 4 capas (ver api-patterns.md)
-- [ ] Select específico
+- [ ] Auth 4 layers (see api-patterns.md)
+- [ ] Specific select
 - [ ] Error handling (400, 401, 404)
 - [ ] Toast notifications
-- [ ] Invalidation correcta
+- [ ] Correct invalidation

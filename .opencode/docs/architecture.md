@@ -1,8 +1,8 @@
-# Arquitectura - Aureo
+# Architecture - Aureo
 
 Feature-based architecture.
 
-## Estructura
+## Structure
 
 ```
 /features/{domain}/
@@ -20,16 +20,16 @@ Feature-based architecture.
   └── api/[[...route]]/  # Hono endpoints
 ```
 
-## Flujo de Datos
+## Data Flow
 
 ```
 User Action → Component → React Query Hook → Hono API → Drizzle → PostgreSQL
 Modal State → Zustand Store → Component Re-render
 ```
 
-## Crear Feature
+## Creating a Feature
 
-1. **Estructura**
+1. **Structure**
 
 ```bash
 features/items/

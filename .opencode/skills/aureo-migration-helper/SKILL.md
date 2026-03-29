@@ -1,35 +1,35 @@
 # Aureo Migration Helper
 
-Migraciones con Drizzle ORM.
+Migrations with Drizzle ORM.
 
-## Cuándo Usar Este Skill
+## When to Use This Skill
 
-✅ **USA cuando**:
+✅ **USE when**:
 
-- Crear nueva tabla en PostgreSQL con Drizzle ORM
-- Añadir/modificar columnas en tabla existente
-- Crear relaciones entre tablas (one-to-one, one-to-many, many-to-many)
-- Añadir constraints (FK, unique, not null, onDelete behaviors)
-- Implementar self-referencing tables (jerarquías)
-- Necesitas guía del workflow: schema → generate → review → migrate → zod
+- Creating new table in PostgreSQL with Drizzle ORM
+- Adding/modifying columns in existing table
+- Creating relations between tables (one-to-one, one-to-many, many-to-many)
+- Adding constraints (FK, unique, not null, onDelete behaviors)
+- Implementing self-referencing tables (hierarchies)
+- Need workflow guidance: schema → generate → review → migrate → zod
 
-❌ **NO USES cuando**:
+❌ **DON'T USE when**:
 
-- Solo consultas DB sin cambiar schema → usa Drizzle query directo
-- Modificación simple (1 campo) → hazlo directo sin skill
-- Seed data o scripts de población → escribe script directo
+- Only querying DB without schema changes → use Drizzle query directly
+- Simple modification (1 field) → do it directly without skill
+- Seed data or population scripts → write script directly
 
 ## Workflow
 
-1. **Modificar schema**: `db/schema.ts`
-2. **Generar migración**: `npm run db:generate` → crea `drizzle/XXXX.sql`
-3. **Revisar SQL**: verificar cambios generados
-4. **Ejecutar**: `npm run db:migrate`
-5. **Zod schema**: `createInsertSchema(tabla)`
+1. **Modify schema**: `db/schema.ts`
+2. **Generate migration**: `npm run db:generate` → creates `drizzle/XXXX.sql`
+3. **Review SQL**: verify generated changes
+4. **Execute**: `npm run db:migrate`
+5. **Zod schema**: `createInsertSchema(table)`
 
-## Patrones
+## Patterns
 
-**Nueva tabla**:
+**New table**:
 
 ```typescript
 export const items = pgTable("items", {
@@ -50,29 +50,29 @@ export const itemsRelations = relations(items, ({ one }) => ({
 
 **Self-referencing**: `parentId: text().references((): AnyPgColumn => table.id)`
 
-**Junction table**: Dos FK + relaciones con `relationName`
+**Junction table**: Two FKs + relations with `relationName`
 
-**Añadir columna**: Solo agregar campo en schema → `db:generate` crea `ALTER TABLE`
+**Add column**: Just add field in schema → `db:generate` creates `ALTER TABLE`
 
 ## onDelete
 
-`cascade` (borrar relacionados) | `set null` | `restrict` (prevenir) | `no action` (default)
+`cascade` (delete related) | `set null` | `restrict` (prevent) | `no action` (default)
 
-## Tipos
+## Types
 
 `text | integer | real | boolean | timestamp | json | jsonb`
 
-## Modificadores
+## Modifiers
 
 `.notNull() | .primaryKey() | .unique() | .default(val) | .defaultNow() | .references()`
 
 ## Drizzle Studio
 
-`npm run db:studio` (puerto 5000)
+`npm run db:studio` (port 5000)
 
-## ⚠️ Crítico
+## ⚠️ Critical
 
-**Amounts**: Siempre `integer` en milliunits (×1000). Ver `lib/utils.ts` para conversión.  
-**Balances**: NUNCA mutar en código - triggers DB automáticos.
+**Amounts**: Always `integer` in milliunits (×1000). See `lib/utils.ts` for conversion.  
+**Balances**: NEVER mutate in code - automatic DB triggers.
 
-Referencia completa: Ver `database-schema.md`
+Complete reference: See `database-schema.md`
