@@ -14,13 +14,13 @@ export type Option<T extends string> = {
   label: string;
 };
 
-interface GenericSelectProps<T extends string> {
+type GenericSelectProps<T extends string> = {
   value: T;
   options: Option<T>[];
   placeholder?: string;
   icon?: ReactNode;
   onChange: (v: T) => void;
-}
+};
 
 export function GenericSelect<T extends string>({
   value,

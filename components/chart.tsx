@@ -9,9 +9,9 @@ import { groupByPeriod, overtimeReducers } from "@/lib/utils";
 import { AreaVariant } from "./area-variant";
 import { GenericSelect } from "./ui/generic-select";
 
-interface ChartProps {
+type ChartProps = {
   data?: OverTimeData;
-}
+};
 
 export const Chart = ({ data = [] }: ChartProps) => {
   const {
