@@ -13,6 +13,7 @@ import { useCreateAccount } from "@/features/accounts/api/use-create-account";
 import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
 import { useCreateCategory } from "@/features/categories/api/use-create-category";
 import { useGetCategories } from "@/features/categories/api/use-get-categories";
+import { useGetTransactionTypes } from "@/features/transaction-types/api/use-get-transaction-types";
 import { useDeleteTransaction } from "@/features/transactions/api/use-delete-transaction";
 import { useEditTransaction } from "@/features/transactions/api/use-edit-transaction";
 import { useGetTransaction } from "@/features/transactions/api/use-get-transaction";
@@ -30,7 +31,7 @@ export const EditTransactionSheet = () => {
 
   const [ConfirmDialog, confirm] = useConfirm(
     "Are you sure?",
-    "You are about to delete this transaction."
+    "You are about to delete this transaction.",
   );
 
   const transactionQuery = useGetTransaction(id);
@@ -51,6 +52,14 @@ export const EditTransactionSheet = () => {
     value: account.id,
   }));
 
+  const transactionTypesQuery = useGetTransactionTypes();
+  const transactionTypeOptions = (transactionTypesQuery.data ?? []).map(
+    (type) => ({
+      label: type.name,
+      value: type.id,
+    }),
+  );
+
   const onCreateAccount = (name: string) => accountMutation.mutate({ name });
   const onCreateCategory = (name: string) => categoryMutation.mutate({ name });
 
@@ -64,7 +73,8 @@ export const EditTransactionSheet = () => {
   const isLoading =
     transactionQuery.isLoading ||
     categoryQuery.isLoading ||
-    accountQuery.isLoading;
+    accountQuery.isLoading ||
+    transactionTypesQuery.isLoading;
 
   const onSubmit = (values: FormValues) => {
     editMutation.mutate(values, {
@@ -84,6 +94,7 @@ export const EditTransactionSheet = () => {
           : new Date(),
         payee: transactionQuery.data.payee,
         notes: transactionQuery.data.notes,
+        transactionTypeId: transactionQuery.data.transactionTypeId,
       }
     : {
         accountId: "",
@@ -92,6 +103,7 @@ export const EditTransactionSheet = () => {
         date: new Date(),
         payee: "",
         notes: "",
+        transactionTypeId: "",
       };
 
   const onDelete = async () => {
@@ -119,7 +131,7 @@ export const EditTransactionSheet = () => {
 
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
-              <Loader2 className="size-4 animate-spin text-muted-foreground" />
+              <Loader2 className="text-muted-foreground size-4 animate-spin" />
             </div>
           ) : (
             <TransactionForm
@@ -131,6 +143,7 @@ export const EditTransactionSheet = () => {
               onCreateCategory={onCreateCategory}
               accountOptions={accountOptions}
               onCreateAccount={onCreateAccount}
+              transactionTypeOptions={transactionTypeOptions}
               onDelete={onDelete}
             />
           )}

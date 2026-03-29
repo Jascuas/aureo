@@ -13,6 +13,7 @@ import { useCreateAccount } from "@/features/accounts/api/use-create-account";
 import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
 import { useCreateCategory } from "@/features/categories/api/use-create-category";
 import { useGetCategories } from "@/features/categories/api/use-get-categories";
+import { useGetTransactionTypes } from "@/features/transaction-types/api/use-get-transaction-types";
 import { useCreateTransaction } from "@/features/transactions/api/use-create-transaction";
 import { useNewTransaction } from "@/features/transactions/hooks/use-new-transaction";
 
@@ -40,6 +41,14 @@ export const NewTransactionSheet = () => {
     value: account.id,
   }));
 
+  const transactionTypesQuery = useGetTransactionTypes();
+  const transactionTypeOptions = (transactionTypesQuery.data ?? []).map(
+    (type) => ({
+      label: type.name,
+      value: type.id,
+    }),
+  );
+
   const onCreateAccount = (name: string) => accountMutation.mutate({ name });
   const onCreateCategory = (name: string) => categoryMutation.mutate({ name });
 
@@ -47,7 +56,10 @@ export const NewTransactionSheet = () => {
     createMutation.isPending ||
     categoryMutation.isPending ||
     accountMutation.isPending;
-  const isLoading = categoryQuery.isLoading || accountQuery.isLoading;
+  const isLoading =
+    categoryQuery.isLoading ||
+    accountQuery.isLoading ||
+    transactionTypesQuery.isLoading;
 
   const onSubmit = (values: FormValues) => {
     createMutation.mutate(values, {
@@ -68,7 +80,7 @@ export const NewTransactionSheet = () => {
 
         {isLoading ? (
           <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+            <Loader2 className="text-muted-foreground size-4 animate-spin" />
           </div>
         ) : (
           <TransactionForm
@@ -78,6 +90,7 @@ export const NewTransactionSheet = () => {
             onCreateCategory={onCreateCategory}
             accountOptions={accountOptions}
             onCreateAccount={onCreateAccount}
+            transactionTypeOptions={transactionTypeOptions}
           />
         )}
       </SheetContent>

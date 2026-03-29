@@ -4,6 +4,7 @@ import { handle } from "hono/vercel";
 import accounts from "./accounts";
 import categories from "./categories";
 import summary from "./summary";
+import transactionTypes from "./transaction-types";
 import transactions from "./transactions";
 
 export const runtime = "edge";
@@ -13,6 +14,7 @@ const app = new Hono()
   .route("/accounts", accounts)
   .route("/categories", categories)
   .route("/summary", summary)
+  .route("/transaction-types", transactionTypes)
   .route("/transactions", transactions);
 
 export const GET = handle(app);

@@ -15,6 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { GenericSelect } from "@/components/ui/generic-select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { insertTransactionSchema } from "@/db/schema";
@@ -27,6 +28,7 @@ const formSchema = z.object({
   payee: z.string(),
   amount: z.string(),
   notes: z.string().nullable().optional(),
+  transactionTypeId: z.string(),
 });
 
 const apiSchema = insertTransactionSchema.omit({
@@ -44,6 +46,7 @@ type TransactionFormProps = {
   disabled?: boolean;
   accountOptions: { label: string; value: string }[];
   categoryOptions: { label: string; value: string }[];
+  transactionTypeOptions: { label: string; value: string }[];
   onCreateAccount: (name: string) => void;
   onCreateCategory: (name: string) => void;
 };
@@ -56,6 +59,7 @@ export const TransactionForm = ({
   disabled,
   accountOptions,
   categoryOptions,
+  transactionTypeOptions,
   onCreateAccount,
   onCreateCategory,
 }: TransactionFormProps) => {
@@ -63,7 +67,6 @@ export const TransactionForm = ({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
-  // TODO ADD TRANSACTION TYPE
   const handleSubmit = (values: FormValues) => {
     const amount = parseFloat(values.amount);
     const amountInMilliunits = convertAmountToMilliunits(amount);
@@ -71,7 +74,6 @@ export const TransactionForm = ({
     onSubmit({
       ...values,
       amount: amountInMilliunits,
-      transactionTypeId: "",
     });
   };
 
@@ -145,6 +147,28 @@ export const TransactionForm = ({
                   value={field.value}
                   onChange={field.onChange}
                   disabled={disabled}
+                />
+              </FormControl>
+
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          name="transactionTypeId"
+          control={form.control}
+          disabled={disabled}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Type</FormLabel>
+
+              <FormControl>
+                <GenericSelect
+                  placeholder="Select a type"
+                  options={transactionTypeOptions}
+                  value={field.value}
+                  onChange={field.onChange}
                 />
               </FormControl>
 
