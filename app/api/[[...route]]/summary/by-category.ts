@@ -32,7 +32,6 @@ const app = new Hono().get(
     if (!auth?.userId) return c.json({ error: "Unauthorized." }, 401);
 
     const { type, from, to, accountId, top } = c.req.valid("query");
-    console.log("TOPPPPP", top);
     const defaultTo = new Date();
     const defaultFrom = subDays(defaultTo, 30);
     const startDate = from

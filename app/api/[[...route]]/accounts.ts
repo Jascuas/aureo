@@ -32,7 +32,7 @@ const app = new Hono()
       "param",
       z.object({
         id: z.string().optional(),
-      })
+      }),
     ),
     clerkMiddleware(),
     async (ctx) => {
@@ -60,7 +60,7 @@ const app = new Hono()
       }
 
       return ctx.json({ data });
-    }
+    },
   )
   .post(
     "/",
@@ -69,7 +69,7 @@ const app = new Hono()
       "json",
       insertAccountSchema.pick({
         name: true,
-      })
+      }),
     ),
     async (ctx) => {
       const auth = getAuth(ctx);
@@ -84,12 +84,13 @@ const app = new Hono()
         .values({
           id: createId(),
           userId: auth.userId,
+          balance: 0,
           ...values,
         })
         .returning();
 
       return ctx.json({ data });
-    }
+    },
   )
   .post(
     "/bulk-delete",
@@ -98,7 +99,7 @@ const app = new Hono()
       "json",
       z.object({
         ids: z.array(z.string()),
-      })
+      }),
     ),
     async (ctx) => {
       const auth = getAuth(ctx);
@@ -113,15 +114,15 @@ const app = new Hono()
         .where(
           and(
             eq(accounts.userId, auth.userId),
-            inArray(accounts.id, values.ids)
-          )
+            inArray(accounts.id, values.ids),
+          ),
         )
         .returning({
           id: accounts.id,
         });
 
       return ctx.json({ data });
-    }
+    },
   )
   .patch(
     "/:id",
@@ -130,13 +131,13 @@ const app = new Hono()
       "param",
       z.object({
         id: z.string().optional(),
-      })
+      }),
     ),
     zValidator(
       "json",
       insertAccountSchema.pick({
         name: true,
-      })
+      }),
     ),
     async (ctx) => {
       const auth = getAuth(ctx);
@@ -162,7 +163,7 @@ const app = new Hono()
       }
 
       return ctx.json({ data });
-    }
+    },
   )
   .delete(
     "/:id",
@@ -171,7 +172,7 @@ const app = new Hono()
       "param",
       z.object({
         id: z.string().optional(),
-      })
+      }),
     ),
     async (ctx) => {
       const auth = getAuth(ctx);
@@ -197,7 +198,7 @@ const app = new Hono()
       }
 
       return ctx.json({ data });
-    }
+    },
   );
 
 export default app;
