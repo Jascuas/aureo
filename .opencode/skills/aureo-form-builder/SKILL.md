@@ -2,11 +2,21 @@
 
 Genera forms con validación Zod + React Hook Form.
 
-## Cuándo Usar
+## Cuándo Usar Este Skill
 
-- Crear form para CRUD (create/edit/delete)
-- Form + sheet wrapper
-- Validación compleja con Zod
+✅ **USA cuando**:
+
+- Crear form completo para CRUD (create + edit + delete) de una entidad
+- Generar form + new sheet + edit sheet + zustand stores (conjunto completo)
+- Implementar validación compleja con Zod + React Hook Form
+- Necesitas form con loading states, disabled states, confirm dialogs
+- Form usa campos estándar: Input, Textarea, DatePicker, Select, AmountInput
+
+❌ **NO USES cuando**:
+
+- Solo necesitas un form simple sin sheets → escribe directo sin skill
+- Form tiene lógica de negocio muy custom → implementa manualmente
+- Solo editas form existente (no crear desde cero) → edita archivo directo
 
 ## Estructura (3 archivos)
 

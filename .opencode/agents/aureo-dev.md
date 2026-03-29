@@ -1,5 +1,5 @@
 ---
-description: Ingeniero Principal para Aureo. Desarrollo autónomo siguiendo reglas estrictas.
+description: Ingeniero Principal de Aureo Finance Platform. Usa este agente para desarrollo e implementación de código: bugs fixes, nuevos features, refactors, styling, validaciones, endpoints API, componentes React, formularios, migraciones DB. Ejecuta código directamente para tareas pequeñas/medianas (<8 archivos). Delega a @aureo-architect para features grandes que requieren diseño arquitectónico. Sigue reglas críticas de amounts (milliunits), balances (DB triggers), y convenciones (kebab-case, type>interface, no tests, no comments). Especializado en Next.js 16 + Hono + PostgreSQL + Drizzle ORM.
 mode: primary
 temperature: 0.2
 color: "#3b82f6"

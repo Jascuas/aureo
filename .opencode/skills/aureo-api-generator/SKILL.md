@@ -1,15 +1,22 @@
 # Aureo API Generator
 
-Genera endpoints API CRUD siguiendo patterns de Aureo.
+Genera endpoints API CRUD con Hono.js siguiendo patterns de Aureo.
 
-## Uso
+## Cuándo Usar Este Skill
 
-```
-Resource: accounts
-Operations: GET (list/single), POST, PATCH, DELETE, bulk-delete
-Schema: insertAccountSchema
-User-owned: yes
-```
+✅ **USA cuando**:
+
+- Crear nuevo recurso API con operaciones CRUD (GET list/single, POST, PATCH, DELETE)
+- Añadir bulk-delete a recurso existente
+- Generar endpoint que requiere autenticación con Clerk (user-owned resources)
+- Implementar validación con Zod en endpoints
+- Crear API que sigue pattern: Hono + clerkMiddleware + zValidator + Drizzle
+
+❌ **NO USES cuando**:
+
+- Solo necesitas un endpoint (no CRUD completo) → escribe directo sin skill
+- API pública sin autenticación → este skill asume Clerk auth
+- Lógica de negocio compleja más allá de CRUD → implementa manualmente
 
 ## Output
 
