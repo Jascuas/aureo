@@ -1,4 +1,4 @@
-import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
+import { clerkMiddleware } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { createId } from "@paralleldrive/cuid2";
 import { and, eq, inArray } from "drizzle-orm";
@@ -7,14 +7,12 @@ import { z } from "zod";
 
 import { db } from "@/db/drizzle";
 import { accounts, insertAccountSchema } from "@/db/schema";
+import { requireAuth } from "@/lib/auth-middleware";
 
 const app = new Hono()
   .get("/", clerkMiddleware(), async (ctx) => {
-    const auth = getAuth(ctx);
-
-    if (!auth?.userId) {
-      return ctx.json({ error: "Unauthorized." }, 401);
-    }
+    const auth = requireAuth(ctx);
+    if (!auth.success) return auth.response;
 
     const data = await db
       .select({
@@ -36,16 +34,14 @@ const app = new Hono()
     ),
     clerkMiddleware(),
     async (ctx) => {
-      const auth = getAuth(ctx);
+      const auth = requireAuth(ctx);
       const { id } = ctx.req.valid("param");
 
       if (!id) {
         return ctx.json({ error: "Missing id." }, 400);
       }
 
-      if (!auth?.userId) {
-        return ctx.json({ error: "Unauthorized." }, 401);
-      }
+      if (!auth.success) return auth.response;
 
       const [data] = await db
         .select({
@@ -72,12 +68,10 @@ const app = new Hono()
       }),
     ),
     async (ctx) => {
-      const auth = getAuth(ctx);
+      const auth = requireAuth(ctx);
       const values = ctx.req.valid("json");
 
-      if (!auth?.userId) {
-        return ctx.json({ error: "Unauthorized." }, 401);
-      }
+      if (!auth.success) return auth.response;
 
       const [data] = await db
         .insert(accounts)
@@ -102,12 +96,10 @@ const app = new Hono()
       }),
     ),
     async (ctx) => {
-      const auth = getAuth(ctx);
+      const auth = requireAuth(ctx);
       const values = ctx.req.valid("json");
 
-      if (!auth?.userId) {
-        return ctx.json({ error: "Unauthorized." }, 401);
-      }
+      if (!auth.success) return auth.response;
 
       const data = await db
         .delete(accounts)
@@ -140,7 +132,7 @@ const app = new Hono()
       }),
     ),
     async (ctx) => {
-      const auth = getAuth(ctx);
+      const auth = requireAuth(ctx);
       const { id } = ctx.req.valid("param");
       const values = ctx.req.valid("json");
 
@@ -148,9 +140,7 @@ const app = new Hono()
         return ctx.json({ error: "Missing id." }, 400);
       }
 
-      if (!auth?.userId) {
-        return ctx.json({ error: "Unauthorized." }, 401);
-      }
+      if (!auth.success) return auth.response;
 
       const [data] = await db
         .update(accounts)
@@ -175,16 +165,14 @@ const app = new Hono()
       }),
     ),
     async (ctx) => {
-      const auth = getAuth(ctx);
+      const auth = requireAuth(ctx);
       const { id } = ctx.req.valid("param");
 
       if (!id) {
         return ctx.json({ error: "Missing id." }, 400);
       }
 
-      if (!auth?.userId) {
-        return ctx.json({ error: "Unauthorized." }, 401);
-      }
+      if (!auth.success) return auth.response;
 
       const [data] = await db
         .delete(accounts)

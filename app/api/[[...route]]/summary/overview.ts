@@ -1,4 +1,4 @@
-import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
+import { clerkMiddleware } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { differenceInDays, subDays } from "date-fns";
 import { and, eq, gte, lte, sql, sum } from "drizzle-orm";
@@ -12,6 +12,7 @@ import {
   calculatePercentageChange,
   convertAmountFromMilliunits,
 } from "@/lib/utils";
+import { requireAuth } from "@/lib/auth-middleware";
 
 const app = new Hono().get(
   "/overview",
@@ -25,10 +26,12 @@ const app = new Hono().get(
     }),
   ),
   async (ctx) => {
-    const auth = getAuth(ctx);
+    const auth = requireAuth(ctx);
     const { from, to, accountId } = ctx.req.valid("query");
 
-    if (!auth?.userId) return ctx.json({ error: "Unauthorized." }, 401);
+    if (!auth.success) return auth.response;
+
+    const userId = auth.userId;
 
     const { startDate, endDate } = parseDateRange(from, to);
 
@@ -69,7 +72,7 @@ const app = new Hono().get(
         .where(
           and(
             accountId ? eq(transactions.accountId, accountId) : undefined,
-            eq(accounts.userId, auth?.userId ?? ""),
+            eq(accounts.userId, userId),
             gte(transactions.date, startDate),
             lte(transactions.date, endDate),
           ),
@@ -102,7 +105,7 @@ const app = new Hono().get(
       .from(accounts)
       .where(
         and(
-          eq(accounts.userId, auth.userId),
+          eq(accounts.userId, userId),
           accountId ? eq(accounts.id, accountId) : undefined,
         ),
       );

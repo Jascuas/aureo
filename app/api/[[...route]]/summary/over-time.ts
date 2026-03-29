@@ -1,4 +1,4 @@
-import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
+import { clerkMiddleware } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { and, eq, gte, lte, sql, sum } from "drizzle-orm";
 import { Hono } from "hono";
@@ -9,6 +9,7 @@ import { accounts, transactions, transactionTypes } from "@/db/schema";
 import { parseDateRange } from "@/lib/date-utils";
 import { Day } from "@/lib/types";
 import { convertAmountFromMilliunits, fillMissingDays } from "@/lib/utils";
+import { requireAuth } from "@/lib/auth-middleware";
 
 const app = new Hono().get(
   "/over-time",
@@ -22,10 +23,12 @@ const app = new Hono().get(
     }),
   ),
   async (ctx) => {
-    const auth = getAuth(ctx);
+    const auth = requireAuth(ctx);
     const { from, to, accountId } = ctx.req.valid("query");
 
-    if (!auth?.userId) return ctx.json({ error: "Unauthorized." }, 401);
+    if (!auth.success) return auth.response;
+
+    const userId = auth.userId;
 
     const { startDate, endDate } = parseDateRange(from, to);
 
@@ -86,16 +89,12 @@ const app = new Hono().get(
       .from(accounts)
       .where(
         and(
-          eq(accounts.userId, auth.userId),
+          eq(accounts.userId, userId),
           accountId ? eq(accounts.id, accountId) : undefined,
         ),
       );
 
-    const currentPeriod = await fetchFinancialData(
-      auth.userId,
-      startDate,
-      endDate,
-    );
+    const currentPeriod = await fetchFinancialData(userId, startDate, endDate);
 
     const days = fillMissingDays(currentPeriod, startDate, endDate);
 

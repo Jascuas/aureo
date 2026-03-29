@@ -1,15 +1,14 @@
-import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
+import { clerkMiddleware } from "@hono/clerk-auth";
 import { Hono } from "hono";
 
 import { db } from "@/db/drizzle";
 import { transactionTypes } from "@/db/schema";
+import { requireAuth } from "@/lib/auth-middleware";
 
 const app = new Hono().get("/", clerkMiddleware(), async (ctx) => {
-  const auth = getAuth(ctx);
+  const auth = requireAuth(ctx);
 
-  if (!auth?.userId) {
-    return ctx.json({ error: "Unauthorized." }, 401);
-  }
+  if (!auth.success) return auth.response;
 
   const data = await db
     .select({

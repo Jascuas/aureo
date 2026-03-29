@@ -1,4 +1,4 @@
-import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
+import { clerkMiddleware } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { and, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { Hono } from "hono";
@@ -12,6 +12,7 @@ import {
   transactionTypes,
 } from "@/db/schema";
 import { parseDateRange } from "@/lib/date-utils";
+import { requireAuth } from "@/lib/auth-middleware";
 
 type TxType = "Income" | "Expense" | "Refund";
 
@@ -29,8 +30,10 @@ const app = new Hono().get(
     }),
   ),
   async (c) => {
-    const auth = getAuth(c);
-    if (!auth?.userId) return c.json({ error: "Unauthorized." }, 401);
+    const auth = requireAuth(c);
+    if (!auth.success) return auth.response;
+
+    const userId = auth.userId;
 
     const { type, from, to, accountId, top } = c.req.valid("query");
     const { startDate, endDate } = parseDateRange(from, to);
@@ -63,7 +66,7 @@ const app = new Hono().get(
       .where(
         and(
           accountId ? eq(transactions.accountId, accountId) : undefined,
-          eq(accounts.userId, auth.userId),
+          eq(accounts.userId, userId),
           inArray(transactionTypes.name, wanted),
           gte(transactions.date, startDate),
           lte(transactions.date, endDate),
