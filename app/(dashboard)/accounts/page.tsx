@@ -8,9 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBulkDeleteAccounts } from "@/features/accounts/api/use-bulk-delete-accounts";
 import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
+import { columns } from "@/features/accounts/components/columns";
 import { useNewAccount } from "@/features/accounts/hooks/use-new-account";
-
-import { columns } from "./columns";
 
 const AccountsPage = () => {
   const newAccount = useNewAccount();
@@ -22,7 +21,7 @@ const AccountsPage = () => {
 
   if (accountsQuery.isLoading) {
     return (
-      <div className="mx-auto -mt-4 lg:-mt-20 w-full max-w-screen-2xl pb-10">
+      <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
         <Card className="border-none drop-shadow-sm">
           <CardHeader>
             <Skeleton className="h-8 w-48" />
@@ -39,7 +38,7 @@ const AccountsPage = () => {
   }
 
   return (
-    <div className="mx-auto -mt-4 lg:-mt-20 w-full max-w-screen-2xl pb-10">
+    <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
       <Card className="border-none drop-shadow-sm">
         <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
           <CardTitle className="line-clamp-1 text-xl">Accounts Page</CardTitle>

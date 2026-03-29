@@ -13,9 +13,9 @@ import { useSelectAccount } from "@/features/accounts/hooks/use-select-account";
 import { useBulkCreateTransactions } from "@/features/transactions/api/use-bulk-create-transactions";
 import { useBulkDeleteTransactions } from "@/features/transactions/api/use-bulk-delete-transactions";
 import { useGetTransactions } from "@/features/transactions/api/use-get-transactions";
+import { columns } from "@/features/transactions/components/columns";
 import { useNewTransaction } from "@/features/transactions/hooks/use-new-transaction";
 
-import { columns } from "./columns";
 import { ImportCard } from "./import-card";
 import { UploadButton } from "./upload-button";
 
@@ -77,7 +77,7 @@ const TransactionsPage = () => {
 
   if (transactionsQuery.isLoading) {
     return (
-      <div className="mx-auto -mt-4 lg:-mt-20 w-full max-w-screen-2xl pb-10">
+      <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
         <Card className="border-none drop-shadow-sm">
           <CardHeader>
             <Skeleton className="h-8 w-48" />
@@ -108,7 +108,7 @@ const TransactionsPage = () => {
   }
 
   return (
-    <div className="mx-auto -mt-4 lg:-mt-20 w-full max-w-screen-2xl pb-10">
+    <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
       <Card className="border-none drop-shadow-sm">
         <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
           <CardTitle className="line-clamp-1 text-xl">

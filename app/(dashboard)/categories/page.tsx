@@ -8,9 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBulkDeleteCategories } from "@/features/categories/api/use-bulk-delete-categories";
 import { useGetCategories } from "@/features/categories/api/use-get-categories";
+import { columns } from "@/features/categories/components/columns";
 import { useNewCategory } from "@/features/categories/hooks/use-new-category";
-
-import { columns } from "./columns";
 
 const CategoriesPage = () => {
   const newCategory = useNewCategory();
@@ -22,7 +21,7 @@ const CategoriesPage = () => {
 
   if (categoriesQuery.isLoading) {
     return (
-      <div className="mx-auto -mt-4 lg:-mt-20 w-full max-w-screen-2xl pb-10">
+      <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
         <Card className="border-none drop-shadow-sm">
           <CardHeader>
             <Skeleton className="h-8 w-48" />
@@ -39,7 +38,7 @@ const CategoriesPage = () => {
   }
 
   return (
-    <div className="mx-auto -mt-4 lg:-mt-20 w-full max-w-screen-2xl pb-10">
+    <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
       <Card className="border-none drop-shadow-sm">
         <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
           <CardTitle className="line-clamp-1 text-xl">
