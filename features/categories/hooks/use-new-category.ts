@@ -1,13 +1,3 @@
-import { create } from "zustand";
+import { createNewStore } from "@/lib/create-modal-store";
 
-type NewCategoryState = {
-  isOpen: boolean;
-  onOpen: () => void;
-  onClose: () => void;
-};
-
-export const useNewCategory = create<NewCategoryState>((set) => ({
-  isOpen: false,
-  onOpen: () => set({ isOpen: true }),
-  onClose: () => set({ isOpen: false }),
-}));
+export const useNewCategory = createNewStore();
