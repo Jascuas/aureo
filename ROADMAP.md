@@ -1,7 +1,7 @@
 # Aureo Finance Platform - Development Roadmap
 
 > **Last Updated**: March 30, 2026  
-> **Project Status**: Sprint 2 in Progress (86% complete)
+> **Project Status**: Sprint 2 Complete ✅ (100%) - Ready for Sprint 3
 
 ---
 
@@ -48,10 +48,10 @@
 
 ---
 
-## 🔧 Technical Debt (Sprint 2-3)
+## 🔧 Technical Debt (Sprint 2) ✅ COMPLETED
 
 **Refactoring to improve maintainability**  
-**Progress**: 8/11 tasks completed (73%)
+**Progress**: 11/11 tasks completed (100%)
 
 ### Code Duplication
 
@@ -64,32 +64,35 @@
 **Impact**: 5 endpoints → 1 utility (+31 lines, -31 duplicated)  
 **Completed**: March 30, 2026
 
-#### Auth Middleware (12 instances) ⏳
+#### Auth Middleware (25 instances) ✅
 
-- [ ] Extract reusable auth wrapper to `lib/auth-middleware.ts`
-- [ ] Replace in all endpoints: accounts (6), categories (6), transactions (7), summary (3)
+- [x] Extract reusable auth wrapper to `lib/auth-middleware.ts`
+- [x] Replace in all endpoints: accounts (6), categories (6), transactions (7), transaction-types (1), summary (3)
+- [x] Fix bulk-delete validator bug in categories.ts (was using wrong schema)
 
+**Commit**: `07a6b6d` - "refactor: extract auth middleware to reduce duplication"  
 **Pattern**: Same 4-layer auth repeated everywhere  
-**Effort**: 1 day  
-**Status**: Pending
+**Impact**: 8 files changed (+92/-107), reduces ~75 lines of boilerplate  
+**Completed**: March 30, 2026
 
-#### SQL CASE Expressions (3 instances) ⏳
+#### SQL CASE Expressions (3 instances) ✅
 
-- [ ] Extract to Drizzle helper function in `db/helpers.ts`
-- [ ] Replace in: `summary/overview.ts:47-66`, `summary/over-time.ts:47-66`, `summary/by-category.ts:45-51`
+- [x] Extract to Drizzle helper functions in `db/helpers.ts`
+- [x] Replace in: `summary/overview.ts:47-66`, `summary/over-time.ts:47-66`, `summary/by-category.ts:45-51`
 
-**Effort**: 1 day  
-**Status**: Pending
+**Commit**: `0e22674` - "refactor: extract SQL CASE expressions to db helpers"  
+**Impact**: 4 files changed (+65/-51), improves maintainability  
+**Completed**: March 30, 2026
 
-### Zustand Store Boilerplate (6 identical stores) ⏳
+### Zustand Store Boilerplate (6 identical stores) ✅
 
-- [ ] Create factory pattern in `lib/create-modal-store.ts`
-- [ ] Generate: `createNewStore<T>(name)` and `createOpenStore<T>(name)`
-- [ ] Replace 6 stores: accounts (2), categories (2), transactions (2)
+- [x] Create factory pattern in `lib/create-modal-store.ts`
+- [x] Generate: `createNewStore()` and `createOpenStore()` functions
+- [x] Replace 6 stores: accounts (2), categories (2), transactions (2)
 
-**Impact**: Reduces 90 lines → 20 lines  
-**Effort**: 4 hours  
-**Status**: Pending
+**Commit**: `4f56056` - "refactor: create zustand modal store factory pattern"  
+**Impact**: 7 files changed (+43/-78), reduces 90 lines → 18 lines  
+**Completed**: March 30, 2026
 
 ### Consistency ✅
 
@@ -277,13 +280,14 @@
 - ✅ Query invalidation fixes
 - ✅ Date parsing extraction
 - ✅ Move columns to features/
-- ⏳ Auth middleware extraction
-- ⏳ Zustand factory pattern
-- ⏳ SQL CASE extraction
+- ✅ Auth middleware extraction
+- ✅ Zustand factory pattern
+- ✅ SQL CASE extraction
 
 **Goal**: Reduce code duplication by 40%  
-**Status**: 73% complete (8/11 tasks)  
-**Started**: March 30, 2026
+**Status**: 100% complete (11/11 tasks) ✅  
+**Started**: March 30, 2026  
+**Completed**: March 30, 2026
 
 ### Sprint 3 (Week 3) - Architecture
 
@@ -331,23 +335,24 @@
 
 ## 📈 Progress Tracking
 
-**Overall Progress**: 15 / 60 tasks completed (25%)
+**Overall Progress**: 18 / 60 tasks completed (30%)
 
 ### By Sprint
 
-- **Sprint 1 (Blockers)**: ✅ 4/4 (100%)
-- **Sprint 2 (Quick Wins)**: 🚧 8/11 (73%)
-- **Sprint 3 (Structure)**: ⏳ 0/3 (0%)
-- **Sprint 4 (Resilience)**: ⏳ 0/4 (0%)
-- **Sprint 5+ (Features)**: ⏳ 0/38 (0%)
+- **Sprint 1** (Critical Blockers): ✅ 4/4 (100%)
+- **Sprint 2** (Technical Debt): ✅ 11/11 (100%)
+- **Sprint 3** (Architecture): ⏳ 0/10 (0%)
+- **Sprint 4** (Resilience): ⏳ 0/8 (0%)
+- **Sprint 5+** (Features): ⏳ 0/27 (0%)
 
 ### Recent Commits (Last 5)
 
-1. `6af62dd` - docs: update README with comprehensive project overview
-2. `2363182` - refactor: move column definitions from app/ to features/
-3. `20f3e8e` - refactor: extract date parsing logic to reusable utility function
-4. `f069eb9` - refactor: improve type consistency and query invalidation patterns
-5. `89e27df` - feat: add category parent selector with circular reference prevention
+1. `0e22674` - refactor: extract SQL CASE expressions to db helpers
+2. `4f56056` - refactor: create zustand modal store factory pattern
+3. `07a6b6d` - refactor: extract auth middleware to reduce duplication
+4. `2363182` - refactor: move column definitions from app/ to features/
+5. `20f3e8e` - refactor: extract date parsing logic to reusable utility function
+6. `89e27df` - feat: add category parent selector with circular reference prevention
 
 **Last Sprint Completed**: Sprint 1 (March 29, 2026)  
 **Current Sprint**: Sprint 2 (73% complete)  
