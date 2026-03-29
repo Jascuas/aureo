@@ -1,0 +1,38 @@
+{
+  "name": "Aureo Finance Platform",
+  "version": "1.0.0",
+  "description": "Personal finance SaaS application with Next.js 16 + Hono.js + PostgreSQL",
+  "agents": {
+    "aureo-dev": {
+      "path": ".opencode/agents/aureo-dev.md",
+      "description": "Primary development agent for implementing features",
+      "mode": "primary"
+    },
+    "aureo-architect": {
+      "path": ".opencode/agents/aureo-architect.md",
+      "description": "Architecture planning and design decisions",
+      "mode": "subagent"
+    }
+  },
+  "skills": {
+    "aureo-api-generator": {
+      "path": ".opencode/skills/aureo-api-generator",
+      "description": "Generate complete API endpoints with Hono.js + Zod + Clerk"
+    },
+    "aureo-form-builder": {
+      "path": ".opencode/skills/aureo-form-builder",
+      "description": "Generate forms with React Hook Form + Zod validation"
+    },
+    "aureo-migration-helper": {
+      "path": ".opencode/skills/aureo-migration-helper",
+      "description": "Help with Drizzle ORM database migrations"
+    }
+  },
+  "docs": {
+    "architecture": ".opencode/docs/architecture.md",
+    "database": ".opencode/docs/database-schema.md",
+    "api": ".opencode/docs/api-patterns.md",
+    "state": ".opencode/docs/state-management.md",
+    "pending": ".opencode/docs/pending-features.md"
+  }
+}
