@@ -1,8 +1,5 @@
 "use client";
 
-import { FaPiggyBank } from "react-icons/fa";
-import { FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
-
 import { useGetOverview } from "@/features/summary/api/use-get-overview";
 
 import { DataCard, DataCardLoading } from "./data-card";
@@ -26,9 +23,6 @@ export const DataGrid = () => {
         value={data?.balance.amount}
         valueChange={data?.balance.changeAmount}
         percentageChange={data?.balance.changePtc}
-        icon={FaPiggyBank}
-        variant="default"
-        dateRange={data?.lastPeriodBalance}
       />
 
       <DataCard
@@ -36,9 +30,6 @@ export const DataGrid = () => {
         value={data?.income.amount}
         valueChange={data?.income.changeAmount}
         percentageChange={data?.income.changePtc}
-        icon={FaArrowTrendUp}
-        variant="success"
-        dateRange={data?.lastPeriod}
       />
 
       <DataCard
@@ -46,9 +37,6 @@ export const DataGrid = () => {
         value={data?.expenses.amount}
         valueChange={data?.expenses.changeAmount}
         percentageChange={data?.expenses.changePtc}
-        icon={FaArrowTrendDown}
-        variant="danger"
-        dateRange={data?.lastPeriod}
       />
     </div>
   );

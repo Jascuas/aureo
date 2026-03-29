@@ -10,7 +10,6 @@ import { accounts, transactions, transactionTypes } from "@/db/schema";
 import {
   calculatePercentageChange,
   convertAmountFromMilliunits,
-  formatDateRange,
 } from "@/lib/utils";
 
 const app = new Hono().get(
@@ -113,33 +112,12 @@ const app = new Hono().get(
         ),
       );
 
-    const [{ delta }] = await db
-      .select({ delta: sum(transactions.amount).mapWith(Number) })
-      .from(transactions)
-      .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-      .where(
-        and(
-          eq(accounts.userId, auth.userId),
-          gte(transactions.date, new Date(startDate)),
-          lte(transactions.date, new Date()),
-          accountId ? eq(transactions.accountId, accountId) : undefined,
-        ),
-      );
-
-    const startBalance = balance - (delta ?? 0);
-    const changeBalance = balance - startBalance;
-    const balanceChangePtc = calculatePercentageChange(
-      changeBalance,
-      startBalance,
-    );
+    const changeBalance =
+      balance + currentPeriod.income - currentPeriod.expenses;
+    const balanceChangePtc = calculatePercentageChange(balance, changeBalance);
 
     return ctx.json({
       data: {
-        lastPeriod: formatDateRange({
-          to: lastPeriodEnd,
-          from: lastPeriodStart,
-        }),
-        lastPeriodBalance: formatDateRange({ to: defaultTo, from }),
         income: {
           amount: convertAmountFromMilliunits(currentPeriod.income),
           changeAmount: convertAmountFromMilliunits(

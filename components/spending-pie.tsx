@@ -32,9 +32,7 @@ export const SpendingPie = ({ data = [] }: SpendingPieProps) => {
   return (
     <Card className="border-none drop-shadow-sm">
       <CardHeader className="flex justify-between space-y-2 p-4 pb-4 lg:flex-row lg:items-center lg:space-y-0 lg:p-6">
-        <CardTitle className="line-clamp-1 text-lg lg:text-2xl">
-          Categories
-        </CardTitle>
+        <CardTitle className="line-clamp-1 text-base">Categories</CardTitle>
 
         <GenericSelect
           value={chartType}

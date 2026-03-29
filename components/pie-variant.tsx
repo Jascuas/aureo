@@ -31,7 +31,7 @@ export const PieVariant = ({ data }: PieVariantProps) => {
           iconType="circle"
           content={({ payload }) => {
             return (
-              <ul className="flex flex-col space-y-2">
+              <ul className="mt-4 flex flex-col space-y-2">
                 {payload?.map((entry, index) => (
                   <li
                     key={`item-${index}`}
@@ -46,14 +46,14 @@ export const PieVariant = ({ data }: PieVariantProps) => {
                     />
 
                     <div className="space-x-1">
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-muted-foreground text-sm">
                         {entry.value}
                       </span>
 
                       <span className="text-sm">
                         {formatPercentage(
                           (entry.payload as unknown as { percent: number })
-                            .percent * 100
+                            .percent * 100,
                         )}
                       </span>
                     </div>
