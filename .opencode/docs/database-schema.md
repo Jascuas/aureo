@@ -1,254 +1,114 @@
-# Database Schema - Aureo Finance Platform
+# Database Schema - Aureo
 
-PostgreSQL database con Drizzle ORM.
+PostgreSQL + Drizzle ORM.
 
----
+## Tablas
 
-## Tablas Principales
-
-### `accounts`
-
-Cuentas financieras del usuario (Checking, Savings, etc.)
+### accounts
 
 ```typescript
 {
-  id: text (PK)
-  name: text NOT NULL
-  userId: text NOT NULL
-  balance: integer           // en milliunits (× 1000)
-}
+  (id, name, userId, balance);
+} // balance en milliunits
 ```
 
-**Relaciones**:
+- Relations: transactions (1:N, CASCADE DELETE)
+- Balance por triggers de DB
 
-- `transactions`: one-to-many (CASCADE DELETE)
-
-**Notas**:
-
-- Balance actualizado por triggers de DB
-- Borrar cuenta borra todas sus transacciones
-
----
-
-### `categories`
-
-Categorías para organizar transacciones (Food, Rent, etc.)
+### categories
 
 ```typescript
 {
-  id: text (PK)
-  name: text NOT NULL
-  userId: text NOT NULL
-  parentId: text (FK → categories.id)  // Self-referencing
-}
+  (id, name, userId, parentId);
+} // parentId self-ref
 ```
 
-**Relaciones**:
+- Relations: transactions (1:N, SET NULL), parent/children (self-ref)
+- ⚠️ UI parent selector NO implementada
 
-- `transactions`: one-to-many (SET NULL)
-- `parent`: self-referencing one-to-one
-- `children`: self-referencing one-to-many
-
-**Notas**:
-
-- Soporte para jerarquía parent-child
-- Borrar categoría NO borra transacciones (SET NULL)
-- ⚠️ UI para parent selector NO implementada
-
----
-
-### `transactions`
-
-Transacciones financieras (ingresos, gastos, etc.)
+### transactions
 
 ```typescript
 {
-  id: text (PK)
-  amount: integer NOT NULL       // en milliunits (× 1000)
-  payee: text NOT NULL
-  notes: text
-  date: timestamp NOT NULL
-  accountId: text NOT NULL (FK → accounts.id, CASCADE)
-  categoryId: text (FK → categories.id, SET NULL)
-  transactionTypeId: text NOT NULL (FK → transactionTypes.id)
+  (id, amount, payee, notes, date, accountId, categoryId, transactionTypeId);
 }
 ```
 
-**Relaciones**:
+- amount en milliunits
+- accountId (CASCADE), categoryId (SET NULL), transactionTypeId (required)
 
-- `account`: many-to-one (CASCADE DELETE)
-- `category`: many-to-one (SET NULL)
-- `transactionType`: many-to-one
-
-**Notas**:
-
-- Amount en milliunits (× 1000)
-- Positivo = Income, Negativo = Expense
-- Borrar account → CASCADE delete transactions
-- Borrar category → SET NULL en transactions
-
----
-
-### `transactionTypes`
-
-Tipos de transacciones disponibles
+### transactionTypes
 
 ```typescript
 {
-  id: text (PK)
-  name: text NOT NULL UNIQUE    // "Income", "Expense", "Refund"
-}
+  (id, name);
+} // "Income", "Expense", "Refund"
 ```
 
-**Valores actuales**:
+- ⚠️ UI selector NO implementada
 
-- `"Income"`: Ingresos (suma al balance)
-- `"Expense"`: Gastos (resta del balance)
-- `"Refund"`: Devoluciones (reduce expenses)
-
-**Notas**:
-
-- ⚠️ UI para selector de tipo NO implementada
-- Form actualmente hardcodea `transactionTypeId: ""`
-
----
-
-## Relaciones Visuales
+## Relaciones
 
 ```
 users (Clerk)
-  │
-  ├─→ accounts (1:N)
-  │     │
-  │     └─→ transactions (1:N, CASCADE)
-  │
-  ├─→ categories (1:N)
-  │     │
-  │     ├─→ parent (self-ref)
-  │     ├─→ children (self-ref)
-  │     └─→ transactions (1:N, SET NULL)
-  │
-  └─→ transactionTypes (N:1)
-        └─→ transactions (1:N)
+  ├─→ accounts (1:N, CASCADE)
+  │     └─→ transactions
+  ├─→ categories (1:N, SET NULL, self-ref)
+  │     └─→ transactions
+  └─→ transactionTypes
+        └─→ transactions
 ```
 
----
-
-## Schemas de Validación (Zod)
-
-### Drizzle → Zod
+## Validación Zod
 
 ```typescript
 // db/schema.ts
 export const insertAccountSchema = createInsertSchema(accounts);
-export const insertCategorySchema = createInsertSchema(categories);
 export const insertTransactionSchema = createInsertSchema(transactions, {
-  date: z.coerce.date(), // Custom coercion
+  date: z.coerce.date(),
 });
-```
 
-### Uso en Forms
-
-```typescript
-// Partial schema (solo campos del form)
+// Usage
 const formSchema = insertAccountSchema.pick({ name: true });
-type FormValues = z.infer<typeof formSchema>;
+zValidator("json", insertAccountSchema.omit({ id: true }));
 ```
 
-### Uso en API
-
-```typescript
-// Validación completa
-zValidator("json", insertAccountSchema);
-
-// Validación parcial para updates
-zValidator("json", insertAccountSchema.pick({ name: true }));
-
-// Omitir campos
-zValidator("json", insertTransactionSchema.omit({ id: true }));
-```
-
----
-
-## Migraciones
-
-### Generar migración
+## Migrations
 
 ```bash
-npm run db:generate
+npm run db:generate  # Generar
+npm run db:migrate   # Ejecutar
+npm run db:studio    # UI (localhost:5000)
 ```
-
-### Ejecutar migración
-
-```bash
-npm run db:migrate
-```
-
-### Drizzle Studio (visual DB editor)
-
-```bash
-npm run db:studio  # http://localhost:5000
-```
-
----
 
 ## IDs
 
-**Generación**: CUID2 via `@paralleldrive/cuid2`
-
 ```typescript
 import { createId } from "@paralleldrive/cuid2";
-
-const id = createId(); // "clh3x..."
+const id = createId(); // text format
 ```
 
-**Formato**: Text strings (no integers)
-
----
-
-## Queries Comunes
-
-### Row-Level Security
-
-Todas las queries filtran por `userId`:
+## Row-Level Security
 
 ```typescript
-// accounts
-const data = await db
-  .select()
-  .from(accounts)
-  .where(eq(accounts.userId, auth.userId));
+// Directo
+.where(eq(accounts.userId, auth.userId))
 
-// transactions (via JOIN con accounts)
-const data = await db
-  .select()
-  .from(transactions)
-  .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-  .where(eq(accounts.userId, auth.userId));
+// Via JOIN (transactions)
+.innerJoin(accounts, eq(transactions.accountId, accounts.id))
+.where(eq(accounts.userId, auth.userId))
 ```
 
-### Conversión de Amounts
+## Amounts
 
 ```typescript
-// Insertar (UI → DB)
-await db.insert(transactions).values({
-  amount: convertAmountToMilliunits(100), // 100 → 100000
-});
+// Insert (UI → DB)
+amount: convertAmountToMilliunits(100); // 100 → 100000
 
-// Leer (DB → UI)
-const amount = convertAmountFromMilliunits(data.amount); // 100000 → 100
+// Read (DB → UI)
+convertAmountFromMilliunits(data.amount); // 100000 → 100
 ```
 
----
+## ⚠️ CRÍTICO
 
-## Triggers (Database Level)
-
-⚠️ **CRÍTICO**: Los balances se actualizan via triggers de PostgreSQL.
-
-**NO implementar lógica de balance en código**.
-
-Los triggers automáticamente:
-
-- Suman/restan al crear transacción
-- Ajustan al editar amount
-- Revierten al borrar transacción
+**Balances**: NUNCA calcular en código. Triggers de DB lo manejan.
