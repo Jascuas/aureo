@@ -1,11 +1,12 @@
 import { clerkMiddleware } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
-import { and, eq, gte, lte, sql, sum } from "drizzle-orm";
+import { and, eq, gte, lte, sum } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
 import { db } from "@/db/drizzle";
 import { accounts, transactions, transactionTypes } from "@/db/schema";
+import { expenseOnlyAmountSql, incomeWithRefundAmountSql } from "@/db/helpers";
 import { parseDateRange } from "@/lib/date-utils";
 import { Day } from "@/lib/types";
 import { convertAmountFromMilliunits, fillMissingDays } from "@/lib/utils";
@@ -41,26 +42,8 @@ const app = new Hono().get(
       const row = await db
         .select({
           date: transactions.date,
-          income: sql`
-      SUM(
-        CASE
-          WHEN ${transactionTypes.name} = 'Income'
-          THEN ${transactions.amount}
-          WHEN ${transactionTypes.name} = 'Refund'
-          THEN ${transactions.amount}
-          ELSE 0
-        END
-      )
-    `.mapWith(Number),
-          expenses: sql`
-      SUM(
-        CASE
-          WHEN ${transactionTypes.name} = 'Expense'
-          THEN ABS(${transactions.amount})
-          ELSE 0
-        END
-      )
-    `.mapWith(Number),
+          income: incomeWithRefundAmountSql,
+          expenses: expenseOnlyAmountSql,
         })
         .from(transactions)
         .innerJoin(

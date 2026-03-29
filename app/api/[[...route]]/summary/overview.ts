@@ -1,12 +1,13 @@
 import { clerkMiddleware } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { differenceInDays, subDays } from "date-fns";
-import { and, eq, gte, lte, sql, sum } from "drizzle-orm";
+import { and, eq, gte, lte, sum } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
 import { db } from "@/db/drizzle";
 import { accounts, transactions, transactionTypes } from "@/db/schema";
+import { expensesAmountSql, incomeAmountSql } from "@/db/helpers";
 import { parseDateRange } from "@/lib/date-utils";
 import {
   calculatePercentageChange,
@@ -42,26 +43,8 @@ const app = new Hono().get(
     async function fetchFinancialData(startDate: Date, endDate: Date) {
       const [row] = await db
         .select({
-          income: sql`
-      SUM(
-        CASE
-          WHEN ${transactionTypes.name} = 'Income'
-          THEN ${transactions.amount}
-          ELSE 0
-        END
-      )
-    `.mapWith(Number),
-          expenses: sql`
-      SUM(
-        CASE
-          WHEN ${transactionTypes.name} = 'Expense'
-          THEN ABS(${transactions.amount})      
-          WHEN ${transactionTypes.name} = 'Refund'
-          THEN -ABS(${transactions.amount})      
-          ELSE 0
-        END
-      )
-    `.mapWith(Number),
+          income: incomeAmountSql,
+          expenses: expensesAmountSql,
         })
         .from(transactions)
         .innerJoin(

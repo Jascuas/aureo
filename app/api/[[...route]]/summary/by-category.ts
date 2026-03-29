@@ -11,6 +11,7 @@ import {
   transactions,
   transactionTypes,
 } from "@/db/schema";
+import { categoryAmountSql } from "@/db/helpers";
 import { parseDateRange } from "@/lib/date-utils";
 import { requireAuth } from "@/lib/auth-middleware";
 
@@ -41,14 +42,6 @@ const app = new Hono().get(
     const wanted: readonly TxType[] =
       type === "Expense" ? ["Expense", "Refund"] : [type];
 
-    const amountExpr = sql`
-    CASE
-      WHEN ${transactionTypes.name} = 'Expense' THEN ABS(${transactions.amount})
-      WHEN ${transactionTypes.name} = 'Refund'  THEN -ABS(${transactions.amount})
-      ELSE ABS(${transactions.amount})
-    END
-  `;
-
     const rows = await db
       .select({
         name: categories.name,
@@ -73,7 +66,7 @@ const app = new Hono().get(
         ),
       )
       .groupBy(categories.name)
-      .orderBy(desc(sql`SUM(${amountExpr})`));
+      .orderBy(desc(sql`SUM(${categoryAmountSql})`));
 
     const topRows = rows.slice(0, top);
     const rest = rows.slice(top);
