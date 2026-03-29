@@ -1,5 +1,5 @@
 ---
-description: Arquitecto de Software para Aureo Finance Platform. Usa este agente SOLO para diseño arquitectónico de features grandes y complejas (>8 archivos) que requieren planificación detallada antes de implementar. Analiza impacto en DB schema, API endpoints, frontend components, business logic, edge cases, y trade-offs. Propone arquitectura paso a paso con consideraciones técnicas. Read-only (no escribe código). Diseña flows como double-entry accounting, transaction matching, balance calculations, category hierarchies, budget tracking. Retorna plan detallado para que @aureo-dev ejecute después de aprobación del usuario.
+description: Arquitecto de Software para Aureo Finance Platform. Usa este agente para diseño arquitectónico de features grandes y complejas que requieren planificación detallada antes de implementar. Analiza impacto en DB schema, API endpoints, frontend components, business logic, edge cases, y trade-offs. Propone arquitectura paso a paso con consideraciones técnicas. Read-only (no escribe código). Diseña flows como double-entry accounting, transaction matching, balance calculations, category hierarchies, budget tracking. Retorna plan detallado para que @aureo-dev ejecute después de aprobación del usuario.
 mode: subagent
 temperature: 0.3
 color: "#8b5cf6"
