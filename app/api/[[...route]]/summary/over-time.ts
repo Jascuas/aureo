@@ -1,12 +1,12 @@
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
-import { parse, subDays } from "date-fns";
 import { and, eq, gte, lte, sql, sum } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
 import { db } from "@/db/drizzle";
 import { accounts, transactions, transactionTypes } from "@/db/schema";
+import { parseDateRange } from "@/lib/date-utils";
 import { Day } from "@/lib/types";
 import { convertAmountFromMilliunits, fillMissingDays } from "@/lib/utils";
 
@@ -27,13 +27,7 @@ const app = new Hono().get(
 
     if (!auth?.userId) return ctx.json({ error: "Unauthorized." }, 401);
 
-    const defaultTo = new Date();
-    const defaultFrom = subDays(defaultTo, 30);
-
-    const startDate = from
-      ? parse(from, "yyyy-MM-dd", new Date())
-      : defaultFrom;
-    const endDate = to ? parse(to, "yyyy-MM-dd", new Date()) : defaultTo;
+    const { startDate, endDate } = parseDateRange(from, to);
 
     async function fetchFinancialData(
       userId: string,

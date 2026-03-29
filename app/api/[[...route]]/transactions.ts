@@ -1,7 +1,6 @@
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { createId } from "@paralleldrive/cuid2";
-import { parse, subDays } from "date-fns";
 import { and, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -12,7 +11,9 @@ import {
   categories,
   insertTransactionSchema,
   transactions,
+  transactionTypes,
 } from "@/db/schema";
+import { parseDateRange } from "@/lib/date-utils";
 
 const app = new Hono()
   .get(
@@ -34,13 +35,7 @@ const app = new Hono()
         return ctx.json({ error: "Unauthorized." }, 401);
       }
 
-      const defaultTo = new Date();
-      const defaultFrom = subDays(defaultTo, 30);
-
-      const startDate = from
-        ? parse(from, "yyyy-MM-dd", new Date())
-        : defaultFrom;
-      const endDate = to ? parse(to, "yyyy-MM-dd", new Date()) : defaultTo;
+      const { startDate, endDate } = parseDateRange(from, to);
 
       const data = await db
         .select({

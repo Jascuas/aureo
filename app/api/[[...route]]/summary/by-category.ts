@@ -1,6 +1,5 @@
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
-import { parse, subDays } from "date-fns";
 import { and, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -12,6 +11,8 @@ import {
   transactions,
   transactionTypes,
 } from "@/db/schema";
+import { parseDateRange } from "@/lib/date-utils";
+
 type TxType = "Income" | "Expense" | "Refund";
 
 const app = new Hono().get(
@@ -32,12 +33,8 @@ const app = new Hono().get(
     if (!auth?.userId) return c.json({ error: "Unauthorized." }, 401);
 
     const { type, from, to, accountId, top } = c.req.valid("query");
-    const defaultTo = new Date();
-    const defaultFrom = subDays(defaultTo, 30);
-    const startDate = from
-      ? parse(from, "yyyy-MM-dd", new Date())
-      : defaultFrom;
-    const endDate = to ? parse(to, "yyyy-MM-dd", new Date()) : defaultTo;
+    const { startDate, endDate } = parseDateRange(from, to);
+
     const wanted: readonly TxType[] =
       type === "Expense" ? ["Expense", "Refund"] : [type];
 
