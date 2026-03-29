@@ -23,6 +23,7 @@ const app = new Hono()
       .select({
         id: categories.id,
         name: categories.name,
+        parentId: categories.parentId,
         parentName: parentCategory.name,
       })
       .from(categories)
@@ -104,8 +105,9 @@ const app = new Hono()
     clerkMiddleware(),
     zValidator(
       "json",
-      z.object({
-        ids: z.array(z.string()),
+      insertCategorySchema.pick({
+        name: true,
+        parentId: true,
       }),
     ),
     async (ctx) => {
@@ -144,6 +146,7 @@ const app = new Hono()
       "json",
       insertCategorySchema.pick({
         name: true,
+        parentId: true,
       }),
     ),
     async (ctx) => {

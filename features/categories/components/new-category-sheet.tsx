@@ -9,12 +9,14 @@ import {
 } from "@/components/ui/sheet";
 import { insertCategorySchema } from "@/db/schema";
 import { useCreateCategory } from "@/features/categories/api/use-create-category";
+import { useGetCategories } from "@/features/categories/api/use-get-categories";
 import { useNewCategory } from "@/features/categories/hooks/use-new-category";
 
 import { CategoryForm } from "./category-form";
 
 const formSchema = insertCategorySchema.pick({
   name: true,
+  parentId: true,
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -22,6 +24,13 @@ type FormValues = z.infer<typeof formSchema>;
 export const NewCategorySheet = () => {
   const { isOpen, onClose } = useNewCategory();
   const mutation = useCreateCategory();
+
+  const categoriesQuery = useGetCategories();
+  const categoryOptions =
+    categoriesQuery.data?.map((category) => ({
+      label: category.name,
+      value: category.id,
+    })) ?? [];
 
   const onSubmit = (values: FormValues) => {
     mutation.mutate(values, {
@@ -45,7 +54,9 @@ export const NewCategorySheet = () => {
         <CategoryForm
           defaultValues={{
             name: "",
+            parentId: null,
           }}
+          categoryOptions={categoryOptions}
           onSubmit={onSubmit}
           disabled={mutation.isPending}
         />

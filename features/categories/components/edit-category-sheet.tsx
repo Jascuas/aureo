@@ -1,4 +1,5 @@
 import { Loader2 } from "lucide-react";
+import { useMemo } from "react";
 import { z } from "zod";
 
 import {
@@ -11,6 +12,7 @@ import {
 import { insertCategorySchema } from "@/db/schema";
 import { useDeleteCategory } from "@/features/categories/api/use-delete-category";
 import { useEditCategory } from "@/features/categories/api/use-edit-category";
+import { useGetCategories } from "@/features/categories/api/use-get-categories";
 import { useGetCategory } from "@/features/categories/api/use-get-category";
 import { useOpenCategory } from "@/features/categories/hooks/use-open-category";
 import { useConfirm } from "@/hooks/use-confirm";
@@ -19,6 +21,7 @@ import { CategoryForm } from "./category-form";
 
 const formSchema = insertCategorySchema.pick({
   name: true,
+  parentId: true,
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -28,12 +31,38 @@ export const EditCategorySheet = () => {
 
   const [ConfirmDialog, confirm] = useConfirm(
     "Are you sure?",
-    "You are about to delete this category."
+    "You are about to delete this category.",
   );
 
   const categoryQuery = useGetCategory(id);
   const editMutation = useEditCategory(id);
   const deleteMutation = useDeleteCategory(id);
+  const categoriesQuery = useGetCategories();
+
+  const getDescendantIds = (categoryId: string): string[] => {
+    const descendants: string[] = [categoryId];
+    const children =
+      categoriesQuery.data?.filter((c) => c.parentId === categoryId) ?? [];
+
+    for (const child of children) {
+      descendants.push(...getDescendantIds(child.id));
+    }
+
+    return descendants;
+  };
+
+  const categoryOptions = useMemo(() => {
+    if (!categoriesQuery.data || !id) return [];
+
+    const excludedIds = getDescendantIds(id);
+
+    return categoriesQuery.data
+      .filter((category) => !excludedIds.includes(category.id))
+      .map((category) => ({
+        label: category.name,
+        value: category.id,
+      }));
+  }, [categoriesQuery.data, id]);
 
   const isPending = editMutation.isPending || deleteMutation.isPending;
 
@@ -50,9 +79,11 @@ export const EditCategorySheet = () => {
   const defaultValues = categoryQuery.data
     ? {
         name: categoryQuery.data.name,
+        parentId: categoryQuery.data.parentId ?? null,
       }
     : {
         name: "",
+        parentId: null,
       };
 
   const onDelete = async () => {
@@ -80,7 +111,7 @@ export const EditCategorySheet = () => {
 
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
-              <Loader2 className="size-4 animate-spin text-muted-foreground" />
+              <Loader2 className="text-muted-foreground size-4 animate-spin" />
             </div>
           ) : (
             <CategoryForm
@@ -89,6 +120,7 @@ export const EditCategorySheet = () => {
               onSubmit={onSubmit}
               disabled={isPending}
               onDelete={onDelete}
+              categoryOptions={categoryOptions}
             />
           )}
         </SheetContent>

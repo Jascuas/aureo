@@ -51,6 +51,15 @@ export const columns: ColumnDef<ResponseType>[] = [
         </Button>
       );
     },
+    cell: ({ row }) => {
+      const hasParent = !!row.original.parentName;
+      return (
+        <div className={hasParent ? "pl-8" : ""}>
+          {hasParent && <span className="text-muted-foreground mr-2">└─</span>}
+          {row.original.name}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "parentName",

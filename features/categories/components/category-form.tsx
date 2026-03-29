@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/select";
 import {
   Form,
   FormControl,
@@ -17,6 +18,7 @@ import { insertCategorySchema } from "@/db/schema";
 
 const formSchema = insertCategorySchema.pick({
   name: true,
+  parentId: true,
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -27,6 +29,7 @@ type CategoryFormProps = {
   onSubmit: (values: FormValues) => void;
   onDelete?: () => void;
   disabled?: boolean;
+  categoryOptions?: { label: string; value: string }[];
 };
 
 export const CategoryForm = ({
@@ -35,6 +38,7 @@ export const CategoryForm = ({
   onSubmit,
   onDelete,
   disabled,
+  categoryOptions = [],
 }: CategoryFormProps) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -66,6 +70,29 @@ export const CategoryForm = ({
 
               <FormControl>
                 <Input placeholder="e.g. Food, Travel, etc." {...field} />
+              </FormControl>
+
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          name="parentId"
+          control={form.control}
+          disabled={disabled}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Parent Category (optional)</FormLabel>
+
+              <FormControl>
+                <Select
+                  placeholder="Select a parent category"
+                  options={categoryOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={disabled}
+                />
               </FormControl>
 
               <FormMessage />
