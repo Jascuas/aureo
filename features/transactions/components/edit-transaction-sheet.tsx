@@ -19,6 +19,7 @@ import { useEditTransaction } from "@/features/transactions/api/use-edit-transac
 import { useGetTransaction } from "@/features/transactions/api/use-get-transaction";
 import { useOpenTransaction } from "@/features/transactions/hooks/use-open-transaction";
 import { useConfirm } from "@/hooks/use-confirm";
+import type { Account, Category, TransactionType } from "@/lib/api-types";
 
 import { TransactionForm } from "./transaction-form";
 
@@ -40,21 +41,23 @@ export const EditTransactionSheet = () => {
 
   const categoryMutation = useCreateCategory();
   const categoryQuery = useGetCategories();
-  const categoryOptions = (categoryQuery.data ?? []).map((category) => ({
-    label: category.name,
-    value: category.id,
-  }));
+  const categoryOptions = (categoryQuery.data ?? []).map(
+    (category: Category) => ({
+      label: category.name,
+      value: category.id,
+    }),
+  );
 
   const accountMutation = useCreateAccount();
   const accountQuery = useGetAccounts();
-  const accountOptions = (accountQuery.data ?? []).map((account) => ({
+  const accountOptions = (accountQuery.data ?? []).map((account: Account) => ({
     label: account.name,
     value: account.id,
   }));
 
   const transactionTypesQuery = useGetTransactionTypes();
   const transactionTypeOptions = (transactionTypesQuery.data ?? []).map(
-    (type) => ({
+    (type: TransactionType) => ({
       label: type.name,
       value: type.id,
     }),

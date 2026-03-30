@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCreateAccount } from "@/features/accounts/api/use-create-account";
 import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
+import type { Account } from "@/lib/api-types";
 
 export const useSelectAccount = (): [
   () => JSX.Element,
@@ -26,7 +27,7 @@ export const useSelectAccount = (): [
       name,
     });
 
-  const accountOptions = (accountQuery.data ?? []).map((account) => ({
+  const accountOptions = (accountQuery.data ?? []).map((account: Account) => ({
     label: account.name,
     value: account.id,
   }));

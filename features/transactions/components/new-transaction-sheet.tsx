@@ -16,6 +16,7 @@ import { useGetCategories } from "@/features/categories/api/use-get-categories";
 import { useGetTransactionTypes } from "@/features/transaction-types/api/use-get-transaction-types";
 import { useCreateTransaction } from "@/features/transactions/api/use-create-transaction";
 import { useNewTransaction } from "@/features/transactions/hooks/use-new-transaction";
+import type { Account, Category, TransactionType } from "@/lib/api-types";
 
 import { TransactionForm } from "./transaction-form";
 
@@ -29,21 +30,23 @@ export const NewTransactionSheet = () => {
   const createMutation = useCreateTransaction();
   const categoryMutation = useCreateCategory();
   const categoryQuery = useGetCategories();
-  const categoryOptions = (categoryQuery.data ?? []).map((category) => ({
-    label: category.name,
-    value: category.id,
-  }));
+  const categoryOptions = (categoryQuery.data ?? []).map(
+    (category: Category) => ({
+      label: category.name,
+      value: category.id,
+    }),
+  );
 
   const accountMutation = useCreateAccount();
   const accountQuery = useGetAccounts();
-  const accountOptions = (accountQuery.data ?? []).map((account) => ({
+  const accountOptions = (accountQuery.data ?? []).map((account: Account) => ({
     label: account.name,
     value: account.id,
   }));
 
   const transactionTypesQuery = useGetTransactionTypes();
   const transactionTypeOptions = (transactionTypesQuery.data ?? []).map(
-    (type) => ({
+    (type: TransactionType) => ({
       label: type.name,
       value: type.id,
     }),

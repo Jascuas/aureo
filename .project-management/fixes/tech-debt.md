@@ -7,6 +7,34 @@
 
 ## 🏗️ Architecture & Performance
 
+### Migrate middleware.ts to proxy.ts (Next.js 15+)
+
+**Problem**: Next.js deprecated `middleware.ts` convention in favor of `proxy.ts`
+
+**Reference**: https://nextjs.org/docs/messages/middleware-to-proxy
+
+**Current State**:
+
+- Using deprecated `middleware.ts` file
+- Works but shows deprecation warning
+
+**Solution**:
+
+- [ ] Rename `middleware.ts` to `proxy.ts`
+- [ ] Update any related imports/references
+- [ ] Verify Clerk auth still works with new convention
+- [ ] Test protected routes after migration
+
+**Files**:
+
+- `middleware.ts` → `proxy.ts`
+- Potentially: Clerk configuration
+
+**Effort**: 1-2 hours  
+**Priority**: MEDIUM (deprecation warning, will break in future Next.js versions)
+
+---
+
 ### Component Organization (components/ vs features/)
 
 **Task**: Review and ensure strict separation between shared and feature-specific components

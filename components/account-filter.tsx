@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
+import type { Account } from "@/lib/api-types";
 
 export const AccountFilter = () => {
   const pathname = usePathname();
@@ -51,7 +52,7 @@ export const AccountFilter = () => {
       <SelectContent>
         <SelectItem value="all">All accounts</SelectItem>
 
-        {accounts?.map((account) => (
+        {accounts?.map((account: Account) => (
           <SelectItem key={account.id} value={account.id}>
             {account.name}
           </SelectItem>
