@@ -34,6 +34,11 @@ const app = new Hono().get(
 
     const { startDate, endDate } = parseDateRange(from, to);
 
+    // For balance chart: extend to today if period is in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const effectiveEndDate = today > endDate ? today : endDate;
+
     async function fetchFinancialData(
       userId: string,
       startDate: Date,
@@ -66,9 +71,14 @@ const app = new Hono().get(
       return row;
     }
 
-    const currentPeriod = await fetchFinancialData(userId, startDate, endDate);
+    const currentPeriod = await fetchFinancialData(
+      userId,
+      startDate,
+      effectiveEndDate,
+      accountId,
+    );
 
-    const days = fillMissingDays(currentPeriod, startDate, endDate);
+    const days = fillMissingDays(currentPeriod, startDate, effectiveEndDate);
 
     // Calculate total income and expenses for the period
     const totalIncomeMilli = currentPeriod.reduce(
@@ -84,7 +94,7 @@ const app = new Hono().get(
     const balanceData = await calculateBalanceForPeriod(
       userId,
       startDate,
-      endDate,
+      effectiveEndDate,
       totalIncomeMilli,
       totalExpensesMilli,
       accountId,

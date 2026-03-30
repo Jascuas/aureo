@@ -22,7 +22,8 @@ export const useGetOverview = () => {
 
       if (!res.ok) throw new Error("Failed to fetch summary.");
 
-      return (await res.json()).data;
+      const json = await res.json() as { data: unknown };
+      return json.data;
     },
   });
 

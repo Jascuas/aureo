@@ -6,10 +6,10 @@ import { Hono } from "hono";
 import { z } from "zod";
 
 import { db } from "@/db/drizzle";
-import { accounts, transactions, transactionTypes } from "@/db/schema";
 import { expensesAmountSql, incomeAmountSql } from "@/db/helpers";
+import { accounts, transactions, transactionTypes } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
-import { calculateBalanceForPeriod } from "@/lib/balance-utils";
+import { calculateCurrentBalanceChange } from "@/lib/balance-utils";
 import { parseDateRange } from "@/lib/date-utils";
 import {
   calculatePercentageChange,
@@ -82,19 +82,16 @@ const app = new Hono().get(
       lastPeriod.expenses,
     );
 
-    // Calculate balance using shared utility
-    const balanceData = await calculateBalanceForPeriod(
+    // Calculate balance: current balance + change since period start
+    const balanceData = await calculateCurrentBalanceChange(
       userId,
-      startDate,
-      endDate,
-      currentPeriod.income,
-      currentPeriod.expenses,
+      startDate, // Only period start matters for balance
       accountId,
     );
 
     const balanceChangePtc = calculatePercentageChange(
-      balanceData.balanceAtStartMilli,
-      balanceData.balanceAtEndMilli,
+      balanceData.balanceAtSinceDateMilli,
+      balanceData.currentBalanceMilli,
     );
 
     return ctx.json({
@@ -115,8 +112,8 @@ const app = new Hono().get(
           changePtc: expensesChangePtc * -1,
         },
         balance: {
-          amount: convertAmountFromMilliunits(balanceData.balanceAtEndMilli),
-          changeAmount: convertAmountFromMilliunits(balanceData.netChangeMilli),
+          amount: convertAmountFromMilliunits(balanceData.currentBalanceMilli),
+          changeAmount: convertAmountFromMilliunits(balanceData.changeMilli),
           changePtc: balanceChangePtc,
         },
       },
