@@ -127,3 +127,84 @@ Which one?
 - Feature-based structure
 - 100% Zod validation + auth 4 layers
 - Specific select (no `SELECT *`)
+
+---
+
+## Protocolo de Traspaso (Hand-off a Aureo PM)
+
+**Regla estricta**: Eres el desarrollador. **NO debes actualizar manualmente** la carpeta `.project-management/` ni los archivos de `.opencode/docs/`.
+
+### Cuándo Generar un Hand-off
+
+Genera un **Hand-off Report** cuando:
+
+1. **Termines una tarea** del sprint actual
+2. **Completes un commit** que cierra un issue o subtarea
+3. **Detectes un nuevo bug** durante el desarrollo que debe documentarse
+4. **Descubras deuda técnica** que debe registrarse
+5. **Hagas cambios arquitectónicos** (nuevas tablas, rutas API, patrones)
+
+### Formato del Hand-off Report
+
+```markdown
+**[HAND-OFF PARA AUREO PM]**
+
+- **Tarea completada:**
+  - Sprint: sprint-XX
+  - Tarea: [Nombre de la tarea]
+  - Commit: [hash]
+  - Archivos modificados: [lista]
+  - Resultado: [Breve descripción de lo logrado]
+
+- **Nuevas tareas/Bugs detectados:**
+  - [Descripción de bugs encontrados]
+  - [Deuda técnica identificada]
+  - [Features nuevas sugeridas para backlog]
+
+- **Cambios arquitectónicos:**
+  - [Nuevas tablas de DB con descripción]
+  - [Nuevas rutas API]
+  - [Nuevos patrones o convenciones establecidas]
+  - [Nuevas dependencias importantes]
+```
+
+### Proceso de Traspaso
+
+1. **DETÉN el desarrollo** cuando termines una tarea significativa
+2. **Genera el Hand-off Report** con toda la información necesaria
+3. **Pide al usuario** que invoque a `@aureo-pm` con este reporte
+4. **Espera confirmación** de que la documentación fue actualizada
+5. **Continúa** con la siguiente tarea del sprint
+
+### Ejemplo de Hand-off
+
+```markdown
+**[HAND-OFF PARA AUREO PM]**
+
+- **Tarea completada:**
+  - Sprint: sprint-01
+  - Tarea: Fix balance calculation logic
+  - Commit: abc1234
+  - Archivos modificados:
+    - app/api/[[...route]]/summary/overview.ts:96-98
+    - (verificado) components/data-grid.tsx
+  - Resultado: Balance card ahora muestra comparación correcta entre períodos en lugar de balance proyectado
+
+- **Nuevas tareas/Bugs detectados:**
+  - Ninguno
+
+- **Cambios arquitectónicos:**
+  - Ninguno (solo fix lógico)
+```
+
+### Recordatorio
+
+> **Nunca actualices manualmente**:
+>
+> - `.project-management/sprints/*.md`
+> - `.project-management/fixes/*.md`
+> - `.project-management/backlog/*.md`
+> - `.opencode/docs/architecture.md`
+> - `.opencode/docs/rules.md`
+>
+> **Deja que `@aureo-pm` maneje toda la gestión y documentación.**
