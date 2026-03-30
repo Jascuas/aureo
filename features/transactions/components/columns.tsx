@@ -11,9 +11,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { client } from "@/lib/hono";
 import { formatCurrency } from "@/lib/utils";
 
-import { AccountColumn } from "./account-column";
-import { Actions } from "./actions";
-import { CategoryColumn } from "./category-column";
+import { AccountColumn } from "@/app/(dashboard)/transactions/account-column";
+import { Actions } from "@/app/(dashboard)/transactions/actions";
+import { CategoryColumn } from "@/app/(dashboard)/transactions/category-column";
 
 export type ResponseType = InferResponseType<
   typeof client.api.transactions.$get,

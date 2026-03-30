@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { client } from "@/lib/hono";
 
-import { Actions } from "./actions";
+import { Actions } from "@/app/(dashboard)/accounts/actions";
 
 export type ResponseType = InferResponseType<
   typeof client.api.accounts.$get,
