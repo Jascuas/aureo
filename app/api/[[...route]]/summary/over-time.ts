@@ -1,16 +1,17 @@
 import { clerkMiddleware } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
-import { and, eq, gte, lte, sum } from "drizzle-orm";
+import { and, eq, gte, lte } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
 import { db } from "@/db/drizzle";
-import { accounts, transactions, transactionTypes } from "@/db/schema";
 import { expenseOnlyAmountSql, incomeWithRefundAmountSql } from "@/db/helpers";
+import { accounts, transactions, transactionTypes } from "@/db/schema";
+import { requireAuth } from "@/lib/auth-middleware";
+import { calculateBalanceForPeriod } from "@/lib/balance-utils";
 import { parseDateRange } from "@/lib/date-utils";
 import { Day } from "@/lib/types";
 import { convertAmountFromMilliunits, fillMissingDays } from "@/lib/utils";
-import { requireAuth } from "@/lib/auth-middleware";
 
 const app = new Hono().get(
   "/over-time",
@@ -65,21 +66,29 @@ const app = new Hono().get(
       return row;
     }
 
-    const [{ balance }] = await db
-      .select({
-        balance: sum(accounts.balance).mapWith(Number),
-      })
-      .from(accounts)
-      .where(
-        and(
-          eq(accounts.userId, userId),
-          accountId ? eq(accounts.id, accountId) : undefined,
-        ),
-      );
-
     const currentPeriod = await fetchFinancialData(userId, startDate, endDate);
 
     const days = fillMissingDays(currentPeriod, startDate, endDate);
+
+    // Calculate total income and expenses for the period
+    const totalIncomeMilli = currentPeriod.reduce(
+      (sum, d) => sum + (d.income || 0),
+      0,
+    );
+    const totalExpensesMilli = currentPeriod.reduce(
+      (sum, d) => sum + (d.expenses || 0),
+      0,
+    );
+
+    // Get balance at period start using shared utility
+    const balanceData = await calculateBalanceForPeriod(
+      userId,
+      startDate,
+      endDate,
+      totalIncomeMilli,
+      totalExpensesMilli,
+      accountId,
+    );
 
     const buildDailyBalance = (days: Day[], openingBalanceMilli: number) => {
       let running = convertAmountFromMilliunits(openingBalanceMilli);
@@ -94,7 +103,7 @@ const app = new Hono().get(
     };
 
     return ctx.json({
-      data: buildDailyBalance(days, balance),
+      data: buildDailyBalance(days, balanceData.balanceAtStartMilli),
     });
   },
 );

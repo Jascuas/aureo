@@ -1,19 +1,20 @@
 import { clerkMiddleware } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { differenceInDays, subDays } from "date-fns";
-import { and, eq, gte, lte, sum } from "drizzle-orm";
+import { and, eq, gte, lte } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
 import { db } from "@/db/drizzle";
 import { accounts, transactions, transactionTypes } from "@/db/schema";
 import { expensesAmountSql, incomeAmountSql } from "@/db/helpers";
+import { requireAuth } from "@/lib/auth-middleware";
+import { calculateBalanceForPeriod } from "@/lib/balance-utils";
 import { parseDateRange } from "@/lib/date-utils";
 import {
   calculatePercentageChange,
   convertAmountFromMilliunits,
 } from "@/lib/utils";
-import { requireAuth } from "@/lib/auth-middleware";
 
 const app = new Hono().get(
   "/overview",
@@ -81,21 +82,20 @@ const app = new Hono().get(
       lastPeriod.expenses,
     );
 
-    const [{ balance }] = await db
-      .select({
-        balance: sum(accounts.balance).mapWith(Number),
-      })
-      .from(accounts)
-      .where(
-        and(
-          eq(accounts.userId, userId),
-          accountId ? eq(accounts.id, accountId) : undefined,
-        ),
-      );
+    // Calculate balance using shared utility
+    const balanceData = await calculateBalanceForPeriod(
+      userId,
+      startDate,
+      endDate,
+      currentPeriod.income,
+      currentPeriod.expenses,
+      accountId,
+    );
 
-    const changeBalance =
-      balance + currentPeriod.income - currentPeriod.expenses;
-    const balanceChangePtc = calculatePercentageChange(balance, changeBalance);
+    const balanceChangePtc = calculatePercentageChange(
+      balanceData.balanceAtStartMilli,
+      balanceData.balanceAtEndMilli,
+    );
 
     return ctx.json({
       data: {
@@ -115,8 +115,8 @@ const app = new Hono().get(
           changePtc: expensesChangePtc * -1,
         },
         balance: {
-          amount: convertAmountFromMilliunits(balance),
-          changeAmount: convertAmountFromMilliunits(changeBalance),
+          amount: convertAmountFromMilliunits(balanceData.balanceAtEndMilli),
+          changeAmount: convertAmountFromMilliunits(balanceData.netChangeMilli),
           changePtc: balanceChangePtc,
         },
       },
