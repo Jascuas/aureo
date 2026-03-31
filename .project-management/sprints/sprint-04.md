@@ -1,7 +1,7 @@
-# Sprint 02 - Core Logic & State Management
+# Sprint 04 - Core Logic & State Management
 
 > **Status**: ⏳ Planned  
-> **Start Date**: TBD (after Sprint 01)  
+> **Start Date**: TBD (after Sprint 03)  
 > **Goal**: Implement account transfers and ensure state synchronization  
 > **Effort**: 1-2 weeks
 

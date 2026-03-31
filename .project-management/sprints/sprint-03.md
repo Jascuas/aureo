@@ -1,7 +1,7 @@
-# Sprint 01 - Critical Fixes
+# Sprint 03 - Critical Fixes
 
 > **Status**: 🚧 Ready to Start  
-> **Start Date**: March 30, 2026  
+> **Start Date**: TBD (after Sprint 02 completed)  
 > **Goal**: Fix balance calculation bug and CSV import issue  
 > **Effort**: 1-2 days
 
