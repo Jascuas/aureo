@@ -11,8 +11,6 @@
 ```
 .project-management/
 ├── sprints/              # Active sprint files
-│   ├── sprint-03.md     # Next sprint (pending)
-│   └── sprint-04.md     # Future sprint
 ├── backlog/              # Future work
 │   └── features.md       # Feature backlog
 ├── fixes/                # Quality improvements
@@ -76,7 +74,7 @@ Use Markdown checkboxes for all tasks:
 
 ## 🎯 Current Status
 
-**Active Sprints**: None (Sprint 03 ready to start)  
+**Active Sprints**: None  
 **Completed Sprints**: 2 (Sprint 01 & 02)  
 **Active Bugs**: 0  
 **Backlog Features**: 11  
@@ -147,11 +145,10 @@ When a bug is fixed:
 
 Ready to code? Start here:
 
-1. Open `sprints/sprint-03.md` (next sprint)
-2. Pick the highest priority unchecked task
-3. Work on it
-4. Check it off when done
-5. Commit with conventional commit message
-6. Move to next task
+1. Create new sprint file: `sprints/sprint-03.md`
+2. Pick tasks from `backlog/features.md` or `fixes/bugs.md`
+3. Work on tasks and check them off
+4. Commit with conventional commit messages
+5. Move completed sprint to `done/` when finished
 
 **Let's ship! 🚢**
