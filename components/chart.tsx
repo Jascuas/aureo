@@ -1,4 +1,6 @@
+import { parseISO } from "date-fns";
 import { FileSearch, Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +16,7 @@ type ChartProps = {
 };
 
 export const Chart = ({ data = [] }: ChartProps) => {
+  const searchParams = useSearchParams();
   const {
     groupBy,
     dataType,
@@ -24,7 +27,24 @@ export const Chart = ({ data = [] }: ChartProps) => {
     onDataTypeChange,
   } = useChartControls();
 
-  const groupedData = groupByPeriod(data ?? [], groupBy, overtimeReducers);
+  // Filter data based on chart type:
+  // - For transactions (tx): only show data up to the requested 'to' date
+  // - For balance: show all data (includes extension to today)
+  const filteredData = (() => {
+    if (dataType === "balance") return data;
+
+    const toParam = searchParams.get("to");
+    if (!toParam) return data;
+
+    const toDate = parseISO(toParam);
+    return data.filter((item) => parseISO(item.date) <= toDate);
+  })();
+
+  const groupedData = groupByPeriod(
+    filteredData ?? [],
+    groupBy,
+    overtimeReducers,
+  );
 
   return (
     <Card className="border-none drop-shadow-sm">
@@ -48,7 +68,7 @@ export const Chart = ({ data = [] }: ChartProps) => {
       </CardHeader>
 
       <CardContent className="p-4 pt-0 lg:p-6">
-        {data.length === 0 ? (
+        {filteredData.length === 0 ? (
           <div className="flex h-[350px] w-full flex-col items-center justify-center gap-y-4">
             <FileSearch className="text-muted-foreground size-6" />
             <p className="text-muted-foreground text-sm">

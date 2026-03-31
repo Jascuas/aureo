@@ -34,7 +34,7 @@ const app = new Hono().get(
 
     const { startDate, endDate } = parseDateRange(from, to);
 
-    // For balance chart: extend to today if period is in the past
+    // Determine if we should extend the period to today for balance calculation
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const effectiveEndDate = today > endDate ? today : endDate;
@@ -71,26 +71,25 @@ const app = new Hono().get(
       return row;
     }
 
-    const currentPeriod = await fetchFinancialData(
+    // Fetch transactions for the REQUESTED period (for transactions chart)
+    const requestedPeriod = await fetchFinancialData(
       userId,
       startDate,
-      effectiveEndDate,
+      endDate,
       accountId,
     );
 
-    const days = fillMissingDays(currentPeriod, startDate, effectiveEndDate);
-
-    // Calculate total income and expenses for the period
-    const totalIncomeMilli = currentPeriod.reduce(
+    // Calculate totals for requested period
+    const totalIncomeMilli = requestedPeriod.reduce(
       (sum, d) => sum + (d.income || 0),
       0,
     );
-    const totalExpensesMilli = currentPeriod.reduce(
+    const totalExpensesMilli = requestedPeriod.reduce(
       (sum, d) => sum + (d.expenses || 0),
       0,
     );
 
-    // Get balance at period start using shared utility
+    // Get balance at period start using effective end date (extends to today if needed)
     const balanceData = await calculateBalanceForPeriod(
       userId,
       startDate,
@@ -99,6 +98,20 @@ const app = new Hono().get(
       totalExpensesMilli,
       accountId,
     );
+
+    // If we need to extend to today, fetch additional transactions
+    let extendedPeriod = requestedPeriod;
+    if (effectiveEndDate > endDate) {
+      extendedPeriod = await fetchFinancialData(
+        userId,
+        startDate,
+        effectiveEndDate,
+        accountId,
+      );
+    }
+
+    // Fill missing days for the EXTENDED period (for balance chart continuity)
+    const days = fillMissingDays(extendedPeriod, startDate, effectiveEndDate);
 
     const buildDailyBalance = (days: Day[], openingBalanceMilli: number) => {
       let running = convertAmountFromMilliunits(openingBalanceMilli);
