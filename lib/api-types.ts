@@ -25,12 +25,14 @@ export type CategoryList = InferResponseType<
 >["data"];
 
 // Transaction Type types
+type TransactionTypesApi = (typeof client.api)["transaction-types"];
+
 export type TransactionType = InferResponseType<
-  typeof client.api["transaction-types"].$get,
+  TransactionTypesApi["$get"],
   200
 >["data"][0];
 
 export type TransactionTypeList = InferResponseType<
-  typeof client.api["transaction-types"].$get,
+  TransactionTypesApi["$get"],
   200
 >["data"];

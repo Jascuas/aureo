@@ -11,10 +11,9 @@ import {
   categories,
   insertTransactionSchema,
   transactions,
-  transactionTypes,
 } from "@/db/schema";
-import { parseDateRange } from "@/lib/date-utils";
 import { requireAuth } from "@/lib/auth-middleware";
+import { parseDateRange } from "@/lib/date-utils";
 
 const app = new Hono()
   .get(
