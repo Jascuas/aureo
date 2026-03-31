@@ -17,7 +17,6 @@
 │   └── features.md       # Feature backlog
 ├── fixes/                # Quality improvements
 │   ├── bugs.md          # Active bugs tracker
-│   ├── bugs-resolved.md # Fixed bugs archive
 │   └── tech-debt.md     # Technical debt backlog
 └── done/                 # Completed sprints (archive)
     ├── sprint-01-completed.md
@@ -50,7 +49,7 @@
 
 - **New Feature Idea?** → Add to `backlog/features.md`
 - **Found a Bug?** → Add to `fixes/bugs.md`
-- **Fixed a Bug?** → Move to `fixes/bugs-resolved.md`
+- **Fixed a Bug?** → Remove from `fixes/bugs.md` and document in sprint completion
 - **Code Smells?** → Add to `fixes/tech-debt.md`
 
 ### 4. Sprint Planning
@@ -80,7 +79,6 @@ Use Markdown checkboxes for all tasks:
 **Active Sprints**: None (Sprint 03 ready to start)  
 **Completed Sprints**: 2 (Sprint 01 & 02)  
 **Active Bugs**: 0  
-**Resolved Bugs**: 4  
 **Backlog Features**: 11  
 **Tech Debt Items**: 4
 
@@ -133,16 +131,15 @@ When a sprint is completed, move it to `done/sprint-XX-completed.md` with:
 - Final status (✅ Completed)
 - Completion date
 - Summary of achievements
+- Bugs fixed (if any)
 - Commits and files changed
 
 ### Fixed Bugs
 
-When a bug is fixed, move it from `fixes/bugs.md` to `fixes/bugs-resolved.md` with:
+When a bug is fixed:
 
-- Fix date
-- Sprint/commit reference
-- Files changed
-- Status: ✅ Fixed
+1. Remove it from `fixes/bugs.md`
+2. Document it in the sprint completion file where it was fixed
 
 ---
 

@@ -54,9 +54,4 @@ Technical explanation
 
 ## ℹ️ Note
 
-When a bug is fixed, move it to `fixes/bugs-resolved.md` with:
-
-- Fix date
-- Sprint/commit reference
-- Files changed
-- Status: ✅ Fixed
+When a bug is fixed, remove it from this list and document it in the corresponding sprint file in `done/sprint-XX-completed.md`.
