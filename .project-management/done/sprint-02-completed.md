@@ -1,84 +1,22 @@
-# Completed Work - Historical Record
+# Sprint 02 - Technical Debt Refactoring ✅
 
-> **Purpose**: Archive of completed sprints and features  
-> **Last Updated**: March 30, 2026
-
----
-
-## ✅ Sprint 1 - Critical Blockers (Completed: March 29, 2026)
-
-### Goal
-
-Unblock transaction creation flow and fix critical data issues.
-
-### Completed Tasks
-
-#### 1. Transaction Type Selector (BLOCKER)
-
-- ✅ Created `transaction_types` table with seed data (Income, Expense, Refund)
-- ✅ Built `GET /api/transaction-types` endpoint
-- ✅ Created `use-get-transaction-types.ts` hook
-- ✅ Replaced hardcoded `transactionTypeId: ""` with `<GenericSelect>` in transaction form
-- ✅ Embedded seed data in migration (no separate script needed)
-- ✅ End-to-end testing passed
-
-**Commit**: `dd883e7` - "feat: implement transaction type selector (BLOCKER fix)"  
-**Files Changed**: 10 files (+417/-35)  
-**Impact**: Unblocked transaction creation flow
+> **Status**: ✅ Completed  
+> **Start Date**: March 30, 2026  
+> **End Date**: March 30, 2026  
+> **Duration**: 1 day  
+> **Goal**: Reduce code duplication by 40% and improve maintainability
 
 ---
 
-#### 2. Account Balance Initialization
-
-- ✅ Set `balance: 0` as default in `POST /api/accounts` instead of NULL
-- ✅ Fixed crashes caused by NULL balance values
-
-**Commit**: `24ae014` - "fix: remove debug console.log and set default account balance to 0"  
-**Impact**: Eliminated account creation crashes
-
----
-
-#### 3. Category Parent Selector
-
-- ✅ Added optional parent category selector to `CategoryForm`
-- ✅ Implemented circular reference prevention (filter out self + descendants)
-- ✅ Built hierarchy display in categories list (indent/tree view with `└─` character)
-
-**Commit**: `89e27df` - "feat: add category parent selector with circular reference prevention"  
-**Files Changed**: 5 files (+86/-4)  
-**Impact**: Enabled category hierarchies
-
----
-
-#### 4. Code Cleanup
-
-- ✅ Removed `console.log("TOPPPPP", top)` from production code
-
-**Commit**: `24ae014`  
-**Impact**: Production code cleanup
-
----
-
-### Sprint 1 Summary
-
-**Status**: 100% complete (4/4 tasks)  
-**Duration**: 1 day  
-**Total Commits**: 4  
-**Files Changed**: 15+ files  
-**Lines Added**: ~500 lines  
-**Blockers Resolved**: 3 critical blockers
-
----
-
-## ✅ Sprint 2 - Technical Debt Refactoring (Completed: March 30, 2026)
-
-### Goal
+## 🎯 Sprint Goal
 
 Reduce code duplication by 40% and improve maintainability.
 
-### Completed Tasks
+---
 
-#### 1. Date Parsing Extraction (5 instances → 1 utility)
+## ✅ Completed Tasks
+
+### 1. Date Parsing Extraction (5 instances → 1 utility)
 
 - ✅ Created `lib/date-utils.ts` with `parseDateRange(from?, to?)` function
 - ✅ Replaced duplicates in: `transactions.ts`, `summary/overview.ts`, `summary/over-time.ts`, `summary/by-category.ts`
@@ -88,7 +26,7 @@ Reduce code duplication by 40% and improve maintainability.
 
 ---
 
-#### 2. Auth Middleware Extraction (25 instances → 1 helper)
+### 2. Auth Middleware Extraction (25 instances → 1 helper)
 
 - ✅ Created `lib/auth-middleware.ts` with `requireAuth()` helper
 - ✅ Returns discriminated union: `{ success: true, userId: string } | { success: false, response: Response }`
@@ -100,7 +38,7 @@ Reduce code duplication by 40% and improve maintainability.
 
 ---
 
-#### 3. SQL CASE Expressions Extraction (3 instances → reusable helpers)
+### 3. SQL CASE Expressions Extraction (3 instances → reusable helpers)
 
 - ✅ Created `db/helpers.ts` with 5 reusable SQL expressions:
   - `incomeAmountSql`: SUM of Income transactions
@@ -115,7 +53,7 @@ Reduce code duplication by 40% and improve maintainability.
 
 ---
 
-#### 4. Zustand Factory Pattern (6 stores → 2 factories)
+### 4. Zustand Factory Pattern (6 stores → 2 factories)
 
 - ✅ Created `lib/create-modal-store.ts` with two factory functions:
   - `createNewStore()`: Generates store with isOpen/onOpen/onClose
@@ -133,7 +71,7 @@ Reduce code duplication by 40% and improve maintainability.
 
 ---
 
-#### 5. Type Consistency (interface → type)
+### 5. Type Consistency (interface → type)
 
 - ✅ Converted all `interface` declarations to `type` for project consistency
 - ✅ Fixed in: `components/chart.tsx`, `components/ui/sheet.tsx`, `components/data-table.tsx`, `components/ui/generic-select.tsx`
@@ -143,7 +81,7 @@ Reduce code duplication by 40% and improve maintainability.
 
 ---
 
-#### 6. Query Invalidation Fixes
+### 6. Query Invalidation Fixes
 
 - ✅ Fixed `use-create-account.ts` to invalidate `["transactions"]`, `["summary"]`
 - ✅ Fixed `use-create-category.ts` (same issue)
@@ -154,7 +92,7 @@ Reduce code duplication by 40% and improve maintainability.
 
 ---
 
-#### 7. File Structure Cleanup
+### 7. File Structure Cleanup
 
 - ✅ Moved `app/(dashboard)/transactions/columns.tsx` → `features/transactions/components/columns.tsx`
 - ✅ Moved `app/(dashboard)/accounts/columns.tsx` → `features/accounts/components/columns.tsx`
@@ -167,10 +105,9 @@ Reduce code duplication by 40% and improve maintainability.
 
 ---
 
-### Sprint 2 Summary
+## 📊 Sprint Summary
 
 **Status**: 100% complete (11/11 tasks)  
-**Duration**: 1 day  
 **Total Commits**: 7  
 **Files Changed**: 20+ files  
 **Lines Removed**: 200+ lines of duplication  
@@ -178,42 +115,6 @@ Reduce code duplication by 40% and improve maintainability.
 
 ---
 
-## 📊 Overall Project Stats (After Sprint 1 & 2)
+## 🐛 Bugs Fixed
 
-### Commits
-
-- **Total Commits**: 13
-- **Features Added**: 3 (transaction type selector, category parent selector, account balance default)
-- **Refactors**: 7 major refactoring tasks
-- **Bug Fixes**: 3 (balance NULL, bulk-delete validator, console.log)
-
-### Code Quality
-
-- **Duplication Removed**: 200+ lines
-- **Boilerplate Reduced**: ~40%
-- **TypeScript Errors**: 0
-- **Conventions**: 100% compliance (kebab-case, type over interface, conventional commits)
-
-### Technical Improvements
-
-- ✅ Auth middleware pattern established
-- ✅ Date parsing centralized
-- ✅ SQL helpers for business logic
-- ✅ Zustand factory pattern for modals
-- ✅ Type consistency enforced
-- ✅ Query invalidation patterns fixed
-- ✅ File structure cleaned (columns moved to features/)
-
----
-
-## 🎯 What's Next
-
-See `.project-management/sprints/sprint-01.md` for current work.
-
-Future sprints will focus on:
-
-- Critical fixes (balance calculation, CSV import)
-- Account transfers
-- Pagination
-- Error boundaries
-- Loading states
+- ✅ Category Bulk Delete Validator Bug (Medium)

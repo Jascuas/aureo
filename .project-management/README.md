@@ -11,13 +11,17 @@
 ```
 .project-management/
 ├── sprints/              # Active sprint files
-│   └── sprint-01.md      # Current sprint tasks
+│   ├── sprint-01.md     # Current sprint tasks
+│   └── sprint-02.md     # Next sprint
 ├── backlog/              # Future work
 │   └── features.md       # Feature backlog
 ├── fixes/                # Quality improvements
-│   ├── bugs.md          # Known bugs tracker
+│   ├── bugs.md          # Active bugs tracker
+│   ├── bugs-resolved.md # Fixed bugs archive
 │   └── tech-debt.md     # Technical debt backlog
 └── done/                 # Completed sprints (archive)
+    ├── sprint-01-completed.md
+    └── sprint-02-completed.md
 ```
 
 ---
@@ -38,7 +42,7 @@
 1. Start Sprint: Create sprints/sprint-XX.md
 2. Work: Check off tasks as you complete them
 3. Review: Ensure Definition of Done is met
-4. Complete: Move file to done/sprint-XX.md
+4. Complete: Move sprint to done/sprint-XX-completed.md
 5. Next: Create next sprint file
 ```
 
@@ -46,6 +50,7 @@
 
 - **New Feature Idea?** → Add to `backlog/features.md`
 - **Found a Bug?** → Add to `fixes/bugs.md`
+- **Fixed a Bug?** → Move to `fixes/bugs-resolved.md`
 - **Code Smells?** → Add to `fixes/tech-debt.md`
 
 ### 4. Sprint Planning
@@ -72,10 +77,10 @@ Use Markdown checkboxes for all tasks:
 
 ## 🎯 Current Status
 
-**Active Sprint**: Sprint 01  
-**Sprint Goal**: Fix balance calculation and CSV import  
-**Completed Sprints**: 0 (first sprint)  
-**Open Bugs**: 0  
+**Active Sprints**: Sprint 01, Sprint 02 (planning)  
+**Completed Sprints**: 2 (Sprint 01 & 02 - Completed)  
+**Active Bugs**: 0  
+**Resolved Bugs**: 4  
 **Backlog Features**: 11  
 **Tech Debt Items**: 4
 
@@ -119,16 +124,25 @@ A sprint is complete when:
 
 ---
 
-## 🔄 Migration from Old ROADMAP.md
+## 📊 Archive Policy
 
-All tasks from the old `ROADMAP.md` have been distributed:
+### Completed Sprints
 
-- ✅ Sprint 1 & 2 completed items → Historical reference
-- 🎯 Sprint 3 critical fixes → `sprints/sprint-01.md`
-- 🏗️ Sprint 4 architecture → `fixes/tech-debt.md`
-- ✨ Future features → `backlog/features.md`
+When a sprint is completed, move it to `done/sprint-XX-completed.md` with:
 
-The old `ROADMAP.md` will remain as historical documentation but is no longer the source of truth.
+- Final status (✅ Completed)
+- Completion date
+- Summary of achievements
+- Commits and files changed
+
+### Fixed Bugs
+
+When a bug is fixed, move it from `fixes/bugs.md` to `fixes/bugs-resolved.md` with:
+
+- Fix date
+- Sprint/commit reference
+- Files changed
+- Status: ✅ Fixed
 
 ---
 
