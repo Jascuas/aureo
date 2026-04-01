@@ -6,9 +6,11 @@ import { transactionTypes } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
 
 const app = new Hono().get("/", clerkMiddleware(), async (ctx) => {
-  const auth = requireAuth(ctx);
+  const userId = requireAuth(ctx);
 
-  if (!auth.success) return auth.response;
+  if (!userId) {
+      return ctx.json({ error: "Unauthorized" }, 401);
+    }
 
   const data = await db
     .select({

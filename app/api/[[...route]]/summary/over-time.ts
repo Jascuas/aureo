@@ -25,12 +25,12 @@ const app = new Hono().get(
     }),
   ),
   async (ctx) => {
-    const auth = requireAuth(ctx);
+    const userId = requireAuth(ctx);
     const { from, to, accountId } = ctx.req.valid("query");
 
-    if (!auth.success) return auth.response;
-
-    const userId = auth.userId;
+    if (!userId) {
+      return ctx.json({ error: "Unauthorized" }, 401);
+    }
 
     const { startDate, endDate } = parseDateRange(from, to);
 

@@ -14,8 +14,11 @@ const parentCategory = alias(categories, "parent");
 
 const app = new Hono()
   .get("/", clerkMiddleware(), async (ctx) => {
-    const auth = requireAuth(ctx);
-    if (!auth.success) return auth.response;
+    const userId = requireAuth(ctx);
+
+    if (!userId) {
+      return ctx.json({ error: "Unauthorized" }, 401);
+    }
 
     const data = await db
       .select({
@@ -26,7 +29,7 @@ const app = new Hono()
       })
       .from(categories)
       .leftJoin(parentCategory, eq(categories.parentId, parentCategory.id))
-      .where(eq(categories.userId, auth.userId));
+      .where(eq(categories.userId, userId));
 
     return ctx.json({ data });
   })
@@ -40,14 +43,16 @@ const app = new Hono()
     ),
     clerkMiddleware(),
     async (ctx) => {
-      const auth = requireAuth(ctx);
+      const userId = requireAuth(ctx);
       const { id } = ctx.req.valid("param");
 
       if (!id) {
-        return ctx.json({ error: "Missing id." }, 400);
+        return ctx.json({ error: "Missing id" }, 400);
       }
 
-      if (!auth.success) return auth.response;
+      if (!userId) {
+        return ctx.json({ error: "Unauthorized" }, 401);
+      }
 
       const [data] = await db
         .select({
@@ -58,10 +63,10 @@ const app = new Hono()
         })
         .from(categories)
         .leftJoin(parentCategory, eq(categories.parentId, parentCategory.id))
-        .where(and(eq(categories.userId, auth.userId), eq(categories.id, id)));
+        .where(and(eq(categories.userId, userId), eq(categories.id, id)));
 
       if (!data) {
-        return ctx.json({ error: "Not found." }, 404);
+        return ctx.json({ error: "Not found" }, 404);
       }
 
       return ctx.json({ data });
@@ -77,16 +82,18 @@ const app = new Hono()
       }),
     ),
     async (ctx) => {
-      const auth = requireAuth(ctx);
+      const userId = requireAuth(ctx);
       const values = ctx.req.valid("json");
 
-      if (!auth.success) return auth.response;
+      if (!userId) {
+        return ctx.json({ error: "Unauthorized" }, 401);
+      }
 
       const [data] = await db
         .insert(categories)
         .values({
           id: createId(),
-          userId: auth.userId,
+          userId,
           ...values,
         })
         .returning();
@@ -104,16 +111,18 @@ const app = new Hono()
       }),
     ),
     async (ctx) => {
-      const auth = requireAuth(ctx);
+      const userId = requireAuth(ctx);
       const values = ctx.req.valid("json");
 
-      if (!auth.success) return auth.response;
+      if (!userId) {
+        return ctx.json({ error: "Unauthorized" }, 401);
+      }
 
       const data = await db
         .delete(categories)
         .where(
           and(
-            eq(categories.userId, auth.userId),
+            eq(categories.userId, userId),
             inArray(categories.id, values.ids),
           ),
         )
@@ -141,24 +150,26 @@ const app = new Hono()
       }),
     ),
     async (ctx) => {
-      const auth = requireAuth(ctx);
+      const userId = requireAuth(ctx);
       const { id } = ctx.req.valid("param");
       const values = ctx.req.valid("json");
 
       if (!id) {
-        return ctx.json({ error: "Missing id." }, 400);
+        return ctx.json({ error: "Missing id" }, 400);
       }
 
-      if (!auth.success) return auth.response;
+      if (!userId) {
+        return ctx.json({ error: "Unauthorized" }, 401);
+      }
 
       const [data] = await db
         .update(categories)
         .set(values)
-        .where(and(eq(categories.userId, auth.userId), eq(categories.id, id)))
+        .where(and(eq(categories.userId, userId), eq(categories.id, id)))
         .returning();
 
       if (!data) {
-        return ctx.json({ error: "Not found." }, 404);
+        return ctx.json({ error: "Not found" }, 404);
       }
 
       return ctx.json({ data });
@@ -174,24 +185,26 @@ const app = new Hono()
       }),
     ),
     async (ctx) => {
-      const auth = requireAuth(ctx);
+      const userId = requireAuth(ctx);
       const { id } = ctx.req.valid("param");
 
       if (!id) {
-        return ctx.json({ error: "Missing id." }, 400);
+        return ctx.json({ error: "Missing id" }, 400);
       }
 
-      if (!auth.success) return auth.response;
+      if (!userId) {
+        return ctx.json({ error: "Unauthorized" }, 401);
+      }
 
       const [data] = await db
         .delete(categories)
-        .where(and(eq(categories.userId, auth.userId), eq(categories.id, id)))
+        .where(and(eq(categories.userId, userId), eq(categories.id, id)))
         .returning({
           id: categories.id,
         });
 
       if (!data) {
-        return ctx.json({ error: "Not found." }, 404);
+        return ctx.json({ error: "Not found" }, 404);
       }
 
       return ctx.json({ data });

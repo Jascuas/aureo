@@ -28,12 +28,12 @@ const app = new Hono().get(
     }),
   ),
   async (ctx) => {
-    const auth = requireAuth(ctx);
+    const userId = requireAuth(ctx);
     const { from, to, accountId } = ctx.req.valid("query");
 
-    if (!auth.success) return auth.response;
-
-    const userId = auth.userId;
+    if (!userId) {
+      return ctx.json({ error: "Unauthorized" }, 401);
+    }
 
     const { startDate, endDate } = parseDateRange(from, to);
 
@@ -41,7 +41,11 @@ const app = new Hono().get(
     const lastPeriodStart = subDays(startDate, periodLength);
     const lastPeriodEnd = subDays(endDate, periodLength);
 
-    async function fetchFinancialData(startDate: Date, endDate: Date) {
+    async function fetchFinancialData(
+      userId: string,
+      startDate: Date,
+      endDate: Date,
+    ) {
       const [row] = await db
         .select({
           income: incomeAmountSql,
@@ -68,9 +72,12 @@ const app = new Hono().get(
       };
     }
 
-    const currentPeriod = await fetchFinancialData(startDate, endDate);
-
-    const lastPeriod = await fetchFinancialData(lastPeriodStart, lastPeriodEnd);
+    const currentPeriod = await fetchFinancialData(userId, startDate, endDate);
+    const lastPeriod = await fetchFinancialData(
+      userId,
+      lastPeriodStart,
+      lastPeriodEnd,
+    );
 
     const incomeChangePtc = calculatePercentageChange(
       currentPeriod.income,
