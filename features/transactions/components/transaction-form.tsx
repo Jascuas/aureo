@@ -31,12 +31,10 @@ const formSchema = z.object({
   transactionTypeId: z.string(),
 });
 
-const apiSchema = insertTransactionSchema.omit({
-  id: true,
-});
-
 type FormValues = z.input<typeof formSchema>;
-type ApiFormValues = z.input<typeof apiSchema>;
+type ApiFormValues = z.input<
+  ReturnType<typeof insertTransactionSchema.omit<{ id: true }>>
+>;
 
 type TransactionFormProps = {
   id?: string;
@@ -96,7 +94,7 @@ export const TransactionForm = ({
             <FormItem>
               <FormControl>
                 <DatePicker
-                  value={field.value}
+                  value={field.value as Date | undefined}
                   onChange={field.onChange}
                   disabled={disabled}
                 />

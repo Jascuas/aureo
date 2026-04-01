@@ -9,7 +9,7 @@ import { formatCurrency } from "@/lib/utils";
 
 type CategoryTooltipProps = {
   active: boolean | undefined;
-  payload: Payload<ValueType, NameType>[] | undefined;
+  payload: readonly Payload<ValueType, NameType>[] | undefined;
 };
 
 export const CategoryTooltip = ({ active, payload }: CategoryTooltipProps) => {

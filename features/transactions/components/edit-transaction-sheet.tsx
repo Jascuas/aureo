@@ -23,9 +23,20 @@ import type { Account, Category, TransactionType } from "@/lib/api-types";
 
 import { TransactionForm } from "./transaction-form";
 
-const formSchema = insertTransactionSchema.omit({ id: true });
+const formSchema = z.object({
+  date: z.coerce.date(),
+  accountId: z.string(),
+  categoryId: z.string().nullable().optional(),
+  payee: z.string(),
+  amount: z.string(),
+  notes: z.string().nullable().optional(),
+  transactionTypeId: z.string(),
+});
 
-type FormValues = z.infer<typeof formSchema>;
+const apiSchema = insertTransactionSchema.omit({ id: true });
+
+type FormValues = z.input<typeof formSchema>;
+type ApiFormValues = z.input<typeof apiSchema>;
 
 export const EditTransactionSheet = () => {
   const { isOpen, onClose, id } = useOpenTransaction();
@@ -79,7 +90,7 @@ export const EditTransactionSheet = () => {
     accountQuery.isLoading ||
     transactionTypesQuery.isLoading;
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = (values: ApiFormValues) => {
     editMutation.mutate(values, {
       onSuccess: () => {
         onClose();
@@ -87,8 +98,8 @@ export const EditTransactionSheet = () => {
     });
   };
 
-  const defaultValues = transactionQuery.data
-    ? {
+  const defaultValues: FormValues = transactionQuery.data
+    ? ({
         accountId: transactionQuery.data.accountId,
         categoryId: transactionQuery.data.categoryId,
         amount: transactionQuery.data.amount.toString(),
@@ -98,8 +109,8 @@ export const EditTransactionSheet = () => {
         payee: transactionQuery.data.payee,
         notes: transactionQuery.data.notes,
         transactionTypeId: transactionQuery.data.transactionTypeId,
-      }
-    : {
+      } as FormValues)
+    : ({
         accountId: "",
         categoryId: "",
         amount: "",
@@ -107,7 +118,7 @@ export const EditTransactionSheet = () => {
         payee: "",
         notes: "",
         transactionTypeId: "",
-      };
+      } as FormValues);
 
   const onDelete = async () => {
     const ok = await confirm();

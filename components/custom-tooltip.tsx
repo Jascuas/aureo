@@ -11,7 +11,7 @@ import { formatCurrency } from "@/lib/utils";
 
 type CustomTooltipProps = {
   active: boolean | undefined;
-  payload: Payload<ValueType, NameType>[] | undefined;
+  payload: readonly Payload<ValueType, NameType>[] | undefined;
   series: AreaSeries[];
 };
 

@@ -20,9 +20,20 @@ import type { Account, Category, TransactionType } from "@/lib/api-types";
 
 import { TransactionForm } from "./transaction-form";
 
-const formSchema = insertTransactionSchema.omit({ id: true });
+const formSchema = z.object({
+  date: z.coerce.date(),
+  accountId: z.string(),
+  categoryId: z.string().nullable().optional(),
+  payee: z.string(),
+  amount: z.string(),
+  notes: z.string().nullable().optional(),
+  transactionTypeId: z.string(),
+});
 
-type FormValues = z.infer<typeof formSchema>;
+const apiSchema = insertTransactionSchema.omit({ id: true });
+
+type FormValues = z.input<typeof formSchema>;
+type ApiFormValues = z.input<typeof apiSchema>;
 
 export const NewTransactionSheet = () => {
   const { isOpen, onClose } = useNewTransaction();
@@ -64,7 +75,7 @@ export const NewTransactionSheet = () => {
     accountQuery.isLoading ||
     transactionTypesQuery.isLoading;
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = (values: ApiFormValues) => {
     createMutation.mutate(values, {
       onSuccess: () => {
         onClose();

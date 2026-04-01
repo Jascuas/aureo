@@ -62,12 +62,14 @@ export const RadialVariant = ({ data }: RadialVariantProps) => {
                     />
 
                     <div className="space-x-1">
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-muted-foreground text-sm">
                         {entry.value}
                       </span>
 
                       <span className="text-sm">
-                        {formatCurrency(entry.payload?.value)}
+                        {formatCurrency(
+                          (entry.payload as { value: number })?.value,
+                        )}
                       </span>
                     </div>
                   </li>
