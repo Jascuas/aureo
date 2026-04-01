@@ -16,6 +16,7 @@ import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
 import { parseDateRange } from "@/lib/date-utils";
 import type { AppEnv } from "@/lib/hono-env";
+import { requireId } from "@/lib/validation-middleware";
 
 const app = new Hono<AppEnv>()
   .get(
@@ -73,13 +74,10 @@ const app = new Hono<AppEnv>()
     ),
     clerkMiddleware(),
     requireAuth,
+    requireId,
     async (c) => {
       const userId = c.var.userId;
-      const { id } = c.req.valid("param");
-
-      if (!id) {
-        return c.json(API_ERRORS.MISSING_ID, 400);
-      }
+      const id = c.var.validatedId;
 
       const [data] = await db
         .select({
@@ -195,14 +193,15 @@ const app = new Hono<AppEnv>()
   )
   .patch(
     "/:id",
-    clerkMiddleware(),
-    requireAuth,
     zValidator(
       "param",
       z.object({
         id: z.string().optional(),
       }),
     ),
+    clerkMiddleware(),
+    requireAuth,
+    requireId,
     zValidator(
       "json",
       insertTransactionSchema.omit({
@@ -211,12 +210,8 @@ const app = new Hono<AppEnv>()
     ),
     async (c) => {
       const userId = c.var.userId;
-      const { id } = c.req.valid("param");
+      const id = c.var.validatedId;
       const values = c.req.valid("json");
-
-      if (!id) {
-        return c.json(API_ERRORS.MISSING_ID, 400);
-      }
 
       const transactionsToUpdate = db.$with("transactions_to_update").as(
         db
@@ -247,21 +242,18 @@ const app = new Hono<AppEnv>()
   )
   .delete(
     "/:id",
-    clerkMiddleware(),
-    requireAuth,
     zValidator(
       "param",
       z.object({
         id: z.string().optional(),
       }),
     ),
+    clerkMiddleware(),
+    requireAuth,
+    requireId,
     async (c) => {
       const userId = c.var.userId;
-      const { id } = c.req.valid("param");
-
-      if (!id) {
-        return c.json(API_ERRORS.MISSING_ID, 400);
-      }
+      const id = c.var.validatedId;
 
       const transactionsToDelete = db.$with("transactions_to_delete").as(
         db

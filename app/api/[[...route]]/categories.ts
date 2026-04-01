@@ -11,6 +11,7 @@ import { categories, insertCategorySchema } from "@/db/schema";
 import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
+import { requireId } from "@/lib/validation-middleware";
 
 const parentCategory = alias(categories, "parent");
 
@@ -41,13 +42,10 @@ const app = new Hono<AppEnv>()
     ),
     clerkMiddleware(),
     requireAuth,
+    requireId,
     async (c) => {
       const userId = c.var.userId;
-      const { id } = c.req.valid("param");
-
-      if (!id) {
-        return c.json(API_ERRORS.MISSING_ID, 400);
-      }
+      const id = c.var.validatedId;
 
       const [data] = await db
         .select({
@@ -124,14 +122,15 @@ const app = new Hono<AppEnv>()
   )
   .patch(
     "/:id",
-    clerkMiddleware(),
-    requireAuth,
     zValidator(
       "param",
       z.object({
         id: z.string().optional(),
       }),
     ),
+    clerkMiddleware(),
+    requireAuth,
+    requireId,
     zValidator(
       "json",
       insertCategorySchema.pick({
@@ -141,12 +140,8 @@ const app = new Hono<AppEnv>()
     ),
     async (c) => {
       const userId = c.var.userId;
-      const { id } = c.req.valid("param");
+      const id = c.var.validatedId;
       const values = c.req.valid("json");
-
-      if (!id) {
-        return c.json(API_ERRORS.MISSING_ID, 400);
-      }
 
       const [data] = await db
         .update(categories)
@@ -163,21 +158,18 @@ const app = new Hono<AppEnv>()
   )
   .delete(
     "/:id",
-    clerkMiddleware(),
-    requireAuth,
     zValidator(
       "param",
       z.object({
         id: z.string().optional(),
       }),
     ),
+    clerkMiddleware(),
+    requireAuth,
+    requireId,
     async (c) => {
       const userId = c.var.userId;
-      const { id } = c.req.valid("param");
-
-      if (!id) {
-        return c.json(API_ERRORS.MISSING_ID, 400);
-      }
+      const id = c.var.validatedId;
 
       const [data] = await db
         .delete(categories)
