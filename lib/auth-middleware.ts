@@ -1,7 +1,16 @@
 import { getAuth } from "@hono/clerk-auth";
-import type { Context } from "hono";
+import { createMiddleware } from "hono/factory";
 
-export function requireAuth(ctx: Context): string | null {
-  const auth = getAuth(ctx);
-  return auth?.userId || null;
-}
+import { API_ERRORS } from "./api-errors";
+import type { AppEnv } from "./hono-env";
+
+export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
+  const auth = getAuth(c);
+
+  if (!auth?.userId) {
+    return c.json(API_ERRORS.UNAUTHORIZED, 401);
+  }
+
+  c.set("userId", auth.userId);
+  await next();
+});

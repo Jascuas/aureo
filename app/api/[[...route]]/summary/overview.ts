@@ -11,14 +11,16 @@ import { accounts, transactions, transactionTypes } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
 import { calculateCurrentBalanceChange } from "@/lib/balance-utils";
 import { parseDateRange } from "@/lib/date-utils";
+import type { AppEnv } from "@/lib/hono-env";
 import {
   calculatePercentageChange,
   convertAmountFromMilliunits,
 } from "@/lib/utils";
 
-const app = new Hono().get(
+const app = new Hono<AppEnv>().get(
   "/overview",
   clerkMiddleware(),
+  requireAuth,
   zValidator(
     "query",
     z.object({
@@ -27,14 +29,9 @@ const app = new Hono().get(
       accountId: z.string().optional(),
     }),
   ),
-  async (ctx) => {
-    const userId = requireAuth(ctx);
-    const { from, to, accountId } = ctx.req.valid("query");
-
-    if (!userId) {
-      return ctx.json({ error: "Unauthorized" }, 401);
-    }
-
+  async (c) => {
+    const userId = c.var.userId;
+    const { from, to, accountId } = c.req.valid("query");
     const { startDate, endDate } = parseDateRange(from, to);
 
     const periodLength = differenceInDays(endDate, startDate) + 1;
@@ -101,7 +98,7 @@ const app = new Hono().get(
       balanceData.currentBalanceMilli,
     );
 
-    return ctx.json({
+    return c.json({
       data: {
         income: {
           amount: convertAmountFromMilliunits(currentPeriod.income),

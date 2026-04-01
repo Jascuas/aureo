@@ -10,12 +10,14 @@ import { accounts, transactions, transactionTypes } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
 import { calculateBalanceForPeriod } from "@/lib/balance-utils";
 import { parseDateRange } from "@/lib/date-utils";
+import type { AppEnv } from "@/lib/hono-env";
 import { Day } from "@/lib/types";
 import { convertAmountFromMilliunits, fillMissingDays } from "@/lib/utils";
 
-const app = new Hono().get(
+const app = new Hono<AppEnv>().get(
   "/over-time",
   clerkMiddleware(),
+  requireAuth,
   zValidator(
     "query",
     z.object({
@@ -24,14 +26,9 @@ const app = new Hono().get(
       accountId: z.string().optional(),
     }),
   ),
-  async (ctx) => {
-    const userId = requireAuth(ctx);
-    const { from, to, accountId } = ctx.req.valid("query");
-
-    if (!userId) {
-      return ctx.json({ error: "Unauthorized" }, 401);
-    }
-
+  async (c) => {
+    const userId = c.var.userId;
+    const { from, to, accountId } = c.req.valid("query");
     const { startDate, endDate } = parseDateRange(from, to);
 
     // Determine if we should extend the period to today for balance calculation
@@ -125,7 +122,7 @@ const app = new Hono().get(
       });
     };
 
-    return ctx.json({
+    return c.json({
       data: buildDailyBalance(days, balanceData.balanceAtStartMilli),
     });
   },

@@ -14,12 +14,14 @@ import {
 } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
 import { parseDateRange } from "@/lib/date-utils";
+import type { AppEnv } from "@/lib/hono-env";
 
 type TxType = "Income" | "Expense" | "Refund";
 
-const app = new Hono().get(
+const app = new Hono<AppEnv>().get(
   "/by-category",
   clerkMiddleware(),
+  requireAuth,
   zValidator(
     "query",
     z.object({
@@ -31,12 +33,7 @@ const app = new Hono().get(
     }),
   ),
   async (c) => {
-    const userId = requireAuth(c);
-
-    if (!userId) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-
+    const userId = c.var.userId;
     const { type, from, to, accountId, top } = c.req.valid("query");
     const { startDate, endDate } = parseDateRange(from, to);
 

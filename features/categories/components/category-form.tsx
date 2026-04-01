@@ -3,8 +3,8 @@ import { Trash } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Button } from "@/components/ui/button";
 import { Select } from "@/components/select";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,

@@ -9,16 +9,13 @@ import { z } from "zod";
 import { db } from "@/db/drizzle";
 import { categories, insertCategorySchema } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
+import type { AppEnv } from "@/lib/hono-env";
 
 const parentCategory = alias(categories, "parent");
 
-const app = new Hono()
-  .get("/", clerkMiddleware(), async (ctx) => {
-    const userId = requireAuth(ctx);
-
-    if (!userId) {
-      return ctx.json({ error: "Unauthorized" }, 401);
-    }
+const app = new Hono<AppEnv>()
+  .get("/", clerkMiddleware(), requireAuth, async (c) => {
+    const userId = c.var.userId;
 
     const data = await db
       .select({
@@ -31,7 +28,7 @@ const app = new Hono()
       .leftJoin(parentCategory, eq(categories.parentId, parentCategory.id))
       .where(eq(categories.userId, userId));
 
-    return ctx.json({ data });
+    return c.json({ data });
   })
   .get(
     "/:id",
@@ -42,16 +39,13 @@ const app = new Hono()
       }),
     ),
     clerkMiddleware(),
-    async (ctx) => {
-      const userId = requireAuth(ctx);
-      const { id } = ctx.req.valid("param");
+    requireAuth,
+    async (c) => {
+      const userId = c.var.userId;
+      const { id } = c.req.valid("param");
 
       if (!id) {
-        return ctx.json({ error: "Missing id" }, 400);
-      }
-
-      if (!userId) {
-        return ctx.json({ error: "Unauthorized" }, 401);
+        return c.json({ error: "Missing id" }, 400);
       }
 
       const [data] = await db
@@ -66,28 +60,25 @@ const app = new Hono()
         .where(and(eq(categories.userId, userId), eq(categories.id, id)));
 
       if (!data) {
-        return ctx.json({ error: "Not found" }, 404);
+        return c.json({ error: "Not found" }, 404);
       }
 
-      return ctx.json({ data });
+      return c.json({ data });
     },
   )
   .post(
     "/",
     clerkMiddleware(),
+    requireAuth,
     zValidator(
       "json",
       insertCategorySchema.pick({
         name: true,
       }),
     ),
-    async (ctx) => {
-      const userId = requireAuth(ctx);
-      const values = ctx.req.valid("json");
-
-      if (!userId) {
-        return ctx.json({ error: "Unauthorized" }, 401);
-      }
+    async (c) => {
+      const userId = c.var.userId;
+      const values = c.req.valid("json");
 
       const [data] = await db
         .insert(categories)
@@ -98,25 +89,22 @@ const app = new Hono()
         })
         .returning();
 
-      return ctx.json({ data });
+      return c.json({ data });
     },
   )
   .post(
     "/bulk-delete",
     clerkMiddleware(),
+    requireAuth,
     zValidator(
       "json",
       z.object({
         ids: z.array(z.string()),
       }),
     ),
-    async (ctx) => {
-      const userId = requireAuth(ctx);
-      const values = ctx.req.valid("json");
-
-      if (!userId) {
-        return ctx.json({ error: "Unauthorized" }, 401);
-      }
+    async (c) => {
+      const userId = c.var.userId;
+      const values = c.req.valid("json");
 
       const data = await db
         .delete(categories)
@@ -130,12 +118,13 @@ const app = new Hono()
           id: categories.id,
         });
 
-      return ctx.json({ data });
+      return c.json({ data });
     },
   )
   .patch(
     "/:id",
     clerkMiddleware(),
+    requireAuth,
     zValidator(
       "param",
       z.object({
@@ -149,17 +138,13 @@ const app = new Hono()
         parentId: true,
       }),
     ),
-    async (ctx) => {
-      const userId = requireAuth(ctx);
-      const { id } = ctx.req.valid("param");
-      const values = ctx.req.valid("json");
+    async (c) => {
+      const userId = c.var.userId;
+      const { id } = c.req.valid("param");
+      const values = c.req.valid("json");
 
       if (!id) {
-        return ctx.json({ error: "Missing id" }, 400);
-      }
-
-      if (!userId) {
-        return ctx.json({ error: "Unauthorized" }, 401);
+        return c.json({ error: "Missing id" }, 400);
       }
 
       const [data] = await db
@@ -169,31 +154,28 @@ const app = new Hono()
         .returning();
 
       if (!data) {
-        return ctx.json({ error: "Not found" }, 404);
+        return c.json({ error: "Not found" }, 404);
       }
 
-      return ctx.json({ data });
+      return c.json({ data });
     },
   )
   .delete(
     "/:id",
     clerkMiddleware(),
+    requireAuth,
     zValidator(
       "param",
       z.object({
         id: z.string().optional(),
       }),
     ),
-    async (ctx) => {
-      const userId = requireAuth(ctx);
-      const { id } = ctx.req.valid("param");
+    async (c) => {
+      const userId = c.var.userId;
+      const { id } = c.req.valid("param");
 
       if (!id) {
-        return ctx.json({ error: "Missing id" }, 400);
-      }
-
-      if (!userId) {
-        return ctx.json({ error: "Unauthorized" }, 401);
+        return c.json({ error: "Missing id" }, 400);
       }
 
       const [data] = await db
@@ -204,10 +186,10 @@ const app = new Hono()
         });
 
       if (!data) {
-        return ctx.json({ error: "Not found" }, 404);
+        return c.json({ error: "Not found" }, 404);
       }
 
-      return ctx.json({ data });
+      return c.json({ data });
     },
   );
 
