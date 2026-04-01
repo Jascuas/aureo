@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 
-
 type HeaderLogoProps = {
   size?: "small" | "large";
 };
@@ -23,6 +22,7 @@ export const HeaderLogo = ({ size = "small" }: HeaderLogoProps) => {
           width={width}
           height={height}
           sizes={sizes}
+          style={{ height: "auto" }}
           priority
         />
       </div>
