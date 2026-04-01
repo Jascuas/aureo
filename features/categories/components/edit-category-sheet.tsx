@@ -19,12 +19,12 @@ import { useConfirm } from "@/hooks/use-confirm";
 
 import { CategoryForm } from "./category-form";
 
-const formSchema = insertCategorySchema.pick({
+const _formSchema = insertCategorySchema.pick({
   name: true,
   parentId: true,
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof _formSchema>;
 
 export const EditCategorySheet = () => {
   const { isOpen, onClose, id } = useOpenCategory();

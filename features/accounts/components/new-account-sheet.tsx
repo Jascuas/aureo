@@ -13,11 +13,11 @@ import { useNewAccount } from "@/features/accounts/hooks/use-new-account";
 
 import { AccountForm } from "./account-form";
 
-const formSchema = insertAccountSchema.pick({
+const _formSchema = insertAccountSchema.pick({
   name: true,
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof _formSchema>;
 
 export const NewAccountSheet = () => {
   const { isOpen, onClose } = useNewAccount();

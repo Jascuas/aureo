@@ -17,18 +17,18 @@ import { useConfirm } from "@/hooks/use-confirm";
 
 import { AccountForm } from "./account-form";
 
-const formSchema = insertAccountSchema.pick({
+const _formSchema = insertAccountSchema.pick({
   name: true,
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof _formSchema>;
 
 export const EditAccountSheet = () => {
   const { isOpen, onClose, id } = useOpenAccount();
 
   const [ConfirmDialog, confirm] = useConfirm(
     "Are you sure?",
-    "You are about to delete this account."
+    "You are about to delete this account.",
   );
 
   const accountQuery = useGetAccount(id);
@@ -80,7 +80,7 @@ export const EditAccountSheet = () => {
 
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
-              <Loader2 className="size-4 animate-spin text-muted-foreground" />
+              <Loader2 className="text-muted-foreground size-4 animate-spin" />
             </div>
           ) : (
             <AccountForm

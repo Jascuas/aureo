@@ -23,7 +23,7 @@ import type { Account, Category, TransactionType } from "@/lib/api-types";
 
 import { TransactionForm } from "./transaction-form";
 
-const formSchema = z.object({
+const _formSchema = z.object({
   date: z.coerce.date(),
   accountId: z.string(),
   categoryId: z.string().nullable().optional(),
@@ -33,10 +33,10 @@ const formSchema = z.object({
   transactionTypeId: z.string(),
 });
 
-const apiSchema = insertTransactionSchema.omit({ id: true });
+const _apiSchema = insertTransactionSchema.omit({ id: true });
 
-type FormValues = z.input<typeof formSchema>;
-type ApiFormValues = z.input<typeof apiSchema>;
+type FormValues = z.input<typeof _formSchema>;
+type ApiFormValues = z.input<typeof _apiSchema>;
 
 export const EditTransactionSheet = () => {
   const { isOpen, onClose, id } = useOpenTransaction();
