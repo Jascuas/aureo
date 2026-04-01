@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import { db } from "@/db/drizzle";
 import { accounts, insertAccountSchema } from "@/db/schema";
+import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
 
@@ -39,7 +40,7 @@ const app = new Hono<AppEnv>()
       const { id } = c.req.valid("param");
 
       if (!id) {
-        return c.json({ error: "Missing id" }, 400);
+        return c.json(API_ERRORS.MISSING_ID, 400);
       }
 
       const [data] = await db
@@ -51,7 +52,7 @@ const app = new Hono<AppEnv>()
         .where(and(eq(accounts.userId, userId), eq(accounts.id, id)));
 
       if (!data) {
-        return c.json({ error: "Not found" }, 404);
+        return c.json(API_ERRORS.NOT_FOUND, 404);
       }
 
       return c.json({ data });
@@ -132,7 +133,7 @@ const app = new Hono<AppEnv>()
       const values = c.req.valid("json");
 
       if (!id) {
-        return c.json({ error: "Missing id" }, 400);
+        return c.json(API_ERRORS.MISSING_ID, 400);
       }
 
       const [data] = await db
@@ -142,7 +143,7 @@ const app = new Hono<AppEnv>()
         .returning();
 
       if (!data) {
-        return c.json({ error: "Not found" }, 404);
+        return c.json(API_ERRORS.NOT_FOUND, 404);
       }
 
       return c.json({ data });
@@ -163,7 +164,7 @@ const app = new Hono<AppEnv>()
       const { id } = c.req.valid("param");
 
       if (!id) {
-        return c.json({ error: "Missing id" }, 400);
+        return c.json(API_ERRORS.MISSING_ID, 400);
       }
 
       const [data] = await db
@@ -174,7 +175,7 @@ const app = new Hono<AppEnv>()
         });
 
       if (!data) {
-        return c.json({ error: "Not found" }, 404);
+        return c.json(API_ERRORS.NOT_FOUND, 404);
       }
 
       return c.json({ data });
