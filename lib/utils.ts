@@ -50,21 +50,43 @@ export function fillMissingDays(
 ) {
   if (activeDays.length === 0) return [];
 
+  // Create a Map with date string as key for O(1) lookup
+  const dayMap = new Map<string, { income: number; expenses: number }>();
+
+  activeDays.forEach((d) => {
+    const dateKey = format(d.date, "yyyy-MM-dd");
+    const existing = dayMap.get(dateKey);
+
+    if (existing) {
+      // If date already exists, accumulate values
+      dayMap.set(dateKey, {
+        income: existing.income + (d.income || 0),
+        expenses: existing.expenses + (d.expenses || 0),
+      });
+    } else {
+      dayMap.set(dateKey, {
+        income: d.income || 0,
+        expenses: d.expenses || 0,
+      });
+    }
+  });
+
   const allDays = eachDayOfInterval({
     start: startDate,
     end: endDate,
   });
 
   const transactionsByDay = allDays.map((day) => {
-    const found = activeDays.find((d) => isSameDay(d.date, day));
+    const dateKey = format(day, "yyyy-MM-dd");
+    const found = dayMap.get(dateKey);
 
-    if (found)
+    if (found) {
       return {
         date: day,
-        income: convertAmountFromMilliunits(found.income),
-        expenses: convertAmountFromMilliunits(found.expenses),
+        income: found.income,
+        expenses: found.expenses,
       };
-    else {
+    } else {
       return {
         date: day,
         income: 0,
