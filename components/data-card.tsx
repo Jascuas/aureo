@@ -33,10 +33,10 @@ export const DataCard = ({
 
   return (
     <Card className="border-none drop-shadow-sm">
-      <CardContent className="p-4 pt-0 lg:p-6">
+      <CardContent className="p-4">
         <CardTitle className="mb-2 line-clamp-1 text-base">{title}</CardTitle>
 
-        <h1 className="line-clamp-1 flex gap-3 text-base font-bold break-words lg:text-lg">
+        <h1 className="line-clamp-1 flex gap-3 text-base font-bold wrap-break-word lg:text-lg">
           <CountUp
             preserveValue
             start={0}

@@ -12,24 +12,26 @@ type CurrentBalanceChangeResult = {
 };
 
 /**
- * Calcula balance actual y cambio desde una fecha de referencia.
+ * Calcula balance en un periodo y cambio desde fecha de referencia.
  *
- * Balance card siempre muestra:
- * - Balance actual (todas las transacciones hasta HOY)
- * - Cambio desde la fecha de referencia (sinceDate) hasta HOY
+ * Balance card muestra:
+ * - Balance al final del periodo (endDate, o HOY si no se especifica)
+ * - Cambio desde la fecha de referencia (sinceDate) hasta endDate
  *
  * @param userId - ID del usuario
- * @param sinceDate - Fecha de referencia (inicio del periodo seleccionado)
+ * @param sinceDate - Fecha de inicio del periodo (para calcular cambio)
+ * @param endDate - Fecha de fin del periodo (opcional, por defecto HOY)
  * @param accountId - Cuenta específica (opcional)
  *
- * @returns Balance actual, balance en fecha de referencia, y cambio
+ * @returns Balance al final del periodo, balance al inicio, y cambio
  */
 export async function calculateCurrentBalanceChange(
   userId: string,
   sinceDate: Date,
+  endDate?: Date,
   accountId?: string,
 ): Promise<CurrentBalanceChangeResult> {
-  // Get current balance from accounts table
+  // Get current balance from accounts table (balance HOY)
   const [{ currentBalance }] = await db
     .select({
       currentBalance: sum(accounts.balance).mapWith(Number),
@@ -41,6 +43,34 @@ export async function calculateCurrentBalanceChange(
         accountId ? eq(accounts.id, accountId) : undefined,
       ),
     );
+
+  // If no endDate provided, use current balance as-is
+  // Otherwise, calculate historical balance at endDate
+  let balanceAtEndDateMilli = currentBalance;
+
+  if (endDate) {
+    // Calculate transactions AFTER endDate
+    const dayAfterEndDate = addDays(endDate, 1);
+
+    const [rowAfter] = await db
+      .select({
+        netAfterEndDate: sum(transactions.amount).mapWith(Number),
+      })
+      .from(transactions)
+      .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+      .where(
+        and(
+          eq(accounts.userId, userId),
+          accountId ? eq(transactions.accountId, accountId) : undefined,
+          gte(transactions.date, dayAfterEndDate),
+        ),
+      );
+
+    const transactionsAfterEndDate = rowAfter?.netAfterEndDate || 0;
+
+    // Balance at endDate = current balance - transactions after endDate
+    balanceAtEndDateMilli = currentBalance - transactionsAfterEndDate;
+  }
 
   // Calculate balance at the reference date (sinceDate)
   // Balance at sinceDate = current balance - all transactions since that date
@@ -65,11 +95,11 @@ export async function calculateCurrentBalanceChange(
   // Balance at reference date = current balance - transactions since then
   const balanceAtSinceDateMilli = currentBalance - transactionsSinceRefDate;
 
-  // Change = current balance - balance at reference date
-  const changeMilli = currentBalance - balanceAtSinceDateMilli;
+  // Change = balance at endDate - balance at sinceDate
+  const changeMilli = balanceAtEndDateMilli - balanceAtSinceDateMilli;
 
   return {
-    currentBalanceMilli: currentBalance,
+    currentBalanceMilli: balanceAtEndDateMilli,
     balanceAtSinceDateMilli,
     changeMilli,
   };

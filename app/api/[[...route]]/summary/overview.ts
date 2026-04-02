@@ -86,10 +86,11 @@ const app = new Hono<AppEnv>().get(
       lastPeriod.expenses,
     );
 
-    // Calculate balance: current balance + change since period start
+    // Calculate balance: balance at period end + change since period start
     const balanceData = await calculateCurrentBalanceChange(
       userId,
-      startDate, // Only period start matters for balance
+      startDate, // Period start (for calculating change)
+      endDate, // Period end (balance at this date)
       accountId,
     );
 

@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className="dark">
+      <html lang="en" className="dark" data-scroll-behavior="smooth">
         <body className={inter.className}>
           <QueryProvider>
             <SheetProvider />

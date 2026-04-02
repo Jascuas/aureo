@@ -4,7 +4,7 @@ import { format, subDays } from "date-fns";
 import { ChevronDown } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import qs from "query-string";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { type DateRange } from "react-day-picker";
 
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,11 @@ export const DateFilter = () => {
 
   const [date, setDate] = useState<DateRange | undefined>(paramState);
 
+  // Sync local state when URL params change
+  useEffect(() => {
+    setDate(paramState);
+  }, [from, to]);
+
   const pushToUrl = (dateRange: DateRange | undefined) => {
     const query = {
       from: format(dateRange?.from || defaultFrom, "yyyy-MM-dd"),
@@ -48,7 +53,7 @@ export const DateFilter = () => {
         url: pathname,
         query,
       },
-      { skipEmptyString: true, skipNull: true }
+      { skipEmptyString: true, skipNull: true },
     );
 
     router.push(url);
@@ -66,7 +71,7 @@ export const DateFilter = () => {
           disabled={false}
           size="sm"
           variant="outline"
-          className="h-9 w-full rounded-md border-none bg-white/10 px-3 font-normal text-white outline-none transition hover:bg-white/30 hover:text-white focus:bg-white/30 focus:ring-transparent focus:ring-offset-0 lg:w-auto"
+          className="h-9 w-full rounded-md border-none bg-white/10 px-3 font-normal text-white transition outline-none hover:bg-white/30 hover:text-white focus:bg-white/30 focus:ring-transparent focus:ring-offset-0 lg:w-auto"
         >
           <span>{formatDateRange(paramState)}</span>
 
