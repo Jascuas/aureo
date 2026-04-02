@@ -1,12 +1,19 @@
 "use client";
 
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { Menu } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useMedia } from "react-use";
 
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 import { NavButton } from "./nav-button";
 
@@ -48,13 +55,20 @@ export const Navigation = () => {
           <Button
             variant="outline"
             size="sm"
-            className="border-none bg-white/10 font-normal text-white outline-none transition hover:bg-white/20 hover:text-white focus:bg-white/30 focus-visible:ring-transparent focus-visible:ring-offset-0"
+            className="border-none bg-white/10 font-normal text-white transition outline-none hover:bg-white/20 hover:text-white focus:bg-white/30 focus-visible:ring-transparent focus-visible:ring-offset-0"
           >
             <Menu className="size-4" />
           </Button>
         </SheetTrigger>
 
         <SheetContent side="left" className="px-2">
+          <VisuallyHidden.Root>
+            <SheetTitle>Navigation Menu</SheetTitle>
+            <SheetDescription>
+              Navigate between different sections of the application
+            </SheetDescription>
+          </VisuallyHidden.Root>
+
           <nav className="flex flex-col gap-y-2 pt-6">
             {routes.map((route) => (
               <Button
