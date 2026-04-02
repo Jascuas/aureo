@@ -11,7 +11,7 @@ import {
 
 import { AreaSeries } from "@/lib/types";
 
-import { CustomTooltip } from "../tooltips/time-series-tooltip";
+import { DynamicTooltip } from "@/components/charts/tooltips/dynamic-tooltip";
 
 type AreaVariantProps = {
   data: unknown[];
@@ -49,7 +49,7 @@ export const AreaVariant = ({ data, series }: AreaVariantProps) => {
 
         <Tooltip
           content={({ active, payload }) => (
-            <CustomTooltip active={active} payload={payload} series={series} />
+            <DynamicTooltip active={active} payload={payload} series={series} />
           )}
         />
 

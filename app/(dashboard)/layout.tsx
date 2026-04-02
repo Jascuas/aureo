@@ -1,6 +1,6 @@
 import { type PropsWithChildren, Suspense } from "react";
 
-import { Header } from "@/components/header";
+import { Header } from "@/components/layout/header";
 
 const DashboardLayout = ({ children }: PropsWithChildren) => {
   return (

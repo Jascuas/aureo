@@ -6,9 +6,9 @@ import { GenericSelect, Option } from "@/components/inputs/generic-select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryChartType } from "@/lib/types";
 
-import { PieVariant } from "../variants/pie-variant";
-import { RadarVariant } from "../variants/radar-variant";
-import { RadialVariant } from "../variants/radial-variant";
+import { PieVariant } from "./variants/pie-variant";
+import { RadarVariant } from "./variants/radar-variant";
+import { RadialVariant } from "./variants/radial-variant";
 
 type SpendingPieProps = {
   data?: {
@@ -17,7 +17,7 @@ type SpendingPieProps = {
   }[];
 };
 
-export const SpendingPie = ({ data = [] }: SpendingPieProps) => {
+export const CategoryChart = ({ data = [] }: SpendingPieProps) => {
   type ChartType = "pie" | "radar" | "radial";
   const [chartType, setChartType] = useState<ChartType>("pie");
 

@@ -6,8 +6,8 @@ import {
 } from "@/components/ui/tooltip";
 import { cn, formatCurrency, formatPercentage } from "@/lib/utils";
 
-import { CountUp } from "./count-up";
-import { ChangeTooltip } from "./tooltips/change-tooltip";
+import { CountUp } from "@/components/count-up";
+import { ChangeTooltip } from "@/components/tooltips/change-tooltip";
 
 type DataCardProps = {
   title: string;

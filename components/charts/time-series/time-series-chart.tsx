@@ -8,13 +8,13 @@ import { useChartControls } from "@/hooks/use-chart-controls";
 import { OverTimeData } from "@/lib/types";
 import { groupByPeriod, overtimeReducers } from "@/lib/utils";
 
-import { AreaVariant } from "../variants/area-variant";
+import { AreaVariant } from "./variants/area-variant";
 
 type ChartProps = {
   data?: OverTimeData;
 };
 
-export const Chart = ({ data = [] }: ChartProps) => {
+export const TimeSeriesChart = ({ data = [] }: ChartProps) => {
   const searchParams = useSearchParams();
   const {
     groupBy,

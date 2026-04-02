@@ -2,8 +2,8 @@
 
 import { useGetOverview } from "@/features/summary/api/use-get-overview";
 
-import { DataCard } from "./data-card";
-import { DataCardLoading } from "./loading/data-card-loading";
+import { DataCard } from "@/components/dashboard/data-card";
+import { DataCardLoading } from "@/components/loading/data-card-loading";
 
 export const DataGrid = () => {
   const { data, isLoading } = useGetOverview();

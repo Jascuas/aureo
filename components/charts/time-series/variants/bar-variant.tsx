@@ -11,7 +11,7 @@ import {
 
 import { AreaSeries, OverTimeData } from "@/lib/types";
 
-import { CustomTooltip } from "../tooltips/time-series-tooltip";
+import { DynamicTooltip } from "@/components/charts/tooltips/dynamic-tooltip";
 
 type BarVariantProps = {
   data: OverTimeData;
@@ -45,7 +45,7 @@ export const BarVariant = ({ data, series }: BarVariantProps) => {
         <Tooltip
           cursor={{ fill: "rgba(255,255,255,0.1)" }}
           content={({ active, payload }) => (
-            <CustomTooltip active={active} payload={payload} series={series} />
+            <DynamicTooltip active={active} payload={payload} series={series} />
           )}
         />
         {series.map(({ key, color }) => (

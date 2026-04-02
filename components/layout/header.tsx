@@ -1,9 +1,9 @@
 import { ClerkLoaded, ClerkLoading, UserButton } from "@clerk/nextjs";
 import { Loader2 } from "lucide-react";
 
-import { Filters } from "./filters/filters";
-import { HeaderLogo } from "./header-logo";
-import { Navigation } from "./navigation";
+import { Filters } from "@/components/filters/filters";
+import { HeaderLogo } from "@/components/layout/header-logo";
+import { Navigation } from "@/components/layout/navigation";
 
 export const Header = () => {
   return (

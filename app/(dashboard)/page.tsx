@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
-import { DataCharts } from "@/components/charts/containers/data-charts";
-import { DataGrid } from "@/components/data-grid";
+import { OverviewCharts } from "@/components/charts/overview-charts";
+import { DataGrid } from "@/components/dashboard/data-grid";
 
 const DashboardPage = () => {
   return (
@@ -9,7 +9,7 @@ const DashboardPage = () => {
       <Suspense>
         <DataGrid />
 
-        <DataCharts />
+        <OverviewCharts />
       </Suspense>
     </div>
   );

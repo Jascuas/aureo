@@ -15,7 +15,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-import { NavButton } from "./nav-button";
+import { NavButton } from "@/components/layout/nav-button";
 
 const routes = [
   {

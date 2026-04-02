@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
-import { AccountFilter } from "./account-filter";
-import { DateFilter } from "./date-filter";
+import { AccountFilter } from "@/components/filters/account-filter";
+import { DateFilter } from "@/components/filters/date-filter";
 
 export const Filters = () => {
   return (

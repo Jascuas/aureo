@@ -2,7 +2,7 @@ import { SignUp } from "@clerk/nextjs";
 import { ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
 import { Loader2 } from "lucide-react";
 
-import { HeaderLogo } from "@/components/header-logo";
+import { HeaderLogo } from "@/components/layout/header-logo";
 
 export default function Page() {
   return (
