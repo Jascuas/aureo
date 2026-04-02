@@ -94,8 +94,8 @@ const app = new Hono<AppEnv>().get(
     );
 
     const balanceChangePtc = calculatePercentageChange(
-      balanceData.balanceAtSinceDateMilli,
       balanceData.currentBalanceMilli,
+      balanceData.balanceAtSinceDateMilli,
     );
 
     return c.json({
