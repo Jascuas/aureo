@@ -1,11 +1,77 @@
 # Feature Backlog
 
 > **Purpose**: Future enhancements and integrations on hold  
-> **Last Updated**: March 30, 2026
+> **Last Updated**: April 2, 2026
 
 ---
 
 ## 🔥 High Priority Features
+
+### CSV Import with AI 🚀 CRITICAL
+
+**Status**: 🎯 **TOP PRIORITY** - Biggest project task
+
+**Description**: Import transactions from CSV files using AI to parse and auto-categorize transactions intelligently.
+
+**Requirements**:
+
+- [ ] Design upload UI component (drag-and-drop + file picker)
+- [ ] Implement CSV parsing logic (handle multiple formats: bank exports, manual exports)
+- [ ] Integrate Claude API for AI categorization
+- [ ] Build preview/review UI (show parsed transactions before import)
+- [ ] Create `POST /api/transactions/import` endpoint
+- [ ] Implement backend validation (duplicate detection, amount parsing)
+- [ ] Handle negative amounts (some banks use negatives for expenses)
+- [ ] Add import history tracking
+- [ ] Design error handling for malformed CSV files
+- [ ] Implement API rate limiting for Claude calls
+- [ ] Optimize memory usage for large CSV files (1000+ transactions)
+
+**Technical Challenges**:
+
+- Different CSV formats across banks
+- Duplicate transaction detection
+- Negative amount handling (varies by bank)
+- Claude API rate limiting
+- Large CSV memory optimization
+
+**Effort**: 3-4 weeks  
+**Priority**: CRITICAL  
+**Blocked By**: None
+
+---
+
+### Investments Dashboard (Arfin-style) 💎
+
+**Status**: 🔥 **HIGH PRIORITY**
+
+**Description**: Unified investments visualization dashboard with percentage change indicators (up/down) for crypto and stocks.
+
+**Requirements**:
+
+- [ ] Create `/investments` page route
+- [ ] Design investments data model (consider integration with transactions)
+- [ ] Integrate external APIs:
+  - CoinGecko API for crypto prices
+  - Yahoo Finance API for stock prices
+- [ ] Build investment overview dashboard card
+- [ ] Implement real-time price updates
+- [ ] Add % change visualization (green/red indicators)
+- [ ] Create portfolio allocation chart
+- [ ] Add manual investment entry form
+
+**Files**:
+
+- `app/(dashboard)/investments/page.tsx` (new)
+- `features/investments/` (new feature directory)
+- `app/api/[[...route]]/investments.ts` (new)
+- `components/investment-card.tsx` (new)
+
+**Effort**: 2-3 weeks  
+**Priority**: HIGH  
+**Blocked By**: None
+
+---
 
 ### Account Transfers
 
@@ -50,6 +116,54 @@
 ---
 
 ## 📊 Medium Priority Features
+
+### Category Filtering in Statistics
+
+**Description**: Add ability to filter statistics and charts by specific category.
+
+**Requirements**:
+
+- [ ] Add category dropdown filter to SpendingPie component
+- [ ] Update `by-category` endpoint with optional `categoryId` query parameter
+- [ ] Implement filter state management
+- [ ] Update chart data based on selected category
+- [ ] Add "All Categories" option to reset filter
+- [ ] Persist filter selection in URL params
+
+**Files**:
+
+- `components/spending-pie.tsx`
+- `app/api/[[...route]]/summary/by-category.ts`
+
+**Effort**: 1 week  
+**Priority**: MEDIUM  
+**Blocked By**: None
+
+---
+
+### Investment % Change in Overview
+
+**Description**: Show investment percentage change in the main dashboard overview card.
+
+**Requirements**:
+
+- [ ] Calculate investment % change for selected time period
+- [ ] Add new "Investments" card to dashboard
+- [ ] Integrate with current asset prices (crypto/stocks)
+- [ ] Display green/red indicator based on performance
+- [ ] Add click-through to investments page
+
+**Files**:
+
+- `app/api/[[...route]]/summary/overview.ts`
+- `app/(dashboard)/page.tsx`
+- `components/data-card.tsx`
+
+**Effort**: 1 week  
+**Priority**: MEDIUM  
+**Blocked By**: Feature "Investments Dashboard (Arfin-style)" must be completed first
+
+---
 
 ### Recurring Transactions
 
@@ -151,6 +265,30 @@
 ---
 
 ## 📈 Low Priority Features
+
+### Additional Feature Ideas (Brainstorming)
+
+**Status**: 💡 **EXPLORATION PHASE**
+
+**Description**: Collection of potential features to explore and prioritize in future sprints.
+
+**Ideas**:
+
+- [ ] **Tags for Transactions**: Add multi-tag support (e.g., "business", "tax-deductible", "vacation")
+- [ ] **Goals/Savings Tracker**: Set financial goals and track progress
+- [ ] **Merchant Insights**: Analyze spending by merchant/vendor
+- [ ] **Split Transactions**: One transaction → multiple categories with percentages
+- [ ] **Scheduled Transactions**: Plan future transactions and get reminders
+- [ ] **Export/Backup**: Export data to JSON/CSV for backup or migration
+- [ ] **Tax Report Generator**: Generate tax-ready reports by category
+- [ ] **Receipt Attachments**: Upload receipt images to transactions
+- [ ] **Transaction Notes**: Add detailed notes/descriptions to transactions
+- [ ] **Multi-user Support**: Share accounts/budgets with family members
+
+**Priority**: LOW (needs user feedback to prioritize)  
+**Status**: Pending user research and feedback
+
+---
 
 ### Reports Export
 
