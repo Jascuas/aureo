@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import {
-  Area,
-  AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
@@ -9,19 +9,19 @@ import {
   YAxis,
 } from "recharts";
 
-import { AreaSeries } from "@/lib/types";
+import { AreaSeries, OverTimeData } from "@/lib/types";
 
-import { CustomTooltip } from "./custom-tooltip";
+import { CustomTooltip } from "../tooltips/time-series-tooltip";
 
-type AreaVariantProps = {
-  data: unknown[];
+type BarVariantProps = {
+  data: OverTimeData;
   series: AreaSeries[];
 };
 
-export const AreaVariant = ({ data, series }: AreaVariantProps) => {
+export const BarVariant = ({ data, series }: BarVariantProps) => {
   return (
     <ResponsiveContainer width="100%" height={350}>
-      <AreaChart data={data}>
+      <BarChart data={data}>
         <CartesianGrid strokeDasharray="3 3" />
 
         <XAxis
@@ -40,40 +40,23 @@ export const AreaVariant = ({ data, series }: AreaVariantProps) => {
             fontSize: "12px",
           }}
           tickMargin={16}
-          tickCount={5}
-          tickLine={false}
-          type="number"
-          domain={["dataMin", "auto"]}
-          allowDataOverflow={true}
         />
 
         <Tooltip
+          cursor={{ fill: "rgba(255,255,255,0.1)" }}
           content={({ active, payload }) => (
             <CustomTooltip active={active} payload={payload} series={series} />
           )}
         />
-
-        <defs>
-          {series.map(({ key, color }) => (
-            <linearGradient key={key} id={key} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={color} stopOpacity={0.8} />
-              <stop offset="95%" stopColor={color} stopOpacity={0} />
-            </linearGradient>
-          ))}
-        </defs>
-
         {series.map(({ key, color }) => (
-          <Area
+          <Bar
             key={key}
-            type="monotone"
             dataKey={key}
-            strokeWidth={2}
-            stroke={color}
-            fill={`url(#${key})`}
+            fill={color}
             className="drop-shadow-sm"
           />
         ))}
-      </AreaChart>
+      </BarChart>
     </ResponsiveContainer>
   );
 };

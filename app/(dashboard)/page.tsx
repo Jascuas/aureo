@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { DataCharts } from "@/components/data-charts";
+import { DataCharts } from "@/components/charts/containers/data-charts";
 import { DataGrid } from "@/components/data-grid";
 
 const DashboardPage = () => {

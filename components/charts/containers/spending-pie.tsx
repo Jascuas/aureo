@@ -1,16 +1,14 @@
 "use client";
-import { FileSearch, Loader2 } from "lucide-react";
+import { FileSearch } from "lucide-react";
 import { useState } from "react";
 
+import { GenericSelect, Option } from "@/components/inputs/generic-select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Option } from "@/components/ui/generic-select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { CategoryChartType } from "@/lib/types";
 
-import { PieVariant } from "./pie-variant";
-import { RadarVariant } from "./radar-variant";
-import { RadialVariant } from "./radial-variant";
-import { GenericSelect } from "./ui/generic-select";
+import { PieVariant } from "../variants/pie-variant";
+import { RadarVariant } from "../variants/radar-variant";
+import { RadialVariant } from "../variants/radial-variant";
 
 type SpendingPieProps = {
   data?: {
@@ -58,23 +56,6 @@ export const SpendingPie = ({ data = [] }: SpendingPieProps) => {
             {chartType === "radial" && <RadialVariant data={data} />}
           </>
         )}
-      </CardContent>
-    </Card>
-  );
-};
-
-export const SpendingPieLoading = () => {
-  return (
-    <Card className="border-none drop-shadow-sm">
-      <CardHeader className="flex justify-between space-y-2 lg:flex-row lg:items-center lg:space-y-0">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-8 w-full lg:w-[120px]" />
-      </CardHeader>
-
-      <CardContent>
-        <div className="flex h-[350px] w-full items-center justify-center">
-          <Loader2 className="size-6 animate-spin text-slate-300" />
-        </div>
       </CardContent>
     </Card>
   );

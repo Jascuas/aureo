@@ -1,7 +1,7 @@
 import { ClerkLoaded, ClerkLoading, UserButton } from "@clerk/nextjs";
 import { Loader2 } from "lucide-react";
 
-import { Filters } from "./filters";
+import { Filters } from "./filters/filters";
 import { HeaderLogo } from "./header-logo";
 import { Navigation } from "./navigation";
 

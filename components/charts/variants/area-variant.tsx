@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import {
-  Bar,
-  BarChart,
+  Area,
+  AreaChart,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
@@ -9,18 +9,19 @@ import {
   YAxis,
 } from "recharts";
 
-import { CustomTooltip } from "@/components/custom-tooltip";
-import { AreaSeries, OverTimeData } from "@/lib/types";
+import { AreaSeries } from "@/lib/types";
 
-type BarVariantProps = {
-  data: OverTimeData;
+import { CustomTooltip } from "../tooltips/time-series-tooltip";
+
+type AreaVariantProps = {
+  data: unknown[];
   series: AreaSeries[];
 };
 
-export const BarVariant = ({ data, series }: BarVariantProps) => {
+export const AreaVariant = ({ data, series }: AreaVariantProps) => {
   return (
     <ResponsiveContainer width="100%" height={350}>
-      <BarChart data={data}>
+      <AreaChart data={data}>
         <CartesianGrid strokeDasharray="3 3" />
 
         <XAxis
@@ -39,23 +40,40 @@ export const BarVariant = ({ data, series }: BarVariantProps) => {
             fontSize: "12px",
           }}
           tickMargin={16}
+          tickCount={5}
+          tickLine={false}
+          type="number"
+          domain={["dataMin", "auto"]}
+          allowDataOverflow={true}
         />
 
         <Tooltip
-          cursor={{ fill: "rgba(255,255,255,0.1)" }}
           content={({ active, payload }) => (
             <CustomTooltip active={active} payload={payload} series={series} />
           )}
         />
+
+        <defs>
+          {series.map(({ key, color }) => (
+            <linearGradient key={key} id={key} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={color} stopOpacity={0.8} />
+              <stop offset="95%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+          ))}
+        </defs>
+
         {series.map(({ key, color }) => (
-          <Bar
+          <Area
             key={key}
+            type="monotone"
             dataKey={key}
-            fill={color}
+            strokeWidth={2}
+            stroke={color}
+            fill={`url(#${key})`}
             className="drop-shadow-sm"
           />
         ))}
-      </BarChart>
+      </AreaChart>
     </ResponsiveContainer>
   );
 };

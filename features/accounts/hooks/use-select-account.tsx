@@ -1,7 +1,7 @@
 "use client";
 import { JSX, useRef, useState } from "react";
 
-import { Select } from "@/components/select";
+import { Select } from "@/components/inputs/select";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

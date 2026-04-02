@@ -9,7 +9,7 @@ import {
 
 import { formatPercentage } from "@/lib/utils";
 
-import { CategoryTooltip } from "./category-tooltip";
+import { CategoryTooltip } from "../tooltips/category-tooltip";
 
 const COLORS = ["#0062FF", "#12C6FF", "#FF647F", "#FF9354"];
 

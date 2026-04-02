@@ -3,9 +3,10 @@ import { Trash } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { AmountInput } from "@/components/amount-input";
-import { DatePicker } from "@/components/date-picker";
-import { Select } from "@/components/select";
+import { AmountInput } from "@/components/inputs/amount-input";
+import { DatePicker } from "@/components/inputs/date-picker";
+import { GenericSelect } from "@/components/inputs/generic-select";
+import { Select } from "@/components/inputs/select";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,7 +16,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { GenericSelect } from "@/components/ui/generic-select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { insertTransactionSchema } from "@/db/schema";

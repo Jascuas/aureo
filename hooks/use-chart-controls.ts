@@ -1,7 +1,7 @@
 // hooks/useChartControls.ts
 import { useState } from "react";
 
-import { Option } from "@/components/ui/generic-select";
+import { Option } from "@/components/inputs/generic-select";
 import { SERIES_MAP } from "@/lib/constants";
 import { AreaSeries, DataType, GroupType } from "@/lib/types";
 

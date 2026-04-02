@@ -1,10 +1,12 @@
 "use client";
 
+import { ChartLoading } from "@/components/loading/chart-loading";
+import { SpendingPieLoading } from "@/components/loading/spending-pie-loading";
 import { useGetCategorySummary } from "@/features/summary/api/use-get-category-summary";
 import { useGetOverTime } from "@/features/summary/api/use-get-over-time";
 
-import { Chart, ChartLoading } from "./chart";
-import { SpendingPie, SpendingPieLoading } from "./spending-pie";
+import { Chart } from "./chart";
+import { SpendingPie } from "./spending-pie";
 
 export const DataCharts = () => {
   const { data, isLoading } = useGetOverTime();
