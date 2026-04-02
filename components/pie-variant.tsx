@@ -21,6 +21,8 @@ type PieVariantProps = {
 };
 
 export const PieVariant = ({ data }: PieVariantProps) => {
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+
   return (
     <ResponsiveContainer width="100%" height={350}>
       <PieChart>
@@ -32,33 +34,38 @@ export const PieVariant = ({ data }: PieVariantProps) => {
           content={({ payload }) => {
             return (
               <ul className="mt-4 flex flex-col space-y-2">
-                {payload?.map((entry, index) => (
-                  <li
-                    key={`item-${index}`}
-                    className="flex items-center space-x-2"
-                  >
-                    <span
-                      className="size-2 rounded-full"
-                      style={{
-                        backgroundColor: entry.color,
-                      }}
-                      aria-hidden
-                    />
+                {payload?.map((entry, index) => {
+                  const dataItem = data.find(
+                    (item) => item.name === entry.value,
+                  );
+                  const percentage =
+                    dataItem && total > 0 ? (dataItem.value / total) * 100 : 0;
 
-                    <div className="space-x-1">
-                      <span className="text-muted-foreground text-sm">
-                        {entry.value}
-                      </span>
+                  return (
+                    <li
+                      key={`item-${index}`}
+                      className="flex items-center space-x-2"
+                    >
+                      <span
+                        className="size-2 rounded-full"
+                        style={{
+                          backgroundColor: entry.color,
+                        }}
+                        aria-hidden
+                      />
 
-                      <span className="text-sm">
-                        {formatPercentage(
-                          (entry.payload as unknown as { percent: number })
-                            .percent * 100,
-                        )}
-                      </span>
-                    </div>
-                  </li>
-                ))}
+                      <div className="space-x-1">
+                        <span className="text-muted-foreground text-sm">
+                          {entry.value}
+                        </span>
+
+                        <span className="text-sm">
+                          {formatPercentage(percentage)}
+                        </span>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             );
           }}
