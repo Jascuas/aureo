@@ -1,7 +1,7 @@
 # Feature Backlog
 
 > **Purpose**: Future enhancements and integrations on hold  
-> **Last Updated**: April 2, 2026
+> **Last Updated**: April 3, 2026 (Added refactoring ideas and soft delete from tech-debt)
 
 ---
 
@@ -269,6 +269,55 @@
 ---
 
 ## 📈 Low Priority Features
+
+### Soft Delete Pattern
+
+**Status**: 💡 **DEFERRED** (implement if user requests data recovery)
+
+**Description**: Implement soft delete pattern for transactions/accounts/categories (mark as deleted instead of hard delete).
+
+**Requirements**:
+
+- [ ] Add `deletedAt` timestamp field to transactions, accounts, categories tables
+- [ ] Create migration with partial indexes for performance
+- [ ] Create helper utilities (`notDeleted()`, `softDeleteNow()`, `restoreSoftDeleted()`)
+- [ ] Update all queries to filter `WHERE deletedAt IS NULL`
+- [ ] Update delete endpoints to use soft delete
+- [ ] (Optional) Create "Trash" UI for restoring deleted items
+
+**Benefits**:
+
+- Data recovery for accidental deletions
+- Audit trail for compliance
+- No foreign key issues
+
+**Trade-offs**:
+
+- Adds complexity to all queries
+- Database grows continuously (mitigable with archiving)
+
+**Effort**: 1-2 weeks  
+**Priority**: LOW (no user requests yet)
+
+---
+
+### Refactoring Ideas (Evaluated in Sprint 06)
+
+**Status**: ✅ **EVALUATED** - No implementation needed
+
+All refactoring ideas were analyzed in Sprint 06. **Result**: None require implementation at this time.
+
+| Idea                          | Status        | Decision                           |
+| ----------------------------- | ------------- | ---------------------------------- |
+| Chart Factory Pattern         | ⏸️ Skip       | Over-abstraction, no clear benefit |
+| Consolidate Summary Endpoints | ✅ Keep as-is | Current structure is correct       |
+| OpenAPI Documentation         | ⏸️ Defer      | Low priority for small teams       |
+| Split Large Forms             | ✅ Keep as-is | Forms are not too large            |
+| Drizzle Query Patterns        | ✅ Keep as-is | Already following best practices   |
+
+**Reference**: See `.project-management/done/sprint-06-completed.md` for full analysis.
+
+---
 
 ### Additional Feature Ideas (Brainstorming)
 
