@@ -101,7 +101,8 @@ For specific information, consult:
 - **Database Schema**: `.opencode/docs/database-schema.md`
 - **API Patterns**: `.opencode/docs/api-patterns.md`
 - **State Management**: `.opencode/docs/state-management.md`
-- **Pending Features**: `.opencode/docs/pending-features.md`
+- **GitHub Workflow**: `.opencode/docs/github-workflow.md` (task management)
+- **Agent Delegation**: `.opencode/docs/agent-delegation.md` (how agents work together)
 
 ---
 
