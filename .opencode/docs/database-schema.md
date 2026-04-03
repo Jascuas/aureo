@@ -37,12 +37,29 @@ PostgreSQL + Drizzle ORM.
 - amount in milliunits
 - accountId (CASCADE), categoryId (SET NULL), transactionTypeId (required)
 
-### transactionTypes
+### transaction_types
 
 ```typescript
 {
-  (id, name);
-} // "Income", "Expense", "Refund"
+  id: text("id").primaryKey(),
+  name: text("name").notNull().unique(),
+}
+```
+
+**Available Types:**
+- `txp8azr12yckwhv9odnb30elu` - Income
+- `txd4b7kzpn2lmjv6cuqf9s3yw` - Expense
+- `txk7m0ugzv4npbqy5e12srj9w` - Refund
+
+**API Endpoint:**
+- `GET /api/transaction-types` - List all types (auth required)
+
+**Usage in code:**
+```typescript
+// Seed/migration scripts - use actual IDs
+transactionTypeId: isExpense 
+  ? "txd4b7kzpn2lmjv6cuqf9s3yw" // Expense
+  : "txp8azr12yckwhv9odnb30elu" // Income
 ```
 
 - ⚠️ UI selector NOT implemented

@@ -93,7 +93,9 @@ const generateTransactionPerDay = (day: Date) => {
       amount: formattedAmount,
       payee: "Merchant",
       notes: "Random transaction",
-      transactionTypeId: isExpense ? "expense" : "income",
+      transactionTypeId: isExpense
+        ? "txd4b7kzpn2lmjv6cuqf9s3yw" // Expense
+        : "txp8azr12yckwhv9odnb30elu", // Income
     });
   }
 };
