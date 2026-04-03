@@ -1,7 +1,7 @@
 import { clerkMiddleware } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { createId } from "@paralleldrive/cuid2";
-import { and, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gt, gte, inArray, lt, lte, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
@@ -27,15 +27,23 @@ const app = new Hono<AppEnv>()
         from: z.string().optional(),
         to: z.string().optional(),
         accountId: z.string().optional(),
+        cursor: z.string().optional(),
+        limit: z.coerce.number().min(1).max(100).default(50),
       }),
     ),
     clerkMiddleware(),
     requireAuth,
     async (c) => {
       const userId = c.var.userId;
-      const { from, to, accountId } = c.req.valid("query");
+      const { from, to, accountId, cursor, limit } = c.req.valid("query");
       const { startDate, endDate } = parseDateRange(from, to);
 
+      // Parse cursor if provided
+      const parsedCursor = cursor
+        ? (JSON.parse(cursor) as { date: string; id: string })
+        : null;
+
+      // Fetch one extra record to determine if there are more pages
       const data = await db
         .select({
           id: transactions.id,
@@ -57,11 +65,34 @@ const app = new Hono<AppEnv>()
             eq(accounts.userId, userId),
             gte(transactions.date, startDate),
             lte(transactions.date, endDate),
+            // Cursor pagination logic
+            parsedCursor
+              ? or(
+                  lt(transactions.date, new Date(parsedCursor.date)),
+                  and(
+                    eq(transactions.date, new Date(parsedCursor.date)),
+                    gt(transactions.id, parsedCursor.id),
+                  ),
+                )
+              : undefined,
           ),
         )
-        .orderBy(desc(transactions.date));
+        .orderBy(desc(transactions.date), desc(transactions.id))
+        .limit(limit + 1);
 
-      return c.json({ data });
+      // Determine if there are more pages
+      const hasMore = data.length > limit;
+      const items = hasMore ? data.slice(0, limit) : data;
+
+      // Generate next cursor if there are more pages
+      const nextCursor = hasMore
+        ? JSON.stringify({
+            date: items[items.length - 1].date.toISOString(),
+            id: items[items.length - 1].id,
+          })
+        : null;
+
+      return c.json({ data: items, nextCursor, hasMore });
     },
   )
   .get(

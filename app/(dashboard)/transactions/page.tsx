@@ -39,7 +39,8 @@ const TransactionsPage = () => {
   const createTransactions = useBulkCreateTransactions();
   const deleteTransactions = useBulkDeleteTransactions();
   const transactionsQuery = useGetTransactions();
-  const transactions = transactionsQuery.data || [];
+  const transactions =
+    transactionsQuery.data?.pages.flatMap((page) => page.data) || [];
 
   const onUpload = (results: typeof INITIAL_IMPORT_RESULTS) => {
     setImportResults(results);
@@ -140,6 +141,25 @@ const TransactionsPage = () => {
             }}
             disabled={isDisabled}
           />
+
+          {transactionsQuery.hasNextPage && (
+            <div className="flex justify-center pt-4">
+              <Button
+                onClick={() => transactionsQuery.fetchNextPage()}
+                disabled={transactionsQuery.isFetchingNextPage}
+                variant="outline"
+              >
+                {transactionsQuery.isFetchingNextPage ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  "Load More"
+                )}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
