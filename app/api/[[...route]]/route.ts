@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { handle } from "hono/vercel";
 
 import accounts from "./accounts";
+import admin from "./admin";
 import categories from "./categories";
 import summary from "./summary";
 import transactionTypes from "./transaction-types";
@@ -12,6 +13,7 @@ export const runtime = "edge";
 const app = new Hono()
   .basePath("/api")
   .route("/accounts", accounts)
+  .route("/admin", admin)
   .route("/categories", categories)
   .route("/summary", summary)
   .route("/transaction-types", transactionTypes)
