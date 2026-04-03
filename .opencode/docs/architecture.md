@@ -99,3 +99,49 @@ export default new Hono().get("/", clerkMiddleware(), async (ctx) => {
 - Files: `kebab-case` (new-account-sheet.tsx, use-get-accounts.ts)
 - Hooks: `useGetAccounts`, `useCreateAccount`, `useNewAccount`
 - Query keys: `["accounts"]`, `["account", { id }]`
+
+## Database Triggers
+
+### Account Balance Trigger
+
+PostgreSQL trigger `update_account_balance()` automatically maintains account balances based on transaction changes. **Never update balances manually in application code.**
+
+**Trigger Details:**
+
+- **Function:** `update_account_balance()`
+- **Events:** `AFTER INSERT OR UPDATE OR DELETE ON transactions`
+- **Behavior:**
+  - **Income/Refund:** Adds `amount` to account balance
+  - **Expense:** Subtracts `amount` from account balance
+  - **Case-Insensitive:** Uses `LOWER(transaction_type.name)` for comparison
+  - **Handles:** Account transfers, transaction type changes, NULL balances, concurrent updates
+
+**Migration:** `drizzle/0002_fix_balance_trigger.sql`
+
+**Historical Bug (Fixed 2026-04-03):**
+
+- **Issue:** Trigger ignored `transaction_type_id` and always **added** amounts (case-sensitivity bug)
+- **Impact:** 83.3% of accounts corrupted (€38,754.84 total corruption)
+- **Formula:** Each expense created `+2× amount` error
+- **Root Cause:** CASE statement compared against lowercase 'income'/'expense' but DB stores capitalized "Income"/"Expense"
+- **Fix:** Added `LOWER()` to all transaction type comparisons + recalculated all balances
+
+**Verification:**
+
+```bash
+# Diagnostic script
+node scripts/diagnose-balance-corruption.mjs
+
+# Test suite
+node scripts/test-trigger-fix.mjs
+
+# Admin endpoint
+GET /api/admin/verify-balances
+```
+
+**Rules:**
+
+- ✅ Let trigger handle all balance updates
+- ❌ Never write `UPDATE accounts SET balance = ...` in API code
+- ✅ Use specific `SELECT` statements (no `SELECT *`)
+- ✅ Always validate transaction types exist before insertion
