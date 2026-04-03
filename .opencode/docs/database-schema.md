@@ -49,7 +49,7 @@ PostgreSQL + Drizzle ORM.
 **Available Types:**
 - `txp8azr12yckwhv9odnb30elu` - Income
 - `txd4b7kzpn2lmjv6cuqf9s3yw` - Expense
-- `txk7m0ugzv4npbqy5e12srj9w` - Refund
+- `uo4hd5voxicrkfovkx0bo8xg` - Transfer
 
 **API Endpoint:**
 - `GET /api/transaction-types` - List all types (auth required)
