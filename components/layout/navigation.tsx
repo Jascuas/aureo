@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useMedia } from "react-use";
 
+import { NavButton } from "@/components/layout/nav-button";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -14,8 +15,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-
-import { NavButton } from "@/components/layout/nav-button";
 
 const routes = [
   {

@@ -1,39 +1,11 @@
 # Technical Debt
 
 > **Purpose**: Code quality improvements and refactoring tasks  
-> **Last Updated**: March 30, 2026
+> **Last Updated**: April 3, 2026 (Reviewed and updated by @aureo-dev)
 
 ---
 
 ## 🏗️ Architecture & Performance
-
-### Component Organization (components/ vs features/)
-
-**Task**: Review and ensure strict separation between shared and feature-specific components
-
-**Current State**:
-
-- ✅ Columns moved from `app/(dashboard)/*/columns.tsx` to `features/*/components/` (commit `2363182`)
-- Shared UI components in `components/` (Button, Input, Select, etc.)
-- Feature-specific components in `features/*/components/`
-
-**Action Items**:
-
-- [ ] Audit all components in `components/` to ensure they're truly shared
-- [ ] Check for feature-specific logic in shared components
-- [ ] Move any feature-specific components from `components/` to appropriate `features/*/components/`
-- [ ] Document component organization rules in `.opencode/docs/rules.md`
-- [ ] Verify imports follow pattern: `@/components/` for shared, relative for feature-specific
-
-**Files to Review**:
-
-- `components/*.tsx` (all files)
-- `features/*/components/*.tsx` (verify placement)
-
-**Effort**: 2-3 hours  
-**Priority**: MEDIUM
-
----
 
 ### Pagination Implementation
 
@@ -88,19 +60,29 @@
 
 ### Loading States on Mutations
 
-**Problem**: No visual feedback during mutations
+**Status**: ✅ **PARTIALLY IMPLEMENTED**
 
 **Current State**:
 
-- Chart/data loading states exist (ChartLoading, SpendingPieLoading, DataCardLoading)
-- Form submissions have no loading indicators
+- ✅ All sheets have `isPending` state (new-_, edit-_)
+- ✅ Sheets stay open during mutations: `open={isOpen || isPending}`
+- ✅ Edit sheets show `<Loader2>` spinners while loading data
+- ✅ Forms receive `disabled={isPending}` prop from parent sheets
+- ❌ **MISSING**: Submit buttons don't show loading spinner inside
 
-**Solution**:
+**Remaining Work**:
 
-- [ ] Add `disabled={isPending}` to all form submit buttons
-- [ ] Add `<Loader2>` spinner inside buttons during mutations
-- [ ] Ensure all mutation hooks return `isPending` state
-- [ ] Test with slow network to verify UX
+- [ ] Add `<Loader2>` icon inside submit buttons (currently just disabled)
+- [ ] Change button text during submit: "Create account" → "Creating..."
+
+**Example**:
+
+```tsx
+<Button className="w-full" disabled={isPending}>
+  {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+  {isPending ? "Creating..." : "Create account"}
+</Button>
+```
 
 **Files**:
 
@@ -108,8 +90,8 @@
 - `features/categories/components/category-form.tsx`
 - `features/transactions/components/transaction-form.tsx`
 
-**Effort**: 3 hours  
-**Priority**: LOW (UX improvement)
+**Effort**: 1 hour  
+**Priority**: LOW (minor UX polish)
 
 ---
 
@@ -136,67 +118,158 @@
 
 ---
 
-## 🔍 Code Quality
-
-### React Query / Zustand Cache Invalidation
-
-**Status**: ✅ **COMPLETED** in Sprint 2
-
-**What was fixed**:
-
-- ✅ `use-create-account.ts` now invalidates `["transactions"]`, `["summary"]`
-- ✅ `use-create-category.ts` now invalidates related queries
-- ✅ `use-edit-account.ts` and `use-edit-category.ts` already correct
-
-**Commit**: `f069eb9` - "refactor: improve type consistency and query invalidation patterns"
-
----
-
-### Component Organization (components/ vs features/)
-
-**Status**: ✅ **COMPLETED** in Sprint 2
-
-**What was fixed**:
-
-- ✅ Columns moved from `app/(dashboard)/*/columns.tsx` to `features/*/components/columns.tsx`
-- ✅ Clear separation: `components/` = shared UI, `features/` = domain-specific
-
-**Commit**: `2363182` - "refactor: move column definitions from app/ to features/"
-
----
-
 ## 📝 Future Refactoring Ideas
 
 ### Consider These Later
 
-- [ ] Extract chart configuration to factory pattern (similar to Zustand stores)
-- [ ] Consolidate summary endpoints into single parameterized endpoint
-- [ ] Add OpenAPI/Swagger documentation for API
-- [ ] Consider splitting large form components into smaller sub-components
-- [ ] Evaluate Drizzle query builder patterns for consistency
+#### 1. Extract Chart Configuration to Factory Pattern
+
+**Status**: ⚠️ **EVALUATE FIRST**
+
+**Current State**:
+
+- All chart variants define configuration inline (colors, gradients, tooltips)
+- Example: `AreaVariant`, `PieVariant`, `RadarVariant` each repeat similar config
+
+**Potential Benefit**:
+
+- Centralized theming (change all chart colors in one place)
+- Consistent visual style across all charts
+
+**Potential Downside**:
+
+- Over-abstraction (current code is readable and variant-specific)
+- Each chart type has unique requirements (area ≠ pie ≠ radar)
+
+**Recommendation**: ⏸️ **SKIP FOR NOW**  
+**Reason**: Current code is maintainable. Factory would add complexity without clear ROI.
 
 ---
 
-## ✅ Completed Refactors
+#### 2. Consolidate Summary Endpoints
 
-### Sprint 2
+**Status**: ✅ **CURRENT STRUCTURE IS CORRECT**
 
-- ✅ Auth middleware extraction (25 instances → 1 reusable function)
-- ✅ Date parsing utils (5 duplicates → 1 function)
-- ✅ SQL CASE helpers (3 duplicates → reusable helpers)
-- ✅ Zustand factory pattern (6 identical stores → 2 factory functions)
-- ✅ Type consistency (interface → type)
-- ✅ Query invalidation patterns fixed
-- ✅ File structure (columns moved to features/)
+**Current State**:
 
-**Impact**: -200+ lines of duplication removed
+- `/api/summary/overview` → Income/expense totals with period comparison
+- `/api/summary/over-time` → Daily time-series data for balance chart
+- `/api/summary/by-category` → Top N categories by spend
 
-### Post-Sprint 2 (March 30-April 2, 2026)
+**Why separate is better**:
 
-- ✅ **Migrate middleware.ts to proxy.ts** (commit `9415df9`)
-  - Renamed `middleware.ts` → `proxy.ts` for Next.js 15+ compliance
-  - Verified Clerk auth still works correctly
-  - Tested protected routes after migration
-  - Eliminated deprecation warning
-  - **Files**: `middleware.ts` → `proxy.ts`
-  - **Impact**: Future-proofed for Next.js 15+
+- Different query patterns (aggregation vs time-series vs grouping)
+- Different response shapes (scalars vs arrays)
+- Different use cases (cards vs charts vs pie charts)
+- Performance: Each endpoint optimized for specific query
+
+**Recommendation**: ✅ **KEEP AS-IS**  
+**Reason**: Premature abstraction. Current API is RESTful and follows single responsibility.
+
+---
+
+#### 3. Add OpenAPI/Swagger Documentation
+
+**Status**: 🔄 **FUTURE ENHANCEMENT**
+
+**Current State**:
+
+- Zod schemas define validation for all endpoints
+- No generated API docs
+
+**Potential Benefit**:
+
+- Auto-generated API documentation
+- Type-safe client generation
+- Better DX for frontend developers
+
+**Implementation**:
+
+- Use `@hono/zod-openapi` (Hono has built-in support)
+- Generate Swagger UI at `/api/docs`
+
+**Files**:
+
+- `app/api/[[...route]]/route.ts` (add OpenAPI middleware)
+- All route files (convert to OpenAPI-compatible Hono routes)
+
+**Effort**: 2 days  
+**Priority**: LOW (nice-to-have for larger teams)
+
+**Recommendation**: ⏸️ **DEFER**  
+**Reason**: Solo/small team project. Zod validation is sufficient for now.
+
+---
+
+#### 4. Split Large Form Components
+
+**Status**: ✅ **CURRENT STRUCTURE IS ACCEPTABLE**
+
+**Current State**:
+
+- `TransactionForm` is 261 lines (date, account, category, type, payee, amount, notes)
+- `AccountForm`, `CategoryForm` are smaller (~100 lines)
+
+**Analysis**:
+
+- TransactionForm has 7 fields → reasonable for a single component
+- Each field is already a FormField (shadcn/ui pattern)
+- Splitting would create:
+  - `TransactionBasicFields.tsx`
+  - `TransactionAmountFields.tsx`
+  - `TransactionMetaFields.tsx`
+
+**Recommendation**: ✅ **KEEP AS-IS**  
+**Reason**: 261 lines is NOT large for a form. Splitting would hurt co-location and readability.
+
+**Trigger for refactor**: If form exceeds 500 lines OR has complex conditional logic.
+
+---
+
+#### 5. Evaluate Drizzle Query Patterns
+
+**Status**: ✅ **CURRENT PATTERNS ARE CORRECT**
+
+**Current State**:
+
+- All queries use explicit SELECT (no `SELECT *`)
+- Consistent use of `innerJoin` for required relations
+- Helper functions for SQL expressions (`incomeAmountSql`, `expensesAmountSql`)
+- All queries filter by `userId` (security)
+
+**Patterns in use**:
+
+```typescript
+// ✅ Good: Explicit SELECT with specific fields
+db.select({
+  id: transactions.id,
+  amount: transactions.amount,
+  // ... specific fields
+});
+
+// ✅ Good: SQL helpers for complex expressions
+const incomeAmountSql = sql`...`;
+db.select({ income: incomeAmountSql })
+
+  // ✅ Good: Consistent auth filtering
+  .where(eq(accounts.userId, userId));
+```
+
+**Recommendation**: ✅ **NO CHANGES NEEDED**  
+**Reason**: Code already follows Drizzle best practices.
+
+---
+
+## Summary of Refactoring Ideas
+
+| Idea                          | Status        | Action                             |
+| ----------------------------- | ------------- | ---------------------------------- |
+| Chart Factory Pattern         | ⏸️ Skip       | Over-abstraction, no clear benefit |
+| Consolidate Summary Endpoints | ✅ Keep as-is | Current structure is correct       |
+| OpenAPI Documentation         | ⏸️ Defer      | Low priority for small teams       |
+| Split Large Forms             | ✅ Keep as-is | Forms are not too large            |
+| Drizzle Query Patterns        | ✅ Keep as-is | Already following best practices   |
+
+**Conclusion**: All "refactoring ideas" have been evaluated. **NONE require action** at this time.
+
+---
