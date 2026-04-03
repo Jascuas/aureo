@@ -7,7 +7,32 @@
 
 ## 🐛 Active Bugs
 
-**No active bugs at this time.** All critical bugs from Sprint 03 have been resolved.
+### 🔥 CRITICAL: Balance Trigger Corruption (Sprint 07)
+
+**Severity**: 🔴 **CRITICAL**  
+**Status**: 🚀 Sprint 07 in progress  
+**Discovered**: April 3, 2026
+
+**Description**: Database trigger `update_account_balance()` corrupts account balances by always adding amounts regardless of transaction type, causing expenses to incorrectly increase balance.
+
+**Impact**:
+
+- All accounts with expense transactions have inflated balances
+- Error formula: +2 × amount per expense transaction
+- Example: $50 expense creates $100 error ($950 expected → $1,050 actual)
+
+**Files Affected**:
+
+- Database trigger: `update_account_balance()` on `transactions` table
+- Migration needed: `drizzle/XXXX_fix_balance_trigger.sql`
+
+**Priority**: P0 - CRITICAL  
+**Effort**: 2-3 days
+
+**Sprint**: See `.project-management/sprints/sprint-07.md` for full fix plan  
+**Detailed Report**: See `.project-management/fixes/balance-trigger-bug.md`
+
+---
 
 ---
 
@@ -49,17 +74,6 @@ Technical explanation
 **Priority**: HIGH | MEDIUM | LOW
 **Effort**: X hours/days
 ```
-
----
-
-## ✅ Recently Fixed Bugs
-
-See `.project-management/done/sprint-03-completed.md` for details on recently fixed bugs:
-
-1. ✅ Balance % Incorrect - `9bf3999`
-2. ✅ Category NaN in Percentages - `a6b97e0`
-3. ✅ Cards Broken in Mobile - `c14a7b6`
-4. ✅ Dialog Accessibility Issues - `7135a4a`
 
 ---
 

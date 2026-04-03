@@ -98,24 +98,26 @@
 
 ### Database Triggers for Balance
 
-**Status**: 🎯 **MOVED TO SPRINT 07**
+**Status**: 🔥 **CRITICAL BUG FOUND - SPRINT 07**
 
-**Description**: Auto-update account balances via DB triggers instead of manual calculations
+**Description**: Fix critical bug in existing balance trigger that corrupts account balances
 
 **Requirements**:
 
-- [ ] Create trigger for INSERT on transactions table
-- [ ] Create trigger for UPDATE on transactions table
-- [ ] Create trigger for DELETE on transactions table
-- [ ] Remove manual balance update logic from API
-- [ ] Test race condition scenarios
-- [ ] Document trigger behavior in schema docs
+- [ ] Diagnose balance corruption (trigger ignores transaction type)
+- [ ] Create migration to recalculate all corrupted balances
+- [ ] Fix trigger to respect transaction types (income/expense/refund)
+- [ ] Test INSERT, UPDATE, DELETE operations
+- [ ] Create admin balance verification endpoint
+- [ ] Document trigger behavior in architecture docs
 
-**Effort**: 1 week  
-**Priority**: HIGH  
+**Effort**: 2-3 days  
+**Priority**: P0 - CRITICAL  
 **Blocked By**: None
 
-**Note**: This feature has been moved to Sprint 07 for active development. See `.project-management/sprints/sprint-07.md` for detailed implementation plan.
+**Critical Issue**: Existing trigger always adds amount (ignores transaction type), causing expenses to incorrectly increase balance instead of decreasing it. This creates +2× error per expense transaction.
+
+**Note**: This is now a CRITICAL BUG FIX sprint. See `.project-management/sprints/sprint-07.md` for detailed fix plan.
 
 ---
 

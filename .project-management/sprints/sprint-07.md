@@ -59,11 +59,30 @@ Net Error: +2 × amount
 
 ---
 
-## 📋 Tasks
+## ✅ Quick Start Checklist
 
-### 🔥 Task 1: Assess Data Corruption (CRITICAL)
+**Estimación total**: 2-3 días
+
+- [ ] **Task 1**: Diagnosticar corrupción de datos (SQL query) — 2 horas
+- [ ] **Task 2**: Crear migración con recalcular + fix trigger — 4 horas
+- [ ] **Task 3**: Verificar código de API (✅ YA HECHO) — 0 horas
+- [ ] **Task 4**: Probar trigger corregido (INSERT/UPDATE/DELETE) — 3 horas
+- [ ] **Task 5**: Crear endpoint admin de verificación — 2 horas
+- [ ] **Task 6**: Documentar en architecture.md — 1 hora
+
+**Total estimado**: ~12 horas (1.5 días)  
+**Buffer para testing**: +1 día  
+**Total con buffer**: 2-3 días
+
+---
+
+## 📋 Detailed Tasks
+
+### 🔥 Task 1: Diagnosticar Corrupción de Datos
 
 **File**: Create `scripts/diagnose-balance-corruption.mjs` (new)
+
+**Estimación**: 2 horas
 
 - [ ] Create diagnostic script to identify corrupted accounts
 - [ ] Run query to compare current vs. correct balances
@@ -110,9 +129,11 @@ HAVING a.balance <> COALESCE(SUM(
 
 ---
 
-### 🔥 Task 2: Create Migration to Fix Trigger
+### 🔥 Task 2: Crear Migración con Recalcular + Fix Trigger
 
 **File**: `drizzle/XXXX_fix_balance_trigger.sql` (new)
+
+**Estimación**: 4 horas
 
 - [ ] Drop existing buggy trigger and function
 - [ ] Recalculate all account balances (data fix)
@@ -241,9 +262,11 @@ EXECUTE FUNCTION update_account_balance();
 
 ---
 
-### ✅ Task 3: Verify API Code (Already Done)
+### ✅ Task 3: Verificar Código de API (YA HECHO)
 
 **Files Checked**: `app/api/[[...route]]/transactions.ts`
+
+**Estimación**: 0 horas (completado durante análisis)
 
 - [x] ✅ Confirmed: API does NOT manually update balances
 - [x] ✅ All endpoints rely on trigger (correct architecture)
@@ -267,9 +290,11 @@ const [data] = await db.delete(transactions).returning();
 
 ---
 
-### 🧪 Task 4: Test Fixed Trigger
+### 🧪 Task 4: Probar Trigger Corregido (INSERT/UPDATE/DELETE)
 
 **File**: Create `scripts/test-trigger-fix.mjs` (new)
+
+**Estimación**: 3 horas
 
 - [ ] Test basic INSERT operations (income, expense, refund)
 - [ ] Test UPDATE operations (amount change, type change, account change)
@@ -303,9 +328,11 @@ const [data] = await db.delete(transactions).returning();
 
 ---
 
-### 📝 Task 5: Create Balance Verification Admin Tool
+### 🛠️ Task 5: Crear Endpoint Admin de Verificación
 
 **File**: `app/api/[[...route]]/admin.ts` (new)
+
+**Estimación**: 2 horas
 
 - [ ] Create `GET /api/admin/verify-balances` endpoint
 - [ ] Return list of accounts with balance mismatches
@@ -350,9 +377,11 @@ export default app;
 
 ---
 
-### 📚 Task 6: Update Documentation
+### 📚 Task 6: Documentar en architecture.md
 
 **File**: `.opencode/docs/architecture.md`
+
+**Estimación**: 1 hora
 
 - [ ] Add "Balance Management" section
 - [ ] Document trigger behavior and transaction type logic
