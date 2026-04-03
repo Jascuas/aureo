@@ -4,7 +4,7 @@ import { Loader2, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { DataTable } from "@/components/data-table";
+import { PaginatedDataTable } from "@/components/paginated-data-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,7 +12,7 @@ import { transactions as transactionSchema } from "@/db/schema";
 import { useSelectAccount } from "@/features/accounts/hooks/use-select-account";
 import { useBulkCreateTransactions } from "@/features/transactions/api/use-bulk-create-transactions";
 import { useBulkDeleteTransactions } from "@/features/transactions/api/use-bulk-delete-transactions";
-import { useGetTransactions } from "@/features/transactions/api/use-get-transactions";
+import { useGetPaginatedTransactions } from "@/features/transactions/api/use-get-paginated-transactions";
 import { columns } from "@/features/transactions/components/columns";
 import { useNewTransaction } from "@/features/transactions/hooks/use-new-transaction";
 
@@ -38,9 +38,8 @@ const TransactionsPage = () => {
   const newTransaction = useNewTransaction();
   const createTransactions = useBulkCreateTransactions();
   const deleteTransactions = useBulkDeleteTransactions();
-  const transactionsQuery = useGetTransactions();
-  const transactions =
-    transactionsQuery.data?.pages.flatMap((page) => page.data) || [];
+  const { transactions, paginationInfo, paginationCallbacks, query } =
+    useGetPaginatedTransactions();
 
   const onUpload = (results: typeof INITIAL_IMPORT_RESULTS) => {
     setImportResults(results);
@@ -73,10 +72,9 @@ const TransactionsPage = () => {
     });
   };
 
-  const isDisabled =
-    transactionsQuery.isLoading || deleteTransactions.isPending;
+  const isDisabled = paginationInfo.isLoading || deleteTransactions.isPending;
 
-  if (transactionsQuery.isLoading) {
+  if (paginationInfo.isLoading) {
     return (
       <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
         <Card className="border-none drop-shadow-sm">
@@ -130,7 +128,7 @@ const TransactionsPage = () => {
         </CardHeader>
 
         <CardContent>
-          <DataTable
+          <PaginatedDataTable
             filterKey="payee"
             columns={columns}
             data={transactions}
@@ -140,26 +138,9 @@ const TransactionsPage = () => {
               deleteTransactions.mutate({ ids });
             }}
             disabled={isDisabled}
+            paginationInfo={paginationInfo}
+            paginationCallbacks={paginationCallbacks}
           />
-
-          {transactionsQuery.hasNextPage && (
-            <div className="flex justify-center pt-4">
-              <Button
-                onClick={() => transactionsQuery.fetchNextPage()}
-                disabled={transactionsQuery.isFetchingNextPage}
-                variant="outline"
-              >
-                {transactionsQuery.isFetchingNextPage ? (
-                  <>
-                    <Loader2 className="mr-2 size-4 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  "Load More"
-                )}
-              </Button>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

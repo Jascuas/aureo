@@ -98,6 +98,8 @@
 
 ### Database Triggers for Balance
 
+**Status**: 🎯 **MOVED TO SPRINT 07**
+
 **Description**: Auto-update account balances via DB triggers instead of manual calculations
 
 **Requirements**:
@@ -112,6 +114,8 @@
 **Effort**: 1 week  
 **Priority**: HIGH  
 **Blocked By**: None
+
+**Note**: This feature has been moved to Sprint 07 for active development. See `.project-management/sprints/sprint-07.md` for detailed implementation plan.
 
 ---
 
