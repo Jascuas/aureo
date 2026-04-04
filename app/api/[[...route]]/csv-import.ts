@@ -1,11 +1,16 @@
 import { clerkMiddleware } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
+import { createId } from "@paralleldrive/cuid2";
+import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
+import { db } from "@/db/drizzle";
+import { importTemplates, insertImportTemplateSchema } from "@/db/schema";
 import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
+import { requireId } from "@/lib/validation-middleware";
 import { detectDuplicates } from "@/features/csv-import/lib/duplicate-matcher";
 import { categorizeTransactions } from "@/features/csv-import/lib/transaction-categorizer";
 
@@ -40,6 +45,20 @@ const categorizeTransactionsSchema = z.object({
     .array(categorizeTransactionSchema)
     .min(1, "At least one transaction required")
     .max(50, "Maximum 50 transactions per batch"),
+});
+
+const saveTemplateSchema = insertImportTemplateSchema.omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+const updateTemplateSchema = insertImportTemplateSchema.partial().omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 // ============================================================================
@@ -132,6 +151,145 @@ const app = new Hono<AppEnv>()
           },
           500,
         );
+      }
+    },
+  )
+  // ============================================================================
+  // Template Management
+  // ============================================================================
+  .get("/templates", clerkMiddleware(), requireAuth, async (c) => {
+    const userId = c.var.userId;
+
+    try {
+      const templates = await db
+        .select({
+          id: importTemplates.id,
+          name: importTemplates.name,
+          columnMapping: importTemplates.columnMapping,
+          dateFormat: importTemplates.dateFormat,
+          amountFormat: importTemplates.amountFormat,
+          createdAt: importTemplates.createdAt,
+          updatedAt: importTemplates.updatedAt,
+        })
+        .from(importTemplates)
+        .where(eq(importTemplates.userId, userId))
+        .orderBy(importTemplates.updatedAt);
+
+      return c.json({ data: templates });
+    } catch (error) {
+      console.error("Get templates error:", error);
+      return c.json({ error: API_ERRORS.INTERNAL_ERROR }, 500);
+    }
+  })
+  .post(
+    "/templates",
+    clerkMiddleware(),
+    requireAuth,
+    zValidator("json", saveTemplateSchema),
+    async (c) => {
+      const userId = c.var.userId;
+      const values = c.req.valid("json");
+
+      try {
+        const [template] = await db
+          .insert(importTemplates)
+          .values({
+            id: createId(),
+            userId,
+            ...values,
+          })
+          .returning();
+
+        return c.json({ data: template });
+      } catch (error: any) {
+        console.error("Save template error:", error);
+
+        // Handle unique constraint violation
+        if (error.code === "23505") {
+          return c.json(
+            {
+              error: {
+                message: "A template with this name already exists",
+              },
+            },
+            409,
+          );
+        }
+
+        return c.json({ error: API_ERRORS.INTERNAL_ERROR }, 500);
+      }
+    },
+  )
+  .patch(
+    "/templates/:id",
+    zValidator("param", z.object({ id: z.string().optional() })),
+    clerkMiddleware(),
+    requireAuth,
+    requireId,
+    zValidator("json", updateTemplateSchema),
+    async (c) => {
+      const userId = c.var.userId;
+      const id = c.var.validatedId;
+      const values = c.req.valid("json");
+
+      try {
+        const [template] = await db
+          .update(importTemplates)
+          .set({
+            ...values,
+            updatedAt: new Date(),
+          })
+          .where(and(eq(importTemplates.id, id), eq(importTemplates.userId, userId)))
+          .returning();
+
+        if (!template) {
+          return c.json({ error: API_ERRORS.NOT_FOUND }, 404);
+        }
+
+        return c.json({ data: template });
+      } catch (error: any) {
+        console.error("Update template error:", error);
+
+        // Handle unique constraint violation
+        if (error.code === "23505") {
+          return c.json(
+            {
+              error: {
+                message: "A template with this name already exists",
+              },
+            },
+            409,
+          );
+        }
+
+        return c.json({ error: API_ERRORS.INTERNAL_ERROR }, 500);
+      }
+    },
+  )
+  .delete(
+    "/templates/:id",
+    zValidator("param", z.object({ id: z.string().optional() })),
+    clerkMiddleware(),
+    requireAuth,
+    requireId,
+    async (c) => {
+      const userId = c.var.userId;
+      const id = c.var.validatedId;
+
+      try {
+        const [template] = await db
+          .delete(importTemplates)
+          .where(and(eq(importTemplates.id, id), eq(importTemplates.userId, userId)))
+          .returning();
+
+        if (!template) {
+          return c.json({ error: API_ERRORS.NOT_FOUND }, 404);
+        }
+
+        return c.json({ data: template });
+      } catch (error) {
+        console.error("Delete template error:", error);
+        return c.json({ error: API_ERRORS.INTERNAL_ERROR }, 500);
       }
     },
   );
