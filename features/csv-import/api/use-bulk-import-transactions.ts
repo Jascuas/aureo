@@ -4,15 +4,15 @@ import { toast } from "sonner";
 
 import { client } from "@/lib/hono";
 
-type ResponseType = InferResponseType<typeof client.api.transactions["bulk-create"]["$post"]>;
-type RequestType = InferRequestType<typeof client.api.transactions["bulk-create"]["$post"]>["json"];
+type ResponseType = InferResponseType<typeof client.api["csv-import"]["import"]["$post"]>;
+type RequestType = InferRequestType<typeof client.api["csv-import"]["import"]["$post"]>["json"];
 
 export const useBulkImportTransactions = () => {
   const queryClient = useQueryClient();
 
   return useMutation<ResponseType, Error, RequestType>({
     mutationFn: async (json) => {
-      const response = await client.api.transactions["bulk-create"].$post({ json });
+      const response = await client.api["csv-import"]["import"].$post({ json });
       if (!response.ok) {
         throw new Error("Failed to import transactions");
       }

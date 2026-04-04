@@ -6,7 +6,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 
 import { db } from "@/db/drizzle";
-import { importTemplates, insertImportTemplateSchema } from "@/db/schema";
+import { accounts, importTemplates, insertImportTemplateSchema, transactions } from "@/db/schema";
 import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
@@ -289,6 +289,81 @@ const app = new Hono<AppEnv>()
         return c.json({ data: template });
       } catch (error) {
         console.error("Delete template error:", error);
+        return c.json({ error: "Internal server error" }, 500);
+      }
+    },
+  )
+  // ============================================================================
+  // Bulk Import
+  // ============================================================================
+  .post(
+    "/import",
+    clerkMiddleware(),
+    requireAuth,
+    zValidator("json", z.object({
+      accountId: z.string().min(1),
+      transactions: z.array(z.object({
+        date: z.string().transform((val) => new Date(val)),
+        amount: z.number().int(), // Milliunits
+        payee: z.string().min(1),
+        notes: z.string().optional(),
+        categoryId: z.string().nullable(),
+        transactionTypeId: z.string().min(1),
+      })).min(1).max(500, "Maximum 500 transactions per import"),
+    })),
+    async (c) => {
+      const userId = c.var.userId;
+      const { accountId, transactions: txs } = c.req.valid("json");
+
+      try {
+        // Validate account belongs to user
+        const [account] = await db
+          .select({ id: accounts.id })
+          .from(accounts)
+          .where(and(eq(accounts.id, accountId), eq(accounts.userId, userId)))
+          .limit(1);
+
+        if (!account) {
+          return c.json({ error: "Account not found" }, 404);
+        }
+
+        // Bulk insert transactions
+        const inserted = await db
+          .insert(transactions)
+          .values(
+            txs.map((tx) => ({
+              id: createId(),
+              accountId,
+              date: tx.date,
+              amount: tx.amount,
+              payee: tx.payee,
+              notes: tx.notes || null,
+              categoryId: tx.categoryId,
+              transactionTypeId: tx.transactionTypeId,
+            }))
+          )
+          .returning({ id: transactions.id });
+
+        return c.json({
+          data: {
+            imported: inserted.length,
+            skipped: 0,
+            errors: [],
+          },
+        });
+      } catch (error: any) {
+        console.error("Bulk import error:", error);
+
+        // Handle foreign key violations
+        if (error.code === "23503") {
+          return c.json(
+            {
+              error: "Invalid category or transaction type ID",
+            },
+            400,
+          );
+        }
+
         return c.json({ error: "Internal server error" }, 500);
       }
     },
