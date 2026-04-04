@@ -26,7 +26,7 @@ type ColumnMappingProps = {
   sampleRows: string[][];
   detectionResult?: ColumnDetectionResult;
   onMappingChange: (mapping: Record<string, number>) => void;
-  onFormatChange: (dateFormat: string, amountFormat: ColumnMappingProps['detectionResult']['amountFormat']) => void;
+  onFormatChange: (dateFormat: string, amountFormat: { decimalSeparator: '.' | ','; thousandsSeparator: ',' | '.' | ' ' | ''; isNegativeExpense: boolean }) => void;
   onSaveTemplate?: (name: string) => void;
   onLoadTemplate?: (templateId: string) => void;
 };
@@ -84,7 +84,7 @@ export const ColumnMapping = ({
   const getValidationErrors = () => {
     const errors: string[] = [];
     const requiredTypes = COLUMN_TYPES.filter(t => t.required).map(t => t.value);
-    const mappedTypes = Object.values(mapping).filter(t => t !== 'unknown');
+    const mappedTypes = Object.values(mapping).filter((t): t is Exclude<ColumnType, 'unknown'> => t !== 'unknown');
     
     requiredTypes.forEach(type => {
       if (!mappedTypes.includes(type)) {

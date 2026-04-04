@@ -104,7 +104,7 @@ const app = new Hono<AppEnv>()
         console.error("Duplicate detection error:", error);
         return c.json(
           {
-            error: API_ERRORS.INTERNAL_ERROR,
+            error: "Internal server error",
           },
           500,
         );
@@ -147,7 +147,7 @@ const app = new Hono<AppEnv>()
         console.error("Categorization error:", error);
         return c.json(
           {
-            error: API_ERRORS.INTERNAL_ERROR,
+            error: "Internal server error",
           },
           500,
         );
@@ -178,7 +178,7 @@ const app = new Hono<AppEnv>()
       return c.json({ data: templates });
     } catch (error) {
       console.error("Get templates error:", error);
-      return c.json({ error: API_ERRORS.INTERNAL_ERROR }, 500);
+      return c.json({ error: "Internal server error" }, 500);
     }
   })
   .post(
@@ -216,7 +216,7 @@ const app = new Hono<AppEnv>()
           );
         }
 
-        return c.json({ error: API_ERRORS.INTERNAL_ERROR }, 500);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   )
@@ -262,7 +262,7 @@ const app = new Hono<AppEnv>()
           );
         }
 
-        return c.json({ error: API_ERRORS.INTERNAL_ERROR }, 500);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   )
@@ -289,7 +289,7 @@ const app = new Hono<AppEnv>()
         return c.json({ data: template });
       } catch (error) {
         console.error("Delete template error:", error);
-        return c.json({ error: API_ERRORS.INTERNAL_ERROR }, 500);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
