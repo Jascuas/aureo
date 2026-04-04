@@ -15,6 +15,13 @@
       "when": 1774821165943,
       "tag": "0001_gorgeous_red_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775321464734,
+      "tag": "0002_sturdy_quasar",
+      "breakpoints": true
     }
   ]
 }

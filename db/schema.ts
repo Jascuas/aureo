@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, jsonb, pgTable, text, timestamp, index, unique } from "drizzle-orm/pg-core";
 import { AnyPgColumn } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -74,4 +74,31 @@ export const insertTransactionSchema = createInsertSchema(transactions, {
 export const transactionTypes = pgTable("transaction_types", {
   id: text("id").primaryKey(),
   name: text("name").notNull().unique(),
+});
+
+// ============================================================================
+// Import Templates
+// ============================================================================
+
+export const importTemplates = pgTable("import_templates", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  name: text("name").notNull(),
+  columnMapping: jsonb("column_mapping").notNull(),
+  dateFormat: text("date_format").notNull(),
+  amountFormat: jsonb("amount_format").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index("import_templates_user_id_idx").on(table.userId),
+  uniqueUserName: unique("import_templates_user_name_unique").on(table.userId, table.name),
+}));
+
+export const insertImportTemplateSchema = createInsertSchema(importTemplates, {
+  columnMapping: z.record(z.string(), z.number()), // { "date": 0, "amount": 2, "payee": 1, ... }
+  amountFormat: z.object({
+    decimalSeparator: z.enum([".", ","]),
+    thousandsSeparator: z.enum([".", ",", " ", ""]),
+    isNegativeExpense: z.boolean(),
+  }),
 });
