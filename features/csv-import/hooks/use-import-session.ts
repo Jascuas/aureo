@@ -1,19 +1,27 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { CategorizationResult } from '../lib/transaction-categorizer';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import type { ColumnDetectionResult, ParsedCSVRow } from '../types/import-types';
 import type { DuplicateMatch } from '../lib/duplicate-matcher';
-import type { 
-  ColumnDetectionResult, 
-  ImportTemplate, 
-  ParsedCSVRow 
-} from '../types/import-types';
+import type { ImportTemplate } from '../types/template-types';
 
-export type ImportStep = 
-  | 'UPLOAD'
-  | 'MAPPING'
-  | 'ANALYSIS'
-  | 'REVIEW'
-  | 'IMPORT';
+export type ImportStep = 'UPLOAD' | 'MAPPING' | 'ANALYSIS' | 'REVIEW' | 'IMPORT';
+
+// Enriched categorization with transaction data (flattened from API)
+export type EnrichedCategorization = {
+  csvRowIndex: number;
+  date: string;
+  amount: number;
+  payee: string;
+  notes?: string;
+  categoryId: string | null;
+  categoryName: string | null;
+  transactionTypeId: string;
+  transactionTypeName: string;
+  confidence: number;
+  reasoning: string;
+  normalizedPayee: string;
+  requiresManualReview: boolean;
+};
 
 type ImportSessionState = {
   currentStep: ImportStep;
@@ -32,6 +40,11 @@ type ImportSessionState = {
   
   analyzedRows: {
     duplicates: DuplicateMatch[];
+    categorizations: EnrichedCategorization[];
+  };
+  
+  analyzedRows: {
+    duplicates: DuplicateMatch[];
     categorizations: CategorizationResult[];
   };
   
@@ -46,8 +59,9 @@ type ImportSessionState = {
   setDetectionResult: (result: ColumnDetectionResult) => void;
   setSelectedTemplate: (template: ImportTemplate | null) => void;
   setFinalMapping: (mapping: Record<string, number>) => void;
+  
   setDuplicates: (duplicates: DuplicateMatch[]) => void;
-  setCategorizations: (categorizations: CategorizationResult[]) => void;
+  setCategorizations: (categorizations: EnrichedCategorization[]) => void;
   setImportResult: (result: ImportSessionState['importResult']) => void;
   
   nextStep: () => void;
