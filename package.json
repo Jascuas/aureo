@@ -15,6 +15,7 @@
   "dependencies": {
     "@clerk/backend": "^3.2.4",
     "@clerk/nextjs": "^7.0.8",
+    "@google/generative-ai": "^0.24.1",
     "@hono/clerk-auth": "^3.1.0",
     "@hono/zod-validator": "^0.7.6",
     "@hookform/resolvers": "^5.2.2",
