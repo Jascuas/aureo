@@ -534,7 +534,7 @@ export const AiImportCard = ({
                 );
                 setCategorizations(updated);
               }}
-              onRowSelectionChange={setSelectedRows}
+              onRowSelectionChange={(selected) => setSelectedRows(new Set(selected))}
             />
           </>
         );

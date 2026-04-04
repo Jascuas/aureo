@@ -8,68 +8,43 @@ import { PaginatedDataTable } from "@/components/paginated-data-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { transactions as transactionSchema } from "@/db/schema";
 import { useSelectAccount } from "@/features/accounts/hooks/use-select-account";
-import { useBulkCreateTransactions } from "@/features/transactions/api/use-bulk-create-transactions";
 import { useBulkDeleteTransactions } from "@/features/transactions/api/use-bulk-delete-transactions";
 import { useGetPaginatedTransactions } from "@/features/transactions/api/use-get-paginated-transactions";
 import { columns } from "@/features/transactions/components/columns";
 import { useNewTransaction } from "@/features/transactions/hooks/use-new-transaction";
-
-import { ImportCard } from "./import-card";
-import { UploadButton } from "./upload-button";
+import { AiImportCard } from "@/features/csv-import/components/ai-import-card";
 
 enum VARIANTS {
   LIST = "LIST",
   IMPORT = "IMPORT",
 }
 
-const INITIAL_IMPORT_RESULTS = {
-  data: [],
-  errors: [],
-  meta: [],
-};
-
 const TransactionsPage = () => {
   const [variant, setVariant] = useState<VARIANTS>(VARIANTS.LIST);
-  const [importResults, setImportResults] = useState(INITIAL_IMPORT_RESULTS);
+  const [selectedAccountId, setSelectedAccountId] = useState<string | undefined>();
 
   const [AccountDialog, confirm] = useSelectAccount();
   const newTransaction = useNewTransaction();
-  const createTransactions = useBulkCreateTransactions();
   const deleteTransactions = useBulkDeleteTransactions();
   const { transactions, paginationInfo, paginationCallbacks, query } =
     useGetPaginatedTransactions();
 
-  const onUpload = (results: typeof INITIAL_IMPORT_RESULTS) => {
-    setImportResults(results);
-    setVariant(VARIANTS.IMPORT);
-  };
-
-  const onCancelImport = () => {
-    setImportResults(INITIAL_IMPORT_RESULTS);
-    setVariant(VARIANTS.LIST);
-  };
-
-  const onSubmitImport = async (
-    values: (typeof transactionSchema.$inferInsert)[],
-  ) => {
+  const onUpload = async () => {
+    // Select account first
     const accountId = await confirm();
 
     if (!accountId) {
       return toast.error("Please select an account to continue.");
     }
 
-    const data = values.map((value) => ({
-      ...value,
-      accountId: accountId as string,
-    }));
+    setSelectedAccountId(accountId as string);
+    setVariant(VARIANTS.IMPORT);
+  };
 
-    createTransactions.mutate(data, {
-      onSuccess: () => {
-        onCancelImport();
-      },
-    });
+  const onCancelImport = () => {
+    setSelectedAccountId(undefined);
+    setVariant(VARIANTS.LIST);
   };
 
   const isDisabled = paginationInfo.isLoading || deleteTransactions.isPending;
@@ -97,11 +72,13 @@ const TransactionsPage = () => {
       <>
         <AccountDialog />
 
-        <ImportCard
-          data={importResults.data}
-          onCancel={onCancelImport}
-          onSubmit={onSubmitImport}
-        />
+        <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
+          <AiImportCard
+            accountId={selectedAccountId}
+            onComplete={onCancelImport}
+            onCancel={onCancelImport}
+          />
+        </div>
       </>
     );
   }
@@ -123,7 +100,14 @@ const TransactionsPage = () => {
               <Plus className="mr-2 size-4" /> Add new
             </Button>
 
-            <UploadButton onUpload={onUpload} />
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onUpload}
+              className="w-full lg:w-auto"
+            >
+              <Plus className="mr-2 size-4" /> Import CSV
+            </Button>
           </div>
         </CardHeader>
 
