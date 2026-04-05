@@ -1,13 +1,3 @@
-/**
- * CSV Import Types
- * 
- * Type definitions for the CSV import feature.
- */
-
-// ============================================================================
-// Column Detection
-// ============================================================================
-
 export type ColumnType = 
   | 'date'
   | 'amount'
@@ -52,10 +42,6 @@ export type ColumnDetectionResult = {
   method: 'heuristic' | 'ai'; // How it was detected
 };
 
-// ============================================================================
-// CSV Parsing
-// ============================================================================
-
 export type ParsedCSVRow = {
   index: number; // Row number in CSV (0-based)
   data: string[]; // Raw cell values
@@ -75,10 +61,6 @@ export type MappedTransaction = {
   warnings: string[];
 };
 
-// ============================================================================
-// Import Templates
-// ============================================================================
-
 export type ImportTemplate = {
   id: string;
   userId: string;
@@ -89,10 +71,6 @@ export type ImportTemplate = {
   createdAt: Date;
   updatedAt: Date;
 };
-
-// ============================================================================
-// Import Session State
-// ============================================================================
 
 export type ImportSessionState = 
   | 'idle'
@@ -128,10 +106,6 @@ export type ImportSession = {
   // Error handling
   error?: string;
 };
-
-// ============================================================================
-// Heuristic Detection Config
-// ============================================================================
 
 export type HeuristicConfig = {
   minConfidence: number; // Minimum confidence to accept heuristic result

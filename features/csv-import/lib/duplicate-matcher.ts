@@ -1,6 +1,7 @@
 import { db } from '@/db/drizzle';
 import { accounts, transactions } from '@/db/schema';
 import { and, between, eq, sql } from 'drizzle-orm';
+import { CSV_IMPORT_CONFIG } from './config';
 
 export type TransactionInput = {
   date: Date;
@@ -28,12 +29,6 @@ export type DuplicateDetectionResult = {
   totalChecked: number;
   exactMatches: number;
   fuzzyMatches: number;
-};
-
-const FUZZY_CONFIG = {
-  dateTolerance: 2,
-  amountTolerance: 0.01,
-  similarityThreshold: 0.85,
 };
 
 async function findExactMatches(
@@ -91,12 +86,12 @@ async function findFuzzyMatches(
     const input = inputs[i];
 
     const dateMin = new Date(input.date);
-    dateMin.setDate(dateMin.getDate() - FUZZY_CONFIG.dateTolerance);
+    dateMin.setDate(dateMin.getDate() - CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.DATE_TOLERANCE_DAYS);
     const dateMax = new Date(input.date);
-    dateMax.setDate(dateMax.getDate() + FUZZY_CONFIG.dateTolerance);
+    dateMax.setDate(dateMax.getDate() + CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.DATE_TOLERANCE_DAYS);
 
-    const amountMin = Math.floor(input.amount * (1 - FUZZY_CONFIG.amountTolerance));
-    const amountMax = Math.ceil(input.amount * (1 + FUZZY_CONFIG.amountTolerance));
+    const amountMin = Math.floor(input.amount * (1 - CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.AMOUNT_TOLERANCE_PERCENT));
+    const amountMax = Math.ceil(input.amount * (1 + CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.AMOUNT_TOLERANCE_PERCENT));
 
     const results = await db
       .select({
@@ -114,7 +109,7 @@ async function findFuzzyMatches(
           eq(accounts.userId, userId),
           between(transactions.date, dateMin, dateMax),
           between(transactions.amount, amountMin, amountMax),
-          sql`similarity(${transactions.payee}, ${input.payee}::text) > ${FUZZY_CONFIG.similarityThreshold}`
+          sql`similarity(${transactions.payee}, ${input.payee}::text) > ${CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.SIMILARITY_THRESHOLD}`
         )
       )
       .orderBy(sql`similarity(${transactions.payee}, ${input.payee}::text) DESC`)

@@ -3,6 +3,7 @@ import { accounts, categories, transactions, transactionTypes } from '@/db/schem
 import { getDefaultAIProvider } from '@/lib/ai';
 import { normalizePayeeName } from '@/lib/utils';
 import { eq, sql } from 'drizzle-orm';
+import { CSV_IMPORT_CONFIG } from './config';
 
 export type TransactionInput = {
   csvRowIndex: number;
@@ -89,8 +90,8 @@ export async function categorizeTransactions(
   userId: string,
   inputs: TransactionInput[]
 ): Promise<CategorizationResult[]> {
-  if (inputs.length > 50) {
-    throw new Error('Maximum 50 transactions per batch');
+  if (inputs.length > CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION) {
+    throw new Error(`Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION} transactions per batch`);
   }
 
   const userCategories = await db
@@ -135,7 +136,7 @@ export async function categorizeTransactions(
       notes: tx.notes,
     })),
     availableCategories: userCategories,
-    fewShotExamples: Array.from(fewShotMap.values()).flat().slice(0, 20),
+    fewShotExamples: Array.from(fewShotMap.values()).flat().slice(0, CSV_IMPORT_CONFIG.AI.MAX_FEW_SHOT_EXAMPLES),
   });
 
   const results: CategorizationResult[] = [];
@@ -165,7 +166,7 @@ export async function categorizeTransactions(
     results.push({
       csvRowIndex: input.csvRowIndex,
       suggestion: {
-        categoryId: topSuggestion.confidence >= 0.7 ? topSuggestion.categoryId : null,
+        categoryId: topSuggestion.confidence >= CSV_IMPORT_CONFIG.AI.MIN_CONFIDENCE_THRESHOLD ? topSuggestion.categoryId : null,
         categoryName: topSuggestion.categoryName,
         transactionTypeId: transactionType.id,
         transactionTypeName: transactionType.name,

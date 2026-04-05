@@ -1,34 +1,8 @@
-/**
- * AI Provider Factory
- * 
- * Central export point for AI abstraction layer.
- * Supports easy switching between Gemini and Claude.
- */
-
 import type { AIProvider, CreateAIProviderOptions } from './types';
 import { GeminiProvider } from './gemini-provider';
 
-// Re-export types
 export * from './types';
 
-/**
- * Create an AI provider instance
- * 
- * @example
- * ```ts
- * // Using Gemini (default)
- * const ai = createAIProvider({
- *   provider: 'gemini',
- *   apiKey: process.env.GEMINI_API_KEY!,
- * });
- * 
- * // Switch to Claude in the future
- * const ai = createAIProvider({
- *   provider: 'claude',
- *   apiKey: process.env.ANTHROPIC_API_KEY!,
- * });
- * ```
- */
 export function createAIProvider(options: CreateAIProviderOptions): AIProvider {
   switch (options.provider) {
     case 'gemini':
@@ -40,7 +14,6 @@ export function createAIProvider(options: CreateAIProviderOptions): AIProvider {
       });
     
     case 'claude':
-      // TODO: Implement ClaudeProvider in the future
       throw new Error('Claude provider not yet implemented. Use "gemini" for now.');
     
     default:
@@ -48,10 +21,6 @@ export function createAIProvider(options: CreateAIProviderOptions): AIProvider {
   }
 }
 
-/**
- * Get the default AI provider for the application
- * Reads configuration from environment variables
- */
 export function getDefaultAIProvider(): AIProvider {
   const apiKey = process.env.GEMINI_API_KEY;
   

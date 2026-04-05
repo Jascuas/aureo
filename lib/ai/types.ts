@@ -1,22 +1,4 @@
-/**
- * AI Provider Abstraction Layer
- * 
- * This abstraction allows easy switching between AI providers (Gemini, Claude, etc.)
- * by implementing the AIProvider interface.
- */
-
-// ============================================================================
-// Column Detection Types
-// ============================================================================
-
-export type ColumnType = 
-  | 'date'
-  | 'amount'
-  | 'description'
-  | 'category'
-  | 'payee'
-  | 'notes'
-  | 'unknown';
+import type { ColumnType } from '@/features/csv-import/types/import-types';
 
 export type ColumnDetectionResult = {
   columns: Array<{
@@ -34,10 +16,6 @@ export type ColumnDetectionResult = {
   };
 };
 
-// ============================================================================
-// Duplicate Detection Types
-// ============================================================================
-
 export type DuplicateMatch = {
   existingTransactionId: string;
   similarity: number; // 0-1
@@ -52,10 +30,6 @@ export type DuplicateDetectionResult = {
   recommendation: 'skip' | 'import' | 'review'; // AI suggestion
 };
 
-// ============================================================================
-// Categorization Types
-// ============================================================================
-
 export type CategorySuggestion = {
   categoryId: string;
   categoryName: string;
@@ -69,10 +43,6 @@ export type CategorizationResult = {
   topSuggestion: CategorySuggestion;
 };
 
-// ============================================================================
-// AI Provider Interface
-// ============================================================================
-
 export type AIProviderConfig = {
   apiKey: string;
   model?: string; // Optional: override default model
@@ -81,19 +51,12 @@ export type AIProviderConfig = {
 };
 
 export type AIProvider = {
-  /**
-   * Detect column types and formats from CSV sample rows
-   */
   detectColumns(params: {
     headers: string[];
     sampleRows: string[][]; // First 5-10 rows
     context?: string; // Optional: bank name or template hint
   }): Promise<ColumnDetectionResult>;
 
-  /**
-   * Detect potential duplicates using semantic similarity
-   * (Only used as fallback after exact/fuzzy SQL matching fails)
-   */
   detectDuplicates(params: {
     newTransactions: Array<{
       date: string;
@@ -110,9 +73,6 @@ export type AIProvider = {
     }>;
   }): Promise<DuplicateDetectionResult[]>;
 
-  /**
-   * Categorize transactions using few-shot learning
-   */
   categorizeTransactions(params: {
     transactions: Array<{
       csvRowIndex: number;
@@ -134,10 +94,6 @@ export type AIProvider = {
     }>;
   }): Promise<CategorizationResult[]>;
 };
-
-// ============================================================================
-// Provider Factory
-// ============================================================================
 
 export type AIProviderType = 'gemini' | 'claude';
 

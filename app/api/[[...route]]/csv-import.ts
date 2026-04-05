@@ -18,6 +18,7 @@ import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
 import { requireId } from "@/lib/validation-middleware";
+import { CSV_IMPORT_CONFIG } from '@/features/csv-import/lib/config';
 
 // ============================================================================
 // Validation Schemas
@@ -33,7 +34,7 @@ const detectDuplicatesSchema = z.object({
   transactions: z
     .array(transactionInputSchema)
     .min(1, "At least one transaction required")
-    .max(100, "Maximum 100 transactions per batch"),
+    .max(CSV_IMPORT_CONFIG.BATCH_LIMITS.DUPLICATE_CHECK, `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.DUPLICATE_CHECK} transactions per batch`),
 });
 
 const categorizeTransactionSchema = z.object({
@@ -49,7 +50,7 @@ const categorizeTransactionsSchema = z.object({
   transactions: z
     .array(categorizeTransactionSchema)
     .min(1, "At least one transaction required")
-    .max(50, "Maximum 50 transactions per batch"),
+    .max(CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION, `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION} transactions per batch`),
 });
 
 const saveTemplateSchema = insertImportTemplateSchema.omit({
@@ -303,7 +304,7 @@ const app = new Hono<AppEnv>()
             }),
           )
           .min(1)
-          .max(500, "Maximum 500 transactions per import"),
+          .max(CSV_IMPORT_CONFIG.BATCH_LIMITS.BULK_IMPORT, `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.BULK_IMPORT} transactions per import`),
       }),
     ),
     async (c) => {
