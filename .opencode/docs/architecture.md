@@ -8,12 +8,15 @@ Feature-based architecture.
 /features/{domain}/
   ├── api/          # React Query hooks (use-get-*, use-create-*)
   ├── components/   # Feature UI (form, sheets)
-  └── hooks/        # Feature state (Zustand)
+  ├── hooks/        # Feature state (Zustand)
+  ├── lib/          # Feature logic (business logic, algorithms)
+  ├── types/        # Feature types
+  └── lib/config.ts # Feature configuration constants (optional)
 
 /components/        # Shared UI (charts, filters, layout)
 /components/ui/     # shadcn primitives
 /hooks/             # Global utils (use-confirm, use-chart-controls)
-/lib/               # Utils (utils.ts, types.ts, hono.ts)
+/lib/               # Utils (utils.ts, types.ts, hono.ts, api-errors.ts)
 /app/
   ├── (auth)/       # Public routes
   ├── (dashboard)/  # Protected routes
@@ -39,8 +42,13 @@ features/items/
   ├── components/
   │   ├── item-form.tsx
   │   └── new-item-sheet.tsx
-  └── hooks/
-      └── use-new-item.ts
+  ├── hooks/
+  │   └── use-new-item.ts
+  ├── lib/           # Business logic
+  │   ├── item-processor.ts
+  │   └── config.ts  # Feature constants (optional)
+  └── types/
+      └── item-types.ts
 ```
 
 2. **API Hook**
@@ -145,3 +153,39 @@ GET /api/admin/verify-balances
 - ❌ Never write `UPDATE accounts SET balance = ...` in API code
 - ✅ Use specific `SELECT` statements (no `SELECT *`)
 - ✅ Always validate transaction types exist before insertion
+
+## Feature Configuration
+
+**For complex features with many constants, create a centralized config file:**
+
+```typescript
+// features/csv-import/lib/config.ts
+export const CSV_IMPORT_CONFIG = {
+  DUPLICATE_DETECTION: {
+    DATE_TOLERANCE_DAYS: 2,
+    AMOUNT_TOLERANCE_PERCENT: 0.01,
+    MATCH_THRESHOLD: 0.8,
+  },
+  BATCH_LIMITS: {
+    MAX_TRANSACTIONS_PER_BATCH: 100,
+    MAX_CATEGORIZATION_BATCH: 50,
+    MAX_DUPLICATE_CHECK_BATCH: 500,
+  },
+  AI: {
+    FEW_SHOT_EXAMPLES: 20,
+    CONFIDENCE_THRESHOLD: 0.7,
+  },
+} as const;
+```
+
+**Benefits:**
+- ✅ Single source of truth for magic numbers
+- ✅ Easy to adjust thresholds/limits
+- ✅ Self-documenting through naming
+- ✅ Type-safe with `as const`
+
+**When to use:**
+- Features with 5+ hardcoded constants
+- AI/ML features with tunable hyperparameters
+- Batch processing with size limits
+- Algorithms with threshold values

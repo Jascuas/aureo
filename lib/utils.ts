@@ -23,6 +23,32 @@ export function convertAmountToMilliunits(amount: number) {
   return Math.round(amount * 1000);
 }
 
+export function parseAmount(
+  value: string,
+  decimalSeparator: '.' | ',' = '.',
+  thousandsSeparator: ',' | '.' | ' ' | '' = ','
+): number {
+  if (!value || value.trim() === '') return 0;
+  
+  let cleaned = value.trim();
+  
+  if (thousandsSeparator) {
+    cleaned = cleaned.replace(new RegExp(`\\${thousandsSeparator}`, 'g'), '');
+  }
+  
+  if (decimalSeparator === ',') {
+    cleaned = cleaned.replace(',', '.');
+  }
+  
+  const parsed = parseFloat(cleaned);
+  
+  if (isNaN(parsed)) {
+    throw new Error(`Invalid amount format: "${value}"`);
+  }
+  
+  return parsed;
+}
+
 export function formatCurrency(value: number) {
   return Intl.NumberFormat("es-ES", {
     style: "currency",

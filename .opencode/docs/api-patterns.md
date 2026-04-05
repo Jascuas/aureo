@@ -103,6 +103,31 @@ z.object({
 .where(eq(accounts.userId, auth.userId))
 ```
 
+## Error Handling
+
+**Always use standardized error constants** from `lib/api-errors.ts`:
+
+```typescript
+import { API_ERRORS } from "@/lib/api-errors";
+
+// ✅ Standardized errors
+if (!auth?.userId) return ctx.json({ error: API_ERRORS.UNAUTHORIZED }, 401);
+if (!data) return ctx.json({ error: API_ERRORS.NOT_FOUND }, 404);
+if (existingTemplate) return ctx.json({ error: API_ERRORS.DUPLICATE_TEMPLATE }, 409);
+
+// ❌ NEVER use inline strings
+return ctx.json({ error: "Internal server error" }, 500);
+return ctx.json({ error: { message: "Something went wrong" } }, 500);
+```
+
+**Available constants:**
+- `API_ERRORS.UNAUTHORIZED` - 401 responses
+- `API_ERRORS.NOT_FOUND` - 404 responses
+- `API_ERRORS.INTERNAL_ERROR` - 500 responses
+- `API_ERRORS.DUPLICATE_TEMPLATE` - 409 duplicate template
+- `API_ERRORS.INVALID_REQUEST` - 400 bad request
+- `API_ERRORS.INVALID_TEMPLATE` - 400 template validation
+
 ## Performance
 
 ```typescript

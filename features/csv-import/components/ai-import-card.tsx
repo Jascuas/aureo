@@ -23,7 +23,7 @@ import { DuplicateResolution } from "./duplicate-resolution";
 import { ImportSummary } from "./import-summary";
 
 import type { ParsedCSVRow } from "../types/import-types";
-import { convertAmountToMilliunits } from "@/lib/utils";
+import { convertAmountToMilliunits, parseAmount } from "@/lib/utils";
 
 type AiImportCardProps = {
   accountId?: string;
@@ -168,8 +168,8 @@ export const AiImportCard = ({
         }),
         dateFormat: 'DD/MM/YYYY' as const,
         amountFormat: {
-          decimalSeparator: '.' as const,
-          thousandsSeparator: ',' as const,
+          decimalSeparator: ',' as const,
+          thousandsSeparator: '.' as const,
           isNegativeExpense: true,
         },
         confidence: 0.85,
@@ -225,17 +225,30 @@ export const AiImportCard = ({
     setIsCategorizing(true);
 
     const mapping = columnMapping.finalMapping;
+    const amountFormat = columnMapping.detectionResult?.amountFormat || {
+      decimalSeparator: ',' as const,
+      thousandsSeparator: '.' as const,
+      isNegativeExpense: true,
+    };
     
     const transactions = csvData.rows
       .slice(0, 5)
-      .map((row) => ({
-        csvRowIndex: row.index,
-        date: row.data[mapping.date!],
-        amount: convertAmountToMilliunits(parseFloat(row.data[mapping.amount!])),
-        payee: row.data[mapping.payee!],
-        description: mapping.description !== undefined ? row.data[mapping.description] : undefined,
-        notes: mapping.notes !== undefined ? row.data[mapping.notes] : undefined,
-      }));
+      .map((row) => {
+        const amountValue = parseAmount(
+          row.data[mapping.amount!],
+          amountFormat.decimalSeparator,
+          amountFormat.thousandsSeparator
+        );
+        
+        return {
+          csvRowIndex: row.index,
+          date: row.data[mapping.date!],
+          amount: convertAmountToMilliunits(amountValue),
+          payee: row.data[mapping.payee!],
+          description: mapping.description !== undefined ? row.data[mapping.description] : undefined,
+          notes: mapping.notes !== undefined ? row.data[mapping.notes] : undefined,
+        };
+      });
 
     console.log('[AI Import] Sending transactions for analysis:', {
       count: transactions.length,

@@ -105,7 +105,7 @@ export const AiPreviewTable = ({
       ),
       cell: ({ row }) => (
         <span className="font-medium">
-          {formatCurrency(row.original.amount)}
+          {formatCurrency(row.original.amount / 1000)}
         </span>
       ),
     },

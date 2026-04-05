@@ -12,13 +12,13 @@ import {
   insertImportTemplateSchema,
   transactions,
 } from "@/db/schema";
+import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
 import { detectDuplicates } from "@/features/csv-import/lib/duplicate-matcher";
 import { categorizeTransactions } from "@/features/csv-import/lib/transaction-categorizer";
 import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
 import { requireId } from "@/lib/validation-middleware";
-import { CSV_IMPORT_CONFIG } from '@/features/csv-import/lib/config';
 
 // ============================================================================
 // Validation Schemas
@@ -34,7 +34,10 @@ const detectDuplicatesSchema = z.object({
   transactions: z
     .array(transactionInputSchema)
     .min(1, "At least one transaction required")
-    .max(CSV_IMPORT_CONFIG.BATCH_LIMITS.DUPLICATE_CHECK, `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.DUPLICATE_CHECK} transactions per batch`),
+    .max(
+      CSV_IMPORT_CONFIG.BATCH_LIMITS.DUPLICATE_CHECK,
+      `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.DUPLICATE_CHECK} transactions per batch`,
+    ),
 });
 
 const categorizeTransactionSchema = z.object({
@@ -50,7 +53,10 @@ const categorizeTransactionsSchema = z.object({
   transactions: z
     .array(categorizeTransactionSchema)
     .min(1, "At least one transaction required")
-    .max(CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION, `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION} transactions per batch`),
+    .max(
+      CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION,
+      `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION} transactions per batch`,
+    ),
 });
 
 const saveTemplateSchema = insertImportTemplateSchema.omit({
@@ -120,6 +126,12 @@ const app = new Hono<AppEnv>()
     async (c) => {
       const userId = c.var.userId;
       const { transactions } = c.req.valid("json");
+
+      console.log('[CSV Import API] Categorize request:', {
+        userId,
+        transactionCount: transactions.length,
+        firstTransaction: transactions[0],
+      });
 
       try {
         const results = await categorizeTransactions(userId, transactions);
@@ -304,7 +316,10 @@ const app = new Hono<AppEnv>()
             }),
           )
           .min(1)
-          .max(CSV_IMPORT_CONFIG.BATCH_LIMITS.BULK_IMPORT, `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.BULK_IMPORT} transactions per import`),
+          .max(
+            CSV_IMPORT_CONFIG.BATCH_LIMITS.BULK_IMPORT,
+            `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.BULK_IMPORT} transactions per import`,
+          ),
       }),
     ),
     async (c) => {
@@ -323,26 +338,47 @@ const app = new Hono<AppEnv>()
           return c.json(API_ERRORS.INVALID_ACCOUNT, 404);
         }
 
-        // Bulk insert transactions
-        const inserted = await db
-          .insert(transactions)
-          .values(
-            txs.map((tx) => ({
-              id: createId(),
-              accountId,
-              date: tx.date,
-              amount: tx.amount,
-              payee: tx.payee,
-              notes: tx.notes || null,
-              categoryId: tx.categoryId,
-              transactionTypeId: tx.transactionTypeId,
-            })),
-          )
-          .returning({ id: transactions.id });
+        const transactionsToInsert = txs.map((tx) => ({
+          id: createId(),
+          accountId,
+          date: tx.date,
+          amount: tx.amount,
+          payee: tx.payee,
+          notes: tx.notes || null,
+          categoryId: tx.categoryId,
+          transactionTypeId: tx.transactionTypeId,
+        }));
+
+        console.log("=".repeat(80));
+        console.log("🔍 BULK IMPORT - DRY RUN MODE");
+        console.log("=".repeat(80));
+        console.log(`Account ID: ${accountId}`);
+        console.log(`User ID: ${userId}`);
+        console.log(`Total transactions: ${transactionsToInsert.length}`);
+        console.log("\n📋 Transactions to insert:\n");
+        transactionsToInsert.forEach((tx, index) => {
+          console.log(`\n--- Transaction ${index + 1} ---`);
+          console.log(`ID: ${tx.id}`);
+          console.log(`Date: ${tx.date.toISOString()}`);
+          console.log(`Amount: ${tx.amount} milliunits (${tx.amount / 1000} EUR)`);
+          console.log(`Payee: ${tx.payee}`);
+          console.log(`Notes: ${tx.notes || '(none)'}`);
+          console.log(`Category ID: ${tx.categoryId || '(none)'}`);
+          console.log(`Transaction Type ID: ${tx.transactionTypeId}`);
+        });
+        console.log("\n" + "=".repeat(80));
+        console.log("⚠️  DATABASE INSERT COMMENTED OUT - DRY RUN MODE");
+        console.log("=".repeat(80) + "\n");
+
+        // COMMENTED OUT: Bulk insert transactions
+        // const inserted = await db
+        //   .insert(transactions)
+        //   .values(transactionsToInsert)
+        //   .returning({ id: transactions.id });
 
         return c.json({
           data: {
-            imported: inserted.length,
+            imported: transactionsToInsert.length,
             skipped: 0,
             errors: [],
           },
