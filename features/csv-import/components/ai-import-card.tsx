@@ -308,6 +308,7 @@ export const AiImportCard = ({
   useEffect(() => {
     if (
       currentStep === 'MAPPING' &&
+      csvData &&
       accountId &&
       templatesResponse &&
       'data' in templatesResponse &&
@@ -321,6 +322,7 @@ export const AiImportCard = ({
       setDetectionResult({
         columns: Object.entries(template.columnMapping as Record<string, number>).map(([type, index]) => ({
           index: index,
+          name: csvData.headers[index] || `Column ${index}`,
           type: type as any,
           confidence: 1.0,
           samples: [],
@@ -328,7 +330,7 @@ export const AiImportCard = ({
         dateFormat: template.dateFormat as any,
         amountFormat: template.amountFormat as any,
         confidence: 1.0,
-        method: 'template',
+        method: 'heuristic' as const,
       });
       
       setFinalMapping(template.columnMapping as Record<string, number>);
@@ -336,7 +338,7 @@ export const AiImportCard = ({
       // Skip to ANALYSIS
       nextStep();
     }
-  }, [currentStep, accountId, templatesResponse, setDetectionResult, setFinalMapping, nextStep]);
+  }, [currentStep, csvData, accountId, templatesResponse, setDetectionResult, setFinalMapping, nextStep]);
 
   useEffect(() => {
     if (
@@ -493,7 +495,7 @@ export const AiImportCard = ({
       });
       nextStep(); // Show error summary
     }
-  }, [accountId, analyzedRows, resolutions, selectedRows, bulkImportMutation, setImportResult, nextStep]);
+  }, [accountId, analyzedRows, resolutions, bulkImportMutation, setImportResult, nextStep]);
 
   // ============================================================================
   // UI Handlers

@@ -22,7 +22,7 @@ import { ConfidenceBadge } from "./confidence-badge";
 import { FormatDetector } from "./format-detector";
 
 type ColumnMappingProps = {
-  accountId: string;
+  accountId?: string;
   headers: string[];
   sampleRows: string[][];
   detectionResult?: ColumnDetectionResult;
@@ -100,7 +100,7 @@ export const ColumnMapping = ({
   };
   
   const handleSaveTemplate = () => {
-    if (!templateName.trim()) return;
+    if (!templateName.trim() || !accountId) return;
     
     const reverseMapping: Record<string, number> = {};
     Object.entries(mapping).forEach(([idx, colType]) => {

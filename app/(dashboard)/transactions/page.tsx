@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, Plus } from "lucide-react";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { PaginatedDataTable } from "@/components/paginated-data-table";
@@ -9,23 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSelectAccount } from "@/features/accounts/hooks/use-select-account";
-import { AiImportCard } from "@/features/csv-import/components/ai-import-card";
 import { useBulkDeleteTransactions } from "@/features/transactions/api/use-bulk-delete-transactions";
 import { useGetPaginatedTransactions } from "@/features/transactions/api/use-get-paginated-transactions";
 import { columns } from "@/features/transactions/components/columns";
 import { useNewTransaction } from "@/features/transactions/hooks/use-new-transaction";
 
-enum VARIANTS {
-  LIST = "LIST",
-  IMPORT = "IMPORT",
-}
-
 const TransactionsPage = () => {
-  const [variant, setVariant] = useState<VARIANTS>(VARIANTS.LIST);
-  const [selectedAccountId, setSelectedAccountId] = useState<
-    string | undefined
-  >();
-
+  const router = useRouter();
   const [AccountDialog, confirm] = useSelectAccount();
   const newTransaction = useNewTransaction();
   const deleteTransactions = useBulkDeleteTransactions();
@@ -40,13 +30,7 @@ const TransactionsPage = () => {
       return toast.error("Please select an account to continue.");
     }
 
-    setSelectedAccountId(accountId as string);
-    setVariant(VARIANTS.IMPORT);
-  };
-
-  const onCancelImport = () => {
-    setSelectedAccountId(undefined);
-    setVariant(VARIANTS.LIST);
+    router.push(`/transactions/upload?accountId=${accountId}`);
   };
 
   const isDisabled = paginationInfo.isLoading || deleteTransactions.isPending;
@@ -65,18 +49,6 @@ const TransactionsPage = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
-    );
-  }
-
-  if (variant === VARIANTS.IMPORT) {
-    return (
-      <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
-        <AiImportCard
-          accountId={selectedAccountId}
-          onComplete={onCancelImport}
-          onCancel={onCancelImport}
-        />
       </div>
     );
   }
