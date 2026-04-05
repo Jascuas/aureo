@@ -39,6 +39,26 @@ export function calculatePercentageChange(current: number, previous: number) {
   return ((current - previous) / previous) * 100;
 }
 
+export function normalizePayeeName(payee: string): string {
+  let normalized = payee.trim();
+
+  normalized = normalized
+    .replace(/\s+(S\.?A\.?|LTD\.?|INC\.?|LLC|CORP\.?|CO\.?)$/i, '')
+    .replace(/\s+#\d+$/, '')
+    .replace(/\s+\d{3,}$/, '')
+    .replace(/\s+MKTPLACE$/i, '')
+    .replace(/\s+MKTP$/i, '')
+    .trim();
+
+  normalized = normalized
+    .toLowerCase()
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+  return normalized;
+}
+
 export function fillMissingDays(
   activeDays: {
     date: Date;

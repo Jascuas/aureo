@@ -1,10 +1,3 @@
-/**
- * Column Detector
- * 
- * Heuristic-based column type detection for CSV imports.
- * Uses pattern matching and keyword analysis to identify column types.
- */
-
 import type {
   ColumnType,
   DetectedColumn,
@@ -16,10 +9,6 @@ import type {
 import { DEFAULT_HEURISTIC_CONFIG } from '../types/import-types';
 import { detectDateFormat, looksLikeDate } from './date-parser';
 import { getDefaultAIProvider } from '@/lib/ai';
-
-// ============================================================================
-// Header Keyword Patterns
-// ============================================================================
 
 const HEADER_PATTERNS: Record<ColumnType, string[]> = {
   date: [
@@ -57,27 +46,16 @@ const HEADER_PATTERNS: Record<ColumnType, string[]> = {
   unknown: [],
 };
 
-// ============================================================================
-// Content Pattern Detection
-// ============================================================================
-
-/**
- * Check if values look like amounts
- */
 function looksLikeAmount(values: string[]): boolean {
   const cleanValues = values.filter(v => v && v.trim());
   if (cleanValues.length === 0) return false;
 
-  // Amount patterns: 1234.56, -1234.56, 1.234,56, (1234.56)
   const amountRegex = /^-?\(?[\d\s.,]+\)?$/;
   const matches = cleanValues.filter(v => amountRegex.test(v.trim()));
 
   return matches.length / cleanValues.length >= 0.7;
 }
 
-/**
- * Detect amount format from samples
- */
 function detectAmountFormat(samples: string[]): AmountFormat {
   const cleanSamples = samples
     .filter(s => s && s.trim())
@@ -91,30 +69,24 @@ function detectAmountFormat(samples: string[]): AmountFormat {
     };
   }
 
-  // Count decimal separators
   let commaAsDecimal = 0;
   let dotAsDecimal = 0;
   let hasNegative = false;
 
   for (const sample of cleanSamples) {
-    // Check for negative
     if (sample.startsWith('-') || sample.startsWith('(')) {
       hasNegative = true;
     }
 
-    // 1.234,56 → comma is decimal
     if (/\d+\.\d{3},\d{2}/.test(sample)) {
       commaAsDecimal++;
     }
-    // 1,234.56 → dot is decimal
     else if (/\d+,\d{3}\.\d{2}/.test(sample)) {
       dotAsDecimal++;
     }
-    // 1234,56 → comma is decimal
     else if (/\d+,\d{1,2}$/.test(sample)) {
       commaAsDecimal++;
     }
-    // 1234.56 → dot is decimal
     else if (/\d+\.\d{1,2}$/.test(sample)) {
       dotAsDecimal++;
     }
@@ -130,37 +102,24 @@ function detectAmountFormat(samples: string[]): AmountFormat {
   };
 }
 
-/**
- * Check if values look like merchant/payee names
- */
 function looksLikePayee(values: string[]): boolean {
   const cleanValues = values.filter(v => v && v.trim());
   if (cleanValues.length === 0) return false;
 
-  // Payees are typically longer text strings
   const avgLength = cleanValues.reduce((sum, v) => sum + v.length, 0) / cleanValues.length;
   
-  // Payees have varied content (not all numbers, not all dates)
   const allNumbers = cleanValues.every(v => /^[\d\s.,\-]+$/.test(v));
   const allDates = cleanValues.every(v => looksLikeDate(v));
 
   return avgLength > 5 && !allNumbers && !allDates;
 }
 
-// ============================================================================
-// Column Type Detection
-// ============================================================================
-
-/**
- * Detect column type using header name and sample values
- */
 function detectColumnType(
   columnName: string,
   values: string[]
 ): { type: ColumnType; confidence: number } {
   const lowerName = columnName.toLowerCase().trim();
 
-  // Check header patterns first (high confidence)
   for (const [type, patterns] of Object.entries(HEADER_PATTERNS)) {
     for (const pattern of patterns) {
       if (lowerName.includes(pattern.toLowerCase())) {
@@ -169,14 +128,12 @@ function detectColumnType(
     }
   }
 
-  // Fallback to content-based detection (medium confidence)
   const cleanValues = values.filter(v => v && v.trim());
   
   if (cleanValues.length === 0) {
     return { type: 'unknown', confidence: 0 };
   }
 
-  // Check if looks like date
   if (cleanValues.some(v => looksLikeDate(v))) {
     const dateMatches = cleanValues.filter(v => looksLikeDate(v)).length;
     const confidence = dateMatches / cleanValues.length;
@@ -185,17 +142,14 @@ function detectColumnType(
     }
   }
 
-  // Check if looks like amount
   if (looksLikeAmount(cleanValues)) {
     return { type: 'amount', confidence: 0.75 };
   }
 
-  // Check if looks like payee/merchant
   if (looksLikePayee(cleanValues)) {
     return { type: 'payee', confidence: 0.7 };
   }
 
-  // Check if looks like balance (similar to amount but usually at the end)
   if (looksLikeAmount(cleanValues) && lowerName.includes('saldo')) {
     return { type: 'balance', confidence: 0.8 };
   }
@@ -203,22 +157,13 @@ function detectColumnType(
   return { type: 'unknown', confidence: 0.3 };
 }
 
-// ============================================================================
-// Main Detection Function
-// ============================================================================
-
-/**
- * Detect column types using heuristics
- */
 export async function detectColumns(
   headers: string[],
   rows: string[][],
   config: HeuristicConfig = DEFAULT_HEURISTIC_CONFIG
 ): Promise<ColumnDetectionResult> {
-  // Sample rows for analysis
   const sampleRows = rows.slice(0, Math.min(config.sampleSize, rows.length));
 
-  // Detect each column
   const detectedColumns: DetectedColumn[] = [];
   let totalConfidence = 0;
 
@@ -233,7 +178,7 @@ export async function detectColumns(
       name: columnName,
       type,
       confidence,
-      samples: columnValues.slice(0, 3), // First 3 samples
+      samples: columnValues.slice(0, 3),
     });
 
     totalConfidence += confidence;
@@ -241,13 +186,11 @@ export async function detectColumns(
 
   const overallConfidence = totalConfidence / headers.length;
 
-  // Detect date format
   const dateColumn = detectedColumns.find(col => col.type === 'date');
   const dateFormatResult = dateColumn
     ? detectDateFormat(dateColumn.samples)
     : { format: 'unknown' as const, confidence: 0 };
 
-  // Detect amount format
   const amountColumn = detectedColumns.find(col => col.type === 'amount');
   const amountFormat = amountColumn
     ? detectAmountFormat(amountColumn.samples)
@@ -257,7 +200,6 @@ export async function detectColumns(
         isNegativeExpense: false,
       };
 
-  // Use AI fallback if confidence is low
   if (config.enableAIFallback && overallConfidence < config.minConfidence) {
     console.log(
       `Heuristic confidence too low (${overallConfidence.toFixed(2)}), falling back to AI...`
@@ -285,7 +227,6 @@ export async function detectColumns(
       };
     } catch (error) {
       console.error('AI fallback failed:', error);
-      // Continue with heuristic result
     }
   }
 
@@ -298,10 +239,6 @@ export async function detectColumns(
   };
 }
 
-/**
- * Create column mapping from detection result
- * Maps field names to column indices
- */
 export function createColumnMapping(
   detectionResult: ColumnDetectionResult
 ): Record<string, number> {
@@ -309,7 +246,6 @@ export function createColumnMapping(
 
   for (const column of detectionResult.columns) {
     if (column.type !== 'unknown' && column.confidence >= 0.5) {
-      // Use the first detected column of each type
       if (!mapping[column.type]) {
         mapping[column.type] = column.index;
       }

@@ -1,13 +1,3 @@
-/**
- * AI Prompts for CSV Import Feature
- * 
- * These prompts are provider-agnostic and work with both Gemini and Claude.
- */
-
-// ============================================================================
-// Column Detection Prompts
-// ============================================================================
-
 export const COLUMN_DETECTION_SYSTEM_PROMPT = `You are a CSV column detection expert for a personal finance application.
 
 Your task is to analyze CSV headers and sample data to identify the type of each column and detect the data formats used.
@@ -72,10 +62,6 @@ export function createColumnDetectionPrompt(params: {
   
   return prompt;
 }
-
-// ============================================================================
-// Duplicate Detection Prompts
-// ============================================================================
 
 export const DUPLICATE_DETECTION_SYSTEM_PROMPT = `You are a transaction duplicate detection expert.
 
@@ -156,10 +142,6 @@ export function createDuplicateDetectionPrompt(params: {
   return prompt;
 }
 
-// ============================================================================
-// Categorization Prompts
-// ============================================================================
-
 export const CATEGORIZATION_SYSTEM_PROMPT = `You are a transaction categorization expert for a personal finance application.
 
 Your task is to suggest appropriate categories for transactions based on the payee, description, amount, and learned patterns from past transactions.
@@ -235,13 +217,11 @@ export function createCategorizationPrompt(params: {
   
   let prompt = `Categorize these transactions:\n\n`;
   
-  // Available categories
   prompt += `Available Categories:\n`;
   availableCategories.forEach((cat) => {
     prompt += `- ${cat.id}: ${cat.name}\n`;
   });
   
-  // Few-shot examples (if provided)
   if (fewShotExamples && fewShotExamples.length > 0) {
     prompt += `\n\nLearned Patterns (use these as reference):\n`;
     fewShotExamples.forEach((example) => {
@@ -251,7 +231,6 @@ export function createCategorizationPrompt(params: {
     });
   }
   
-  // Transactions to categorize
   prompt += `\n\nTransactions to Categorize:\n`;
   transactions.forEach((tx) => {
     prompt += `${tx.csvRowIndex}. Date: ${tx.date}, Amount: ${tx.amount}, Payee: "${tx.payee}"`;

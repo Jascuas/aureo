@@ -1,10 +1,3 @@
-/**
- * Gemini AI Provider Implementation
- * 
- * Uses Google's Gemini 1.5 Flash model for CSV import AI features.
- * Cost: $0.075 per 1M input tokens (40x cheaper than Claude)
- */
-
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import type {
   AIProvider,
@@ -30,10 +23,9 @@ export class GeminiProvider implements AIProvider {
 
   constructor(config: AIProviderConfig) {
     this.client = new GoogleGenerativeAI(config.apiKey);
-    this.temperature = config.temperature ?? 0.1; // Low temperature for deterministic results
+    this.temperature = config.temperature ?? 0.1;
     this.maxTokens = config.maxTokens ?? 2048;
     
-    // Default to Gemini 2.5 Flash Lite (free tier with generous limits)
     const modelName = config.model ?? 'gemini-2.5-flash-lite';
     this.model = this.client.getGenerativeModel({
       model: modelName,
@@ -44,30 +36,22 @@ export class GeminiProvider implements AIProvider {
     });
   }
 
-  /**
-   * Clean JSON response from markdown code blocks
-   */
   private cleanJsonResponse(text: string): string {
-    // Remove markdown code blocks if present
     let cleaned = text.trim();
     
-    // Remove ```json and ``` markers
     if (cleaned.startsWith('```json')) {
-      cleaned = cleaned.slice(7); // Remove ```json
+      cleaned = cleaned.slice(7);
     } else if (cleaned.startsWith('```')) {
-      cleaned = cleaned.slice(3); // Remove ```
+      cleaned = cleaned.slice(3);
     }
     
     if (cleaned.endsWith('```')) {
-      cleaned = cleaned.slice(0, -3); // Remove trailing ```
+      cleaned = cleaned.slice(0, -3);
     }
     
     return cleaned.trim();
   }
 
-  /**
-   * Detect column types and formats from CSV sample rows
-   */
   async detectColumns(params: {
     headers: string[];
     sampleRows: string[][];
@@ -86,7 +70,6 @@ export class GeminiProvider implements AIProvider {
       const text = response.text();
       const cleanedText = this.cleanJsonResponse(text);
       
-      // Parse JSON response
       const parsed = JSON.parse(cleanedText) as ColumnDetectionResult;
       
       return parsed;
@@ -96,9 +79,6 @@ export class GeminiProvider implements AIProvider {
     }
   }
 
-  /**
-   * Detect potential duplicates using semantic similarity
-   */
   async detectDuplicates(params: {
     newTransactions: Array<{
       date: string;
@@ -127,7 +107,6 @@ export class GeminiProvider implements AIProvider {
       const text = response.text();
       const cleanedText = this.cleanJsonResponse(text);
       
-      // Parse JSON response
       const parsed = JSON.parse(cleanedText) as { results: DuplicateDetectionResult[] };
       
       return parsed.results;
@@ -137,9 +116,6 @@ export class GeminiProvider implements AIProvider {
     }
   }
 
-  /**
-   * Categorize transactions using few-shot learning
-   */
   async categorizeTransactions(params: {
     transactions: Array<{
       csvRowIndex: number;
@@ -173,7 +149,6 @@ export class GeminiProvider implements AIProvider {
       const text = response.text();
       const cleanedText = this.cleanJsonResponse(text);
       
-      // Parse JSON response
       const parsed = JSON.parse(cleanedText) as { results: CategorizationResult[] };
       
       return parsed.results;

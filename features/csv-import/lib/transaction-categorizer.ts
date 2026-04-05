@@ -1,22 +1,13 @@
-/**
- * Transaction Categorizer
- * 
- * Uses AI with few-shot learning from user's transaction history.
- */
-
 import { db } from '@/db/drizzle';
 import { accounts, categories, transactions, transactionTypes } from '@/db/schema';
 import { getDefaultAIProvider } from '@/lib/ai';
+import { normalizePayeeName } from '@/lib/utils';
 import { eq, sql } from 'drizzle-orm';
-
-// ============================================================================
-// Types
-// ============================================================================
 
 export type TransactionInput = {
   csvRowIndex: number;
   date: string;
-  amount: number; // In milliunits
+  amount: number;
   payee: string;
   description?: string;
   notes?: string;
@@ -37,48 +28,6 @@ export type CategorizationResult = {
   suggestion: CategorizationSuggestion;
 };
 
-// ============================================================================
-// Merchant Name Normalization
-// ============================================================================
-
-/**
- * Normalize merchant names for better matching
- * Examples:
- * - "AMAZON MKTPLACE" → "Amazon"
- * - "STARBUCKS #1234" → "Starbucks"
- * - "MERCADONA S.A." → "Mercadona"
- */
-export function normalizeMerchantName(payee: string): string {
-  let normalized = payee.trim();
-
-  // Remove common suffixes
-  normalized = normalized
-    .replace(/\s+(S\.?A\.?|LTD\.?|INC\.?|LLC|CORP\.?|CO\.?)$/i, '')
-    .replace(/\s+#\d+$/, '') // Store numbers: "Starbucks #1234"
-    .replace(/\s+\d{3,}$/, '') // Transaction IDs
-    .replace(/\s+MKTPLACE$/i, '') // Amazon Marketplace
-    .replace(/\s+MKTP$/i, '') // Marketplace abbreviation
-    .trim();
-
-  // Capitalize first letter of each word
-  normalized = normalized
-    .toLowerCase()
-    .split(' ')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-
-  return normalized;
-}
-
-// ============================================================================
-// Transaction Type Detection
-// ============================================================================
-
-/**
- * Detect transaction type from amount sign
- * - Negative amount → Expense
- * - Positive amount → Income
- */
 async function detectTransactionType(amount: number): Promise<{
   id: string;
   name: string;
@@ -101,14 +50,6 @@ async function detectTransactionType(amount: number): Promise<{
   return type;
 }
 
-// ============================================================================
-// Few-Shot Learning
-// ============================================================================
-
-/**
- * Find similar transactions from user's history for few-shot learning
- * Uses ILIKE for fuzzy matching on payee
- */
 async function findSimilarTransactions(
   userId: string,
   payee: string,
@@ -121,9 +62,7 @@ async function findSimilarTransactions(
     categoryName: string | null;
   }>
 > {
-  const normalizedPayee = normalizeMerchantName(payee);
-
-  // Extract first significant word for ILIKE search
+  const normalizedPayee = normalizePayeeName(payee);
   const searchTerm = normalizedPayee.split(' ')[0];
 
   const results = await db
@@ -146,23 +85,14 @@ async function findSimilarTransactions(
   return results;
 }
 
-// ============================================================================
-// Main Categorization Logic
-// ============================================================================
-
-/**
- * Categorize transactions using AI with few-shot learning
- */
 export async function categorizeTransactions(
   userId: string,
   inputs: TransactionInput[]
 ): Promise<CategorizationResult[]> {
-  // Validate batch size
   if (inputs.length > 50) {
     throw new Error('Maximum 50 transactions per batch');
   }
 
-  // Get all available categories for this user
   const userCategories = await db
     .select({
       id: categories.id,
@@ -175,7 +105,6 @@ export async function categorizeTransactions(
     throw new Error('No categories found for user. Please create categories first.');
   }
 
-  // Collect few-shot examples for each transaction
   const fewShotMap = new Map<
     number,
     Array<{ payee: string; description?: string; categoryId: string; categoryName: string }>
@@ -195,7 +124,6 @@ export async function categorizeTransactions(
     fewShotMap.set(input.csvRowIndex, examples);
   }
 
-  // Prepare AI prompt
   const aiProvider = getDefaultAIProvider();
   const aiResults = await aiProvider.categorizeTransactions({
     transactions: inputs.map((tx) => ({
@@ -214,12 +142,9 @@ export async function categorizeTransactions(
 
   for (const input of inputs) {
     const aiResult = aiResults.find((r) => r.csvRowIndex === input.csvRowIndex);
-
-    // Detect transaction type from amount
     const transactionType = await detectTransactionType(input.amount);
 
     if (!aiResult || !aiResult.topSuggestion) {
-      // No AI suggestion → manual review required
       results.push({
         csvRowIndex: input.csvRowIndex,
         suggestion: {
@@ -229,7 +154,7 @@ export async function categorizeTransactions(
           transactionTypeName: transactionType.name,
           confidence: 0.0,
           reasoning: 'No similar transactions found. Manual categorization required.',
-          normalizedPayee: normalizeMerchantName(input.payee),
+          normalizedPayee: normalizePayeeName(input.payee),
         },
       });
       continue;
@@ -246,7 +171,7 @@ export async function categorizeTransactions(
         transactionTypeName: transactionType.name,
         confidence: topSuggestion.confidence,
         reasoning: topSuggestion.reasoning || 'AI categorization',
-        normalizedPayee: normalizeMerchantName(input.payee),
+        normalizedPayee: normalizePayeeName(input.payee),
       },
     });
   }

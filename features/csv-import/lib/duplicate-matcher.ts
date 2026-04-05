@@ -1,20 +1,10 @@
-/**
- * Duplicate Matcher
- * 
- * Detects duplicate transactions using exact and fuzzy matching.
- */
-
 import { db } from '@/db/drizzle';
 import { accounts, transactions } from '@/db/schema';
 import { and, between, eq, sql } from 'drizzle-orm';
 
-// ============================================================================
-// Types
-// ============================================================================
-
 export type TransactionInput = {
   date: Date;
-  amount: number; // In milliunits
+  amount: number;
   payee: string;
 };
 
@@ -30,7 +20,7 @@ export type DuplicateMatch = {
     accountId: string;
   };
   matchType: MatchType;
-  score: number; // 0-1 (1 = perfect match)
+  score: number;
 };
 
 export type DuplicateDetectionResult = {
@@ -40,24 +30,12 @@ export type DuplicateDetectionResult = {
   fuzzyMatches: number;
 };
 
-// ============================================================================
-// Configuration
-// ============================================================================
-
 const FUZZY_CONFIG = {
-  dateTolerance: 2, // ±2 days
-  amountTolerance: 0.01, // ±1%
-  similarityThreshold: 0.85, // 85% similarity
+  dateTolerance: 2,
+  amountTolerance: 0.01,
+  similarityThreshold: 0.85,
 };
 
-// ============================================================================
-// Exact Match
-// ============================================================================
-
-/**
- * Find exact duplicates
- * Matches: same date, same amount, same payee (case-insensitive)
- */
 async function findExactMatches(
   userId: string,
   inputs: TransactionInput[]
@@ -100,14 +78,6 @@ async function findExactMatches(
   return matches;
 }
 
-// ============================================================================
-// Fuzzy Match
-// ============================================================================
-
-/**
- * Find fuzzy duplicates using pg_trgm similarity
- * Matches: date ±2 days, amount ±1%, payee similarity >85%
- */
 async function findFuzzyMatches(
   userId: string,
   inputs: TransactionInput[],
@@ -116,18 +86,15 @@ async function findFuzzyMatches(
   const matches = new Map<number, DuplicateMatch>();
 
   for (let i = 0; i < inputs.length; i++) {
-    // Skip if already has exact match
     if (exactMatches.has(i)) continue;
 
     const input = inputs[i];
 
-    // Date range: ±2 days
     const dateMin = new Date(input.date);
     dateMin.setDate(dateMin.getDate() - FUZZY_CONFIG.dateTolerance);
     const dateMax = new Date(input.date);
     dateMax.setDate(dateMax.getDate() + FUZZY_CONFIG.dateTolerance);
 
-    // Amount range: ±1%
     const amountMin = Math.floor(input.amount * (1 - FUZZY_CONFIG.amountTolerance));
     const amountMax = Math.ceil(input.amount * (1 + FUZZY_CONFIG.amountTolerance));
 
@@ -173,30 +140,17 @@ async function findFuzzyMatches(
   return matches;
 }
 
-// ============================================================================
-// Main API
-// ============================================================================
-
-/**
- * Detect duplicates in batch
- * Returns all matches (exact + fuzzy)
- */
 export async function detectDuplicates(
   userId: string,
   inputs: TransactionInput[]
 ): Promise<DuplicateDetectionResult> {
-  // Validate batch size
   if (inputs.length > 100) {
     throw new Error('Maximum 100 transactions per batch');
   }
 
-  // Find exact matches first
   const exactMatches = await findExactMatches(userId, inputs);
-
-  // Find fuzzy matches (excluding exact matches)
   const fuzzyMatches = await findFuzzyMatches(userId, inputs, exactMatches);
 
-  // Combine results
   const allMatches = new Map([...exactMatches, ...fuzzyMatches]);
   const duplicates = Array.from(allMatches.values()).sort(
     (a, b) => a.csvIndex - b.csvIndex
