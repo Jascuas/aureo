@@ -10,9 +10,10 @@ import type {
   DetectedColumn,
   ColumnDetectionResult,
   AmountFormat,
+  DateFormat,
   HeuristicConfig,
-  DEFAULT_HEURISTIC_CONFIG,
 } from '../types/import-types';
+import { DEFAULT_HEURISTIC_CONFIG } from '../types/import-types';
 import { detectDateFormat, looksLikeDate } from './date-parser';
 import { getDefaultAIProvider } from '@/lib/ai';
 
@@ -269,7 +270,6 @@ export async function detectColumns(
         sampleRows,
       });
 
-      // Convert AI result to our format
       return {
         columns: aiResult.columns.map(col => ({
           index: col.index,
@@ -278,7 +278,7 @@ export async function detectColumns(
           confidence: col.confidence,
           samples: sampleRows.map(row => row[col.index] || '').slice(0, 3),
         })),
-        dateFormat: aiResult.dateFormat || 'unknown',
+        dateFormat: (aiResult.dateFormat as DateFormat | undefined) || 'unknown',
         amountFormat: aiResult.amountFormat || amountFormat,
         confidence: aiResult.columns.reduce((sum, col) => sum + col.confidence, 0) / aiResult.columns.length,
         method: 'ai',

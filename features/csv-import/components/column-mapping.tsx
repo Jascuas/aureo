@@ -64,7 +64,8 @@ export const ColumnMapping = ({
   const [templateName, setTemplateName] = useState('');
   const [showSaveInput, setShowSaveInput] = useState(false);
   
-  const { data: templates } = useGetTemplates();
+  const { data: templatesResponse } = useGetTemplates();
+  const templates = templatesResponse && 'data' in templatesResponse ? templatesResponse.data : [];
   const saveTemplateMutation = useSaveTemplate();
   
   const handleMappingChange = (columnIndex: number, type: ColumnType) => {
@@ -86,9 +87,9 @@ export const ColumnMapping = ({
     const requiredTypes = COLUMN_TYPES.filter(t => t.required).map(t => t.value);
     const mappedTypes = Object.values(mapping).filter((t): t is Exclude<ColumnType, 'unknown'> => t !== 'unknown');
     
-    requiredTypes.forEach(type => {
-      if (!mappedTypes.includes(type)) {
-        const label = COLUMN_TYPES.find(t => t.value === type)?.label;
+    requiredTypes.forEach(requiredType => {
+      if (requiredType !== 'unknown' && !mappedTypes.includes(requiredType)) {
+        const label = COLUMN_TYPES.find(t => t.value === requiredType)?.label;
         errors.push(`${label} column is required`);
       }
     });

@@ -1,8 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { ColumnDetectionResult, ParsedCSVRow } from '../types/import-types';
+import type { ColumnDetectionResult, ParsedCSVRow, ImportTemplate } from '../types/import-types';
 import type { DuplicateMatch } from '../lib/duplicate-matcher';
-import type { ImportTemplate } from '../types/template-types';
 
 export type ImportStep = 'UPLOAD' | 'MAPPING' | 'ANALYSIS' | 'REVIEW' | 'IMPORT';
 
@@ -41,11 +40,6 @@ type ImportSessionState = {
   analyzedRows: {
     duplicates: DuplicateMatch[];
     categorizations: EnrichedCategorization[];
-  };
-  
-  analyzedRows: {
-    duplicates: DuplicateMatch[];
-    categorizations: CategorizationResult[];
   };
   
   importResult: {

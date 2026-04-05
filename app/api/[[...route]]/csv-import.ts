@@ -6,13 +6,18 @@ import { Hono } from "hono";
 import { z } from "zod";
 
 import { db } from "@/db/drizzle";
-import { accounts, importTemplates, insertImportTemplateSchema, transactions } from "@/db/schema";
+import {
+  accounts,
+  importTemplates,
+  insertImportTemplateSchema,
+  transactions,
+} from "@/db/schema";
+import { detectDuplicates } from "@/features/csv-import/lib/duplicate-matcher";
+import { categorizeTransactions } from "@/features/csv-import/lib/transaction-categorizer";
 import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
 import { requireId } from "@/lib/validation-middleware";
-import { detectDuplicates } from "@/features/csv-import/lib/duplicate-matcher";
-import { categorizeTransactions } from "@/features/csv-import/lib/transaction-categorizer";
 
 // ============================================================================
 // Validation Schemas
@@ -102,12 +107,7 @@ const app = new Hono<AppEnv>()
         });
       } catch (error) {
         console.error("Duplicate detection error:", error);
-        return c.json(
-          {
-            error: "Internal server error",
-          },
-          500,
-        );
+        return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
       }
     },
   )
@@ -138,19 +138,18 @@ const app = new Hono<AppEnv>()
             })),
             summary: {
               totalProcessed: results.length,
-              highConfidence: results.filter((r) => r.suggestion.confidence >= 0.7).length,
-              requiresReview: results.filter((r) => r.suggestion.confidence < 0.7).length,
+              highConfidence: results.filter(
+                (r) => r.suggestion.confidence >= 0.7,
+              ).length,
+              requiresReview: results.filter(
+                (r) => r.suggestion.confidence < 0.7,
+              ).length,
             },
           },
         });
       } catch (error) {
         console.error("Categorization error:", error);
-        return c.json(
-          {
-            error: "Internal server error",
-          },
-          500,
-        );
+        return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
       }
     },
   )
@@ -178,7 +177,7 @@ const app = new Hono<AppEnv>()
       return c.json({ data: templates });
     } catch (error) {
       console.error("Get templates error:", error);
-      return c.json({ error: "Internal server error" }, 500);
+      return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
     }
   })
   .post(
@@ -204,19 +203,11 @@ const app = new Hono<AppEnv>()
       } catch (error: any) {
         console.error("Save template error:", error);
 
-        // Handle unique constraint violation
         if (error.code === "23505") {
-          return c.json(
-            {
-              error: {
-                message: "A template with this name already exists",
-              },
-            },
-            409,
-          );
+          return c.json(API_ERRORS.DUPLICATE_TEMPLATE_NAME, 409);
         }
 
-        return c.json({ error: "Internal server error" }, 500);
+        return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
       }
     },
   )
@@ -239,30 +230,24 @@ const app = new Hono<AppEnv>()
             ...values,
             updatedAt: new Date(),
           })
-          .where(and(eq(importTemplates.id, id), eq(importTemplates.userId, userId)))
+          .where(
+            and(eq(importTemplates.id, id), eq(importTemplates.userId, userId)),
+          )
           .returning();
 
         if (!template) {
-          return c.json({ error: API_ERRORS.NOT_FOUND }, 404);
+          return c.json(API_ERRORS.NOT_FOUND, 404);
         }
 
         return c.json({ data: template });
       } catch (error: any) {
         console.error("Update template error:", error);
 
-        // Handle unique constraint violation
         if (error.code === "23505") {
-          return c.json(
-            {
-              error: {
-                message: "A template with this name already exists",
-              },
-            },
-            409,
-          );
+          return c.json(API_ERRORS.DUPLICATE_TEMPLATE_NAME, 409);
         }
 
-        return c.json({ error: "Internal server error" }, 500);
+        return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
       }
     },
   )
@@ -279,17 +264,19 @@ const app = new Hono<AppEnv>()
       try {
         const [template] = await db
           .delete(importTemplates)
-          .where(and(eq(importTemplates.id, id), eq(importTemplates.userId, userId)))
+          .where(
+            and(eq(importTemplates.id, id), eq(importTemplates.userId, userId)),
+          )
           .returning();
 
         if (!template) {
-          return c.json({ error: API_ERRORS.NOT_FOUND }, 404);
+          return c.json(API_ERRORS.NOT_FOUND, 404);
         }
 
         return c.json({ data: template });
       } catch (error) {
         console.error("Delete template error:", error);
-        return c.json({ error: "Internal server error" }, 500);
+        return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
       }
     },
   )
@@ -300,17 +287,25 @@ const app = new Hono<AppEnv>()
     "/import",
     clerkMiddleware(),
     requireAuth,
-    zValidator("json", z.object({
-      accountId: z.string().min(1),
-      transactions: z.array(z.object({
-        date: z.string().transform((val) => new Date(val)),
-        amount: z.number().int(), // Milliunits
-        payee: z.string().min(1),
-        notes: z.string().optional(),
-        categoryId: z.string().nullable(),
-        transactionTypeId: z.string().min(1),
-      })).min(1).max(500, "Maximum 500 transactions per import"),
-    })),
+    zValidator(
+      "json",
+      z.object({
+        accountId: z.string().min(1),
+        transactions: z
+          .array(
+            z.object({
+              date: z.string().transform((val) => new Date(val)),
+              amount: z.number().int(), // Milliunits
+              payee: z.string().min(1),
+              notes: z.string().optional(),
+              categoryId: z.string().nullable(),
+              transactionTypeId: z.string().min(1),
+            }),
+          )
+          .min(1)
+          .max(500, "Maximum 500 transactions per import"),
+      }),
+    ),
     async (c) => {
       const userId = c.var.userId;
       const { accountId, transactions: txs } = c.req.valid("json");
@@ -324,7 +319,7 @@ const app = new Hono<AppEnv>()
           .limit(1);
 
         if (!account) {
-          return c.json({ error: "Account not found" }, 404);
+          return c.json(API_ERRORS.INVALID_ACCOUNT, 404);
         }
 
         // Bulk insert transactions
@@ -340,7 +335,7 @@ const app = new Hono<AppEnv>()
               notes: tx.notes || null,
               categoryId: tx.categoryId,
               transactionTypeId: tx.transactionTypeId,
-            }))
+            })),
           )
           .returning({ id: transactions.id });
 
@@ -354,17 +349,11 @@ const app = new Hono<AppEnv>()
       } catch (error: any) {
         console.error("Bulk import error:", error);
 
-        // Handle foreign key violations
         if (error.code === "23503") {
-          return c.json(
-            {
-              error: "Invalid category or transaction type ID",
-            },
-            400,
-          );
+          return c.json(API_ERRORS.INVALID_FOREIGN_KEY, 400);
         }
 
-        return c.json({ error: "Internal server error" }, 500);
+        return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
       }
     },
   );

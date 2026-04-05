@@ -6,8 +6,7 @@
 
 import { db } from '@/db/drizzle';
 import { accounts, categories, transactions, transactionTypes } from '@/db/schema';
-import { createAIProvider } from '@/lib/ai';
-import { createCategorizationPrompt, CATEGORIZATION_SYSTEM_PROMPT } from '@/lib/ai/prompts';
+import { getDefaultAIProvider } from '@/lib/ai';
 import { eq, sql } from 'drizzle-orm';
 
 // ============================================================================
@@ -197,7 +196,8 @@ export async function categorizeTransactions(
   }
 
   // Prepare AI prompt
-  const prompt = createCategorizationPrompt({
+  const aiProvider = getDefaultAIProvider();
+  const aiResults = await aiProvider.categorizeTransactions({
     transactions: inputs.map((tx) => ({
       csvRowIndex: tx.csvRowIndex,
       date: tx.date,
@@ -207,18 +207,13 @@ export async function categorizeTransactions(
       notes: tx.notes,
     })),
     availableCategories: userCategories,
-    fewShotExamples: Array.from(fewShotMap.values()).flat().slice(0, 20), // Max 20 examples total
+    fewShotExamples: Array.from(fewShotMap.values()).flat().slice(0, 20),
   });
 
-  // Call AI
-  const aiProvider = createAIProvider();
-  const aiResponse = await aiProvider.categorize(CATEGORIZATION_SYSTEM_PROMPT, prompt);
-
-  // Map AI results to our format
   const results: CategorizationResult[] = [];
 
   for (const input of inputs) {
-    const aiResult = aiResponse.results.find((r) => r.csvRowIndex === input.csvRowIndex);
+    const aiResult = aiResults.find((r) => r.csvRowIndex === input.csvRowIndex);
 
     // Detect transaction type from amount
     const transactionType = await detectTransactionType(input.amount);
@@ -250,7 +245,7 @@ export async function categorizeTransactions(
         transactionTypeId: transactionType.id,
         transactionTypeName: transactionType.name,
         confidence: topSuggestion.confidence,
-        reasoning: topSuggestion.reasoning,
+        reasoning: topSuggestion.reasoning || 'AI categorization',
         normalizedPayee: normalizeMerchantName(input.payee),
       },
     });
