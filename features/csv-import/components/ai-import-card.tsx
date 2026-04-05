@@ -211,9 +211,7 @@ export const AiImportCard = ({
 
     setDetectionError(null);
     nextStep();
-    
-    handleAnalysis();
-  }, [columnMapping.finalMapping, nextStep, handleAnalysis]);
+  }, [columnMapping.finalMapping, nextStep]);
 
   // ============================================================================
   // STEP 3: ANALYSIS (Parallel: Duplicates + Categorization)
@@ -284,6 +282,17 @@ export const AiImportCard = ({
       setIsCategorizing(false);
     }
   }, [csvData, columnMapping.finalMapping, detectDuplicatesMutation, categorizeMutation, setDuplicates, setCategorizations]);
+
+  useEffect(() => {
+    if (
+      currentStep === 'ANALYSIS' &&
+      !isDetectingDuplicates &&
+      !isCategorizing &&
+      analyzedRows.categorizations.length === 0
+    ) {
+      handleAnalysis();
+    }
+  }, [currentStep, handleAnalysis, isDetectingDuplicates, isCategorizing, analyzedRows.categorizations.length]);
 
   useEffect(() => {
     if (
