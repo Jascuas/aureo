@@ -271,17 +271,26 @@ export const AiImportCard = ({
       
       setDuplicates(transformedDuplicates);
       setCategorizations(enrichedCategorizations);
-      
-      if (transformedDuplicates.length === 0) {
-        nextStep(); // Auto-advance to REVIEW if no duplicates
-      }
     } catch (error: any) {
       setAnalysisError(error?.message || 'Failed to analyze transactions');
     } finally {
       setIsDetectingDuplicates(false);
       setIsCategorizing(false);
     }
-  }, [csvData, columnMapping.finalMapping, detectDuplicatesMutation, categorizeMutation, setDuplicates, setCategorizations, nextStep]);
+  }, [csvData, columnMapping.finalMapping, detectDuplicatesMutation, categorizeMutation, setDuplicates, setCategorizations]);
+
+  useEffect(() => {
+    if (
+      currentStep === 'ANALYSIS' &&
+      !isDetectingDuplicates &&
+      !isCategorizing &&
+      !analysisError &&
+      analyzedRows.categorizations.length > 0 &&
+      analyzedRows.duplicates.length === 0
+    ) {
+      nextStep();
+    }
+  }, [currentStep, isDetectingDuplicates, isCategorizing, analysisError, analyzedRows, nextStep]);
 
   const handleRetryDuplicates = useCallback(async () => {
     if (!csvData || !columnMapping.finalMapping) return;
@@ -583,9 +592,12 @@ export const AiImportCard = ({
             <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            {analyzedRows.duplicates.length > 0 && (
+            {!isDetectingDuplicates && !isCategorizing && (
               <Button onClick={() => nextStep()}>
-                Review {analyzedRows.duplicates.length} Duplicates
+                {analyzedRows.duplicates.length > 0 
+                  ? `Review ${analyzedRows.duplicates.length} Duplicates`
+                  : 'Continue to Review'
+                }
               </Button>
             )}
           </div>
