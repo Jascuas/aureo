@@ -9,11 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSelectAccount } from "@/features/accounts/hooks/use-select-account";
+import { AiImportCard } from "@/features/csv-import/components/ai-import-card";
 import { useBulkDeleteTransactions } from "@/features/transactions/api/use-bulk-delete-transactions";
 import { useGetPaginatedTransactions } from "@/features/transactions/api/use-get-paginated-transactions";
 import { columns } from "@/features/transactions/components/columns";
 import { useNewTransaction } from "@/features/transactions/hooks/use-new-transaction";
-import { AiImportCard } from "@/features/csv-import/components/ai-import-card";
 
 enum VARIANTS {
   LIST = "LIST",
@@ -22,12 +22,14 @@ enum VARIANTS {
 
 const TransactionsPage = () => {
   const [variant, setVariant] = useState<VARIANTS>(VARIANTS.LIST);
-  const [selectedAccountId, setSelectedAccountId] = useState<string | undefined>();
+  const [selectedAccountId, setSelectedAccountId] = useState<
+    string | undefined
+  >();
 
   const [AccountDialog, confirm] = useSelectAccount();
   const newTransaction = useNewTransaction();
   const deleteTransactions = useBulkDeleteTransactions();
-  const { transactions, paginationInfo, paginationCallbacks, query } =
+  const { transactions, paginationInfo, paginationCallbacks } =
     useGetPaginatedTransactions();
 
   const onUpload = async () => {
@@ -103,7 +105,7 @@ const TransactionsPage = () => {
             <Button
               size="sm"
               variant="outline"
-              onClick={onUpload}
+              onClick={() => void onUpload()}
               className="w-full lg:w-auto"
             >
               <Plus className="mr-2 size-4" /> Import CSV
