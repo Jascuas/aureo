@@ -86,7 +86,7 @@ const TransactionsPage = () => {
       <AccountDialog />
 
       <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
-      <Card className="border-none drop-shadow-sm">
+        <Card className="border-none drop-shadow-sm">
         <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
           <CardTitle className="line-clamp-1 text-xl">
             Transaction History
@@ -126,9 +126,9 @@ const TransactionsPage = () => {
             paginationInfo={paginationInfo}
             paginationCallbacks={paginationCallbacks}
           />
-        </CardContent>
-      </Card>
-    </div>
+          </CardContent>
+        </Card>
+      </div>
     </>
   );
 };
