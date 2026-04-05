@@ -12,7 +12,6 @@ import { ArrowUpDown } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -43,36 +42,15 @@ type PreviewRow = {
 type AiPreviewTableProps = {
   rows: PreviewRow[];
   onCategoryChange: (rowIndex: number, categoryId: string | null, categoryName: string | null) => void;
-  onRowSelectionChange?: (selectedRows: number[]) => void;
 };
 
 export const AiPreviewTable = ({ 
   rows, 
   onCategoryChange,
-  onRowSelectionChange,
 }: AiPreviewTableProps) => {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [rowSelection, setRowSelection] = useState({});
   
   const columns: ColumnDef<PreviewRow>[] = [
-    {
-      id: 'select',
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all rows"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label={`Select row ${row.index + 1}`}
-        />
-      ),
-      enableSorting: false,
-    },
     {
       accessorKey: 'date',
       header: 'Date',
@@ -163,59 +141,29 @@ export const AiPreviewTable = ({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
-    onRowSelectionChange: (updater) => {
-      setRowSelection(updater);
-      
-      const newSelection = typeof updater === 'function' 
-        ? updater(rowSelection) 
-        : updater;
-      
-      const selectedIndices = Object.keys(newSelection)
-        .filter(key => newSelection[key as keyof typeof newSelection])
-        .map(key => parseInt(key));
-      
-      onRowSelectionChange?.(selectedIndices);
-    },
     state: {
       sorting,
-      rowSelection,
     },
   });
   
-  const selectedCount = table.getFilteredSelectedRowModel().rows.length;
-  const totalCount = table.getFilteredRowModel().rows.length;
-  const highConfidenceCount = rows.filter(r => r.confidence >= 0.9).length;
+  const totalCount = rows.length;
+  const highConfidenceCount = rows.filter(r => r.confidence >= 0.7).length;
+  const lowConfidenceCount = rows.filter(r => r.confidence < 0.7).length;
   
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <span>{selectedCount} of {totalCount} selected</span>
+          <span>{totalCount} transaction{totalCount === 1 ? '' : 's'}</span>
           <span>•</span>
           <span>{highConfidenceCount} high confidence</span>
+          {lowConfidenceCount > 0 && (
+            <>
+              <span>•</span>
+              <span className="text-amber-600">{lowConfidenceCount} need review</span>
+            </>
+          )}
         </div>
-        
-        {highConfidenceCount > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const highConfidenceIndices = rows
-                .map((r, i) => ({ ...r, index: i }))
-                .filter(r => r.confidence >= 0.9)
-                .map(r => r.index);
-              
-              const newSelection = highConfidenceIndices.reduce((acc, idx) => {
-                acc[idx] = true;
-                return acc;
-              }, {} as Record<number, boolean>);
-              
-              setRowSelection(newSelection);
-            }}
-          >
-            Select All High Confidence
-          </Button>
-        )}
       </div>
       
       <div className="rounded-md border">

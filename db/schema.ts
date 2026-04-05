@@ -83,6 +83,7 @@ export const transactionTypes = pgTable("transaction_types", {
 export const importTemplates = pgTable("import_templates", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  accountId: text("account_id").notNull(),
   name: text("name").notNull(),
   columnMapping: jsonb("column_mapping").notNull(),
   dateFormat: text("date_format").notNull(),
@@ -91,7 +92,8 @@ export const importTemplates = pgTable("import_templates", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
   userIdIdx: index("import_templates_user_id_idx").on(table.userId),
-  uniqueUserName: unique("import_templates_user_name_unique").on(table.userId, table.name),
+  accountIdIdx: index("import_templates_account_id_idx").on(table.accountId),
+  uniqueUserAccount: unique("import_templates_user_account_unique").on(table.userId, table.accountId),
 }));
 
 export const insertImportTemplateSchema = createInsertSchema(importTemplates, {

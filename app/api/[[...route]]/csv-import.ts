@@ -171,11 +171,17 @@ const app = new Hono<AppEnv>()
   // ============================================================================
   .get("/templates", clerkMiddleware(), requireAuth, async (c) => {
     const userId = c.var.userId;
+    const accountId = c.req.query("accountId");
 
     try {
+      const whereConditions = accountId
+        ? and(eq(importTemplates.userId, userId), eq(importTemplates.accountId, accountId))
+        : eq(importTemplates.userId, userId);
+        
       const templates = await db
         .select({
           id: importTemplates.id,
+          accountId: importTemplates.accountId,
           name: importTemplates.name,
           columnMapping: importTemplates.columnMapping,
           dateFormat: importTemplates.dateFormat,
@@ -184,7 +190,7 @@ const app = new Hono<AppEnv>()
           updatedAt: importTemplates.updatedAt,
         })
         .from(importTemplates)
-        .where(eq(importTemplates.userId, userId))
+        .where(whereConditions)
         .orderBy(importTemplates.updatedAt);
 
       return c.json({ data: templates });

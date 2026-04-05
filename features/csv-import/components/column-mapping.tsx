@@ -22,6 +22,7 @@ import { ConfidenceBadge } from "./confidence-badge";
 import { FormatDetector } from "./format-detector";
 
 type ColumnMappingProps = {
+  accountId: string;
   headers: string[];
   sampleRows: string[][];
   detectionResult?: ColumnDetectionResult;
@@ -43,6 +44,7 @@ const COLUMN_TYPES: { value: ColumnType; label: string; required: boolean }[] = 
 ];
 
 export const ColumnMapping = ({
+  accountId,
   headers,
   sampleRows,
   detectionResult,
@@ -108,12 +110,13 @@ export const ColumnMapping = ({
     });
     
     saveTemplateMutation.mutate({
+      accountId,
       name: templateName,
       columnMapping: reverseMapping,
       dateFormat: detectionResult?.dateFormat || 'DD/MM/YYYY',
       amountFormat: detectionResult?.amountFormat || {
-        decimalSeparator: '.',
-        thousandsSeparator: ',',
+        decimalSeparator: ',',
+        thousandsSeparator: '.',
         isNegativeExpense: true,
       },
     });

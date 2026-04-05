@@ -13,6 +13,7 @@ import { useDuplicateResolution } from "../hooks/use-duplicate-resolution";
 import { useDetectDuplicates } from "../api/use-detect-duplicates";
 import { useCategorizeTransactions } from "../api/use-categorize-transactions";
 import { useBulkImportTransactions } from "../api/use-bulk-import-transactions";
+import { useGetTemplates } from "../api/use-get-templates";
 
 import { ImportStepper } from "./import-stepper";
 import { FileUploadSection } from "./file-upload-section";
@@ -57,6 +58,7 @@ export const AiImportCard = ({
   const detectDuplicatesMutation = useDetectDuplicates();
   const categorizeMutation = useCategorizeTransactions();
   const bulkImportMutation = useBulkImportTransactions();
+  const { data: templatesResponse } = useGetTemplates(accountId);
   
   const [isParsingCSV, setIsParsingCSV] = useState(false);
   const [isDetectingColumns, setIsDetectingColumns] = useState(false);
@@ -65,7 +67,6 @@ export const AiImportCard = ({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [detectionError, setDetectionError] = useState<string | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
-  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   
   const pendingDuplicatesCount = getPendingCount(analyzedRows.duplicates);
 
@@ -303,6 +304,40 @@ export const AiImportCard = ({
     }
   }, [csvData, columnMapping.finalMapping, detectDuplicatesMutation, categorizeMutation, setDuplicates, setCategorizations]);
 
+  // Auto-apply template and skip to ANALYSIS if template exists for this account
+  useEffect(() => {
+    if (
+      currentStep === 'MAPPING' &&
+      accountId &&
+      templatesResponse &&
+      'data' in templatesResponse &&
+      templatesResponse.data.length > 0
+    ) {
+      const template = templatesResponse.data[0]; // Use the most recent template
+      
+      console.log('[AI Import] Auto-applying template:', template.name);
+      
+      // Apply the template mapping
+      setDetectionResult({
+        columns: Object.entries(template.columnMapping as Record<string, number>).map(([type, index]) => ({
+          index: index,
+          type: type as any,
+          confidence: 1.0,
+          samples: [],
+        })),
+        dateFormat: template.dateFormat as any,
+        amountFormat: template.amountFormat as any,
+        confidence: 1.0,
+        method: 'template',
+      });
+      
+      setFinalMapping(template.columnMapping as Record<string, number>);
+      
+      // Skip to ANALYSIS
+      nextStep();
+    }
+  }, [currentStep, accountId, templatesResponse, setDetectionResult, setFinalMapping, nextStep]);
+
   useEffect(() => {
     if (
       currentStep === 'ANALYSIS' &&
@@ -407,16 +442,15 @@ export const AiImportCard = ({
       return;
     }
 
-    // Filter transactions to import (exclude skipped duplicates, only selected)
+    // Filter transactions to import (exclude skipped duplicates only)
     const rowsToImport = analyzedRows.categorizations.filter((cat) => {
       const resolution = resolutions.find(r => r.csvIndex === cat.csvRowIndex);
       if (resolution?.action === 'skip') return false;
-      if (!selectedRows.has(cat.csvRowIndex)) return false;
       return true;
     });
 
     if (rowsToImport.length === 0) {
-      setAnalysisError('No transactions selected for import');
+      setAnalysisError('No transactions to import');
       return;
     }
 
@@ -475,14 +509,6 @@ export const AiImportCard = ({
     onCancel?.();
   };
 
-  // Auto-select all rows when entering REVIEW
-  useEffect(() => {
-    if (currentStep === 'REVIEW' && analyzedRows.categorizations.length > 0) {
-      const allIndexes = new Set(analyzedRows.categorizations.map(c => c.csvRowIndex));
-      setSelectedRows(allIndexes);
-    }
-  }, [currentStep, analyzedRows.categorizations]);
-
   // Warn before leaving during import
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -521,6 +547,7 @@ export const AiImportCard = ({
               </Alert>
             )}
             <ColumnMapping
+              accountId={accountId}
               headers={csvData!.headers}
               sampleRows={csvData!.rows.slice(0, 5).map(r => r.data)}
               detectionResult={columnMapping.detectionResult || undefined}
@@ -578,7 +605,6 @@ export const AiImportCard = ({
                 );
                 setCategorizations(updated);
               }}
-              onRowSelectionChange={(selected) => setSelectedRows(new Set(selected))}
             />
           </>
         );
@@ -624,6 +650,9 @@ export const AiImportCard = ({
       case 'ANALYSIS':
         return (
           <div className="flex gap-2">
+            <Button variant="outline" onClick={previousStep}>
+              Back to Mapping
+            </Button>
             <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
@@ -639,6 +668,11 @@ export const AiImportCard = ({
         );
       
       case 'REVIEW':
+        const transactionsToImport = analyzedRows.categorizations.filter((cat) => {
+          const resolution = resolutions.find(r => r.csvIndex === cat.csvRowIndex);
+          return resolution?.action !== 'skip';
+        }).length;
+        
         return (
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleCancel}>
@@ -646,9 +680,9 @@ export const AiImportCard = ({
             </Button>
             <Button 
               onClick={handleImport}
-              disabled={selectedRows.size === 0}
+              disabled={transactionsToImport === 0}
             >
-              Import {selectedRows.size} Transactions
+              Import {transactionsToImport} {transactionsToImport === 1 ? 'Transaction' : 'Transactions'}
             </Button>
           </div>
         );
