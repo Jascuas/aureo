@@ -226,15 +226,22 @@ export const AiImportCard = ({
 
     const mapping = columnMapping.finalMapping;
     
-    // Transform CSV rows to transaction format
-    const transactions = csvData.rows.map((row) => ({
-      csvRowIndex: row.index,
-      date: row.data[mapping.date!],
-      amount: convertAmountToMilliunits(parseFloat(row.data[mapping.amount!])),
-      payee: row.data[mapping.payee!],
-      description: mapping.description !== undefined ? row.data[mapping.description] : undefined,
-      notes: mapping.notes !== undefined ? row.data[mapping.notes] : undefined,
-    }));
+    const transactions = csvData.rows
+      .slice(0, 5)
+      .map((row) => ({
+        csvRowIndex: row.index,
+        date: row.data[mapping.date!],
+        amount: convertAmountToMilliunits(parseFloat(row.data[mapping.amount!])),
+        payee: row.data[mapping.payee!],
+        description: mapping.description !== undefined ? row.data[mapping.description] : undefined,
+        notes: mapping.notes !== undefined ? row.data[mapping.notes] : undefined,
+      }));
+
+    console.log('[AI Import] Sending transactions for analysis:', {
+      count: transactions.length,
+      sample: transactions[0],
+      mapping,
+    });
 
     try {
       const [duplicatesResult, categorizeResult] = await Promise.all([
