@@ -71,22 +71,21 @@ const TransactionsPage = () => {
 
   if (variant === VARIANTS.IMPORT) {
     return (
-      <>
-        <AccountDialog />
-
-        <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
-          <AiImportCard
-            accountId={selectedAccountId}
-            onComplete={onCancelImport}
-            onCancel={onCancelImport}
-          />
-        </div>
-      </>
+      <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
+        <AiImportCard
+          accountId={selectedAccountId}
+          onComplete={onCancelImport}
+          onCancel={onCancelImport}
+        />
+      </div>
     );
   }
 
   return (
-    <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
+    <>
+      <AccountDialog />
+
+      <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
       <Card className="border-none drop-shadow-sm">
         <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
           <CardTitle className="line-clamp-1 text-xl">
@@ -130,6 +129,7 @@ const TransactionsPage = () => {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 };
 
