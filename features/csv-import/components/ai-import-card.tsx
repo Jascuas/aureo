@@ -177,7 +177,16 @@ export const AiImportCard = ({
       };
 
       setDetectionResult(detectionResult);
-      nextStep(); // Auto-advance to MAPPING
+      
+      const autoMapping: Record<string, number> = {};
+      detectionResult.columns.forEach(col => {
+        if (col.type !== 'unknown') {
+          autoMapping[col.type] = col.index;
+        }
+      });
+      setFinalMapping(autoMapping);
+      
+      nextStep();
     } catch (error) {
       setDetectionError('Failed to detect columns. Please map them manually.');
     } finally {
