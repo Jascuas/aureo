@@ -316,7 +316,18 @@ export const AiImportCard = ({
     ) {
       const template = templatesResponse.data[0]; // Use the most recent template
       
-      console.log('[AI Import] Auto-applying template:', template.name);
+      // Validate template compatibility with current CSV
+      const templateIndices = Object.values(template.columnMapping as Record<string, number>);
+      const maxIndex = Math.max(...templateIndices);
+      
+      if (maxIndex >= csvData.headers.length) {
+        console.warn('[AI Import] Template incompatible: requires more columns than CSV has');
+        console.warn(`Template max index: ${maxIndex}, CSV columns: ${csvData.headers.length}`);
+        // Stay in MAPPING step - user must configure manually
+        return;
+      }
+      
+      console.log('[AI Import] Auto-applying compatible template:', template.name);
       
       // Apply the template mapping
       setDetectionResult({
@@ -371,9 +382,21 @@ export const AiImportCard = ({
     setIsDetectingDuplicates(true);
 
     const mapping = columnMapping.finalMapping;
+    const amountFormat = columnMapping.detectionResult?.amountFormat || {
+      decimalSeparator: ',' as const,
+      thousandsSeparator: '.' as const,
+      isNegativeExpense: true,
+    };
+    
     const transactions = csvData.rows.map((row) => ({
       date: row.data[mapping.date!],
-      amount: convertAmountToMilliunits(parseFloat(row.data[mapping.amount!])),
+      amount: convertAmountToMilliunits(
+        parseAmount(
+          row.data[mapping.amount!],
+          amountFormat.decimalSeparator,
+          amountFormat.thousandsSeparator
+        )
+      ),
       payee: row.data[mapping.payee!],
     }));
 
@@ -403,10 +426,22 @@ export const AiImportCard = ({
     setIsCategorizing(true);
 
     const mapping = columnMapping.finalMapping;
+    const amountFormat = columnMapping.detectionResult?.amountFormat || {
+      decimalSeparator: ',' as const,
+      thousandsSeparator: '.' as const,
+      isNegativeExpense: true,
+    };
+    
     const transactions = csvData.rows.map((row) => ({
       csvRowIndex: row.index,
       date: row.data[mapping.date!],
-      amount: convertAmountToMilliunits(parseFloat(row.data[mapping.amount!])),
+      amount: convertAmountToMilliunits(
+        parseAmount(
+          row.data[mapping.amount!],
+          amountFormat.decimalSeparator,
+          amountFormat.thousandsSeparator
+        )
+      ),
       payee: row.data[mapping.payee!],
       description: mapping.description !== undefined ? row.data[mapping.description] : undefined,
       notes: mapping.notes !== undefined ? row.data[mapping.notes] : undefined,

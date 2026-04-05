@@ -223,6 +223,14 @@ const app = new Hono<AppEnv>()
         console.error("Save template error:", error);
 
         if (error.code === "23505") {
+          if (error.constraint === "import_templates_user_account_unique") {
+            return c.json(
+              {
+                error: "A template already exists for this account. Only one template per account is allowed.",
+              },
+              409
+            );
+          }
           return c.json(API_ERRORS.DUPLICATE_TEMPLATE_NAME, 409);
         }
 
@@ -373,18 +381,17 @@ const app = new Hono<AppEnv>()
           console.log(`Transaction Type ID: ${tx.transactionTypeId}`);
         });
         console.log("\n" + "=".repeat(80));
-        console.log("⚠️  DATABASE INSERT COMMENTED OUT - DRY RUN MODE");
+        console.log("✅ INSERTING TRANSACTIONS TO DATABASE");
         console.log("=".repeat(80) + "\n");
 
-        // COMMENTED OUT: Bulk insert transactions
-        // const inserted = await db
-        //   .insert(transactions)
-        //   .values(transactionsToInsert)
-        //   .returning({ id: transactions.id });
+        const inserted = await db
+          .insert(transactions)
+          .values(transactionsToInsert)
+          .returning({ id: transactions.id });
 
         return c.json({
           data: {
-            imported: transactionsToInsert.length,
+            imported: inserted.length,
             skipped: 0,
             errors: [],
           },
