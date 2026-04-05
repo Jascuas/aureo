@@ -185,8 +185,6 @@ export const AiImportCard = ({
         }
       });
       setFinalMapping(autoMapping);
-      
-      nextStep();
     } catch (error) {
       setDetectionError('Failed to detect columns. Please map them manually.');
     } finally {
@@ -212,11 +210,10 @@ export const AiImportCard = ({
     }
 
     setDetectionError(null);
-    nextStep(); // Go to ANALYSIS
+    nextStep();
     
-    // Auto-trigger analysis
     handleAnalysis();
-  }, [columnMapping.finalMapping, nextStep]);
+  }, [columnMapping.finalMapping, nextStep, handleAnalysis]);
 
   // ============================================================================
   // STEP 3: ANALYSIS (Parallel: Duplicates + Categorization)
