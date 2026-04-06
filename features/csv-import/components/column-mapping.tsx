@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -27,21 +28,29 @@ type ColumnMappingProps = {
   sampleRows: string[][];
   detectionResult?: ColumnDetectionResult;
   onMappingChange: (mapping: Record<string, number>) => void;
-  onFormatChange: (dateFormat: string, amountFormat: { decimalSeparator: '.' | ','; thousandsSeparator: ',' | '.' | ' ' | ''; isNegativeExpense: boolean }) => void;
+  onFormatChange: (
+    dateFormat: string,
+    amountFormat: {
+      decimalSeparator: "." | ",";
+      thousandsSeparator: "," | "." | " " | "";
+      isNegativeExpense: boolean;
+    },
+  ) => void;
   onSaveTemplate?: (name: string) => void;
   onLoadTemplate?: (templateId: string) => void;
 };
 
-const COLUMN_TYPES: { value: ColumnType; label: string; required: boolean }[] = [
-  { value: 'date', label: 'Date', required: true },
-  { value: 'amount', label: 'Amount', required: true },
-  { value: 'payee', label: 'Payee', required: true },
-  { value: 'description', label: 'Description', required: false },
-  { value: 'notes', label: 'Notes', required: false },
-  { value: 'category', label: 'Category', required: false },
-  { value: 'balance', label: 'Balance', required: false },
-  { value: 'unknown', label: 'Ignore', required: false },
-];
+const COLUMN_TYPES: { value: ColumnType; label: string; required: boolean }[] =
+  [
+    { value: "date", label: "Date", required: true },
+    { value: "amount", label: "Amount", required: true },
+    { value: "payee", label: "Payee", required: true },
+    { value: "description", label: "Description", required: false },
+    { value: "notes", label: "Notes", required: false },
+    { value: "category", label: "Category", required: false },
+    { value: "balance", label: "Balance", required: false },
+    { value: "unknown", label: "Ignore", required: false },
+  ];
 
 export const ColumnMapping = ({
   accountId,
@@ -55,114 +64,127 @@ export const ColumnMapping = ({
 }: ColumnMappingProps) => {
   const [mapping, setMapping] = useState<Record<number, ColumnType>>(() => {
     const initialMapping: Record<number, ColumnType> = {};
-    
-    detectionResult?.columns.forEach(col => {
+
+    detectionResult?.columns.forEach((col) => {
       initialMapping[col.index] = col.type;
     });
-    
+
     return initialMapping;
   });
-  
-  const [templateName, setTemplateName] = useState('');
+
+  const [templateName, setTemplateName] = useState("");
   const [showSaveInput, setShowSaveInput] = useState(false);
-  
+
   const { data: templatesResponse } = useGetTemplates();
-  const templates = templatesResponse && 'data' in templatesResponse ? templatesResponse.data : [];
+  const templates =
+    templatesResponse && "data" in templatesResponse
+      ? templatesResponse.data
+      : [];
   const saveTemplateMutation = useSaveTemplate();
-  
+
   const handleMappingChange = (columnIndex: number, type: ColumnType) => {
     const newMapping = { ...mapping, [columnIndex]: type };
     setMapping(newMapping);
-    
+
     const reverseMapping: Record<string, number> = {};
     Object.entries(newMapping).forEach(([idx, colType]) => {
-      if (colType !== 'unknown') {
+      if (colType !== "unknown") {
         reverseMapping[colType] = parseInt(idx);
       }
     });
-    
+
     onMappingChange(reverseMapping);
   };
-  
+
   const getValidationErrors = () => {
     const errors: string[] = [];
-    const requiredTypes = COLUMN_TYPES.filter(t => t.required).map(t => t.value);
-    const mappedTypes = Object.values(mapping).filter((t): t is Exclude<ColumnType, 'unknown'> => t !== 'unknown');
-    
-    requiredTypes.forEach(requiredType => {
-      if (requiredType !== 'unknown' && !mappedTypes.includes(requiredType)) {
-        const label = COLUMN_TYPES.find(t => t.value === requiredType)?.label;
+    const requiredTypes = COLUMN_TYPES.filter((t) => t.required).map(
+      (t) => t.value,
+    );
+    const mappedTypes = Object.values(mapping).filter(
+      (t): t is Exclude<ColumnType, "unknown"> => t !== "unknown",
+    );
+
+    requiredTypes.forEach((requiredType) => {
+      if (requiredType !== "unknown" && !mappedTypes.includes(requiredType)) {
+        const label = COLUMN_TYPES.find((t) => t.value === requiredType)?.label;
         errors.push(`${label} column is required`);
       }
     });
-    
+
     return errors;
   };
-  
+
   const handleSaveTemplate = () => {
     if (!templateName.trim() || !accountId) return;
-    
+
     const reverseMapping: Record<string, number> = {};
     Object.entries(mapping).forEach(([idx, colType]) => {
-      if (colType !== 'unknown') {
+      if (colType !== "unknown") {
         reverseMapping[colType] = parseInt(idx);
       }
     });
-    
+
     saveTemplateMutation.mutate({
       accountId,
       name: templateName,
       columnMapping: reverseMapping,
-      dateFormat: detectionResult?.dateFormat || 'DD/MM/YYYY',
+      dateFormat: detectionResult?.dateFormat || "DD/MM/YYYY",
       amountFormat: detectionResult?.amountFormat || {
-        decimalSeparator: ',',
-        thousandsSeparator: '.',
+        decimalSeparator: ",",
+        thousandsSeparator: ".",
         isNegativeExpense: true,
       },
     });
-    
-    setTemplateName('');
+
+    setTemplateName("");
     setShowSaveInput(false);
   };
-  
+
   const validationErrors = getValidationErrors();
-  
+
   return (
     <div className="space-y-6">
       <ColumnPreview headers={headers} sampleRows={sampleRows} />
-      
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Column Mapping</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {headers.map((header, idx) => {
-            const detected = detectionResult?.columns.find(c => c.index === idx);
-            const currentType = mapping[idx] || 'unknown';
-            
+            const detected = detectionResult?.columns.find(
+              (c) => c.index === idx,
+            );
+            const currentType = mapping[idx] || "unknown";
+
             return (
               <div key={idx} className="flex items-center gap-4">
                 <div className="flex-1">
-                  <p className="text-sm font-medium">{header || `Column ${idx + 1}`}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Sample: {sampleRows[0]?.[idx] || '-'}
+                  <p className="text-sm font-medium">
+                    {header || `Column ${idx + 1}`}
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    Sample: {sampleRows[0]?.[idx] || "-"}
                   </p>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
-                  {detected && detected.type !== 'unknown' && (
+                  {detected && detected.type !== "unknown" && (
                     <ConfidenceBadge confidence={detected.confidence} />
                   )}
-                  
+
                   <Select
                     value={currentType}
-                    onValueChange={(value) => handleMappingChange(idx, value as ColumnType)}
+                    onValueChange={(value) =>
+                      handleMappingChange(idx, value as ColumnType)
+                    }
                   >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {COLUMN_TYPES.map(type => (
+                      {COLUMN_TYPES.map((type) => (
                         <SelectItem key={type.value} value={type.value}>
                           <div className="flex items-center gap-2">
                             <span>{type.label}</span>
@@ -180,7 +202,7 @@ export const ColumnMapping = ({
           })}
         </CardContent>
       </Card>
-      
+
       {validationErrors.length > 0 && (
         <Alert variant="destructive">
           <AlertCircle className="size-4" />
@@ -193,7 +215,7 @@ export const ColumnMapping = ({
           </AlertDescription>
         </Alert>
       )}
-      
+
       {detectionResult && (
         <Card>
           <CardHeader>
@@ -202,19 +224,22 @@ export const ColumnMapping = ({
           <CardContent>
             <FormatDetector
               dateFormat={detectionResult.dateFormat}
-              onDateFormatChange={(format) => 
+              onDateFormatChange={(format) =>
                 onFormatChange(format, detectionResult.amountFormat)
               }
               amountFormat={detectionResult.amountFormat}
-              onAmountFormatChange={(format) => 
+              onAmountFormatChange={(format) =>
                 onFormatChange(detectionResult.dateFormat, format)
               }
-              isAutoDetected={detectionResult.method === 'heuristic' || detectionResult.method === 'ai'}
+              isAutoDetected={
+                detectionResult.method === "heuristic" ||
+                detectionResult.method === "ai"
+              }
             />
           </CardContent>
         </Card>
       )}
-      
+
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           {templates && templates.length > 0 && (
@@ -223,7 +248,7 @@ export const ColumnMapping = ({
                 <SelectValue placeholder="Load template..." />
               </SelectTrigger>
               <SelectContent>
-                {templates.map(template => (
+                {templates.map((template) => (
                   <SelectItem key={template.id} value={template.id}>
                     {template.name}
                   </SelectItem>
@@ -232,22 +257,24 @@ export const ColumnMapping = ({
             </Select>
           )}
         </div>
-        
+
         <div className="flex items-center gap-2">
           {showSaveInput ? (
             <>
-              <input
+              <Input
                 type="text"
                 value={templateName}
                 onChange={(e) => setTemplateName(e.target.value)}
                 placeholder="Template name..."
-                className="h-9 rounded-md border px-3 text-sm"
+                className="h-9 w-[200px]"
                 autoFocus
               />
               <Button
                 size="sm"
                 onClick={handleSaveTemplate}
-                disabled={!templateName.trim() || saveTemplateMutation.isPending}
+                disabled={
+                  !templateName.trim() || saveTemplateMutation.isPending
+                }
               >
                 <Check className="size-4" />
               </Button>
@@ -256,7 +283,7 @@ export const ColumnMapping = ({
                 variant="outline"
                 onClick={() => {
                   setShowSaveInput(false);
-                  setTemplateName('');
+                  setTemplateName("");
                 }}
               >
                 Cancel
