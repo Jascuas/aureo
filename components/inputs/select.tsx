@@ -36,10 +36,40 @@ export const Select = ({
       styles={{
         control: (base) => ({
           ...base,
-          borderColor: "#e2e8f0",
+          backgroundColor: "hsl(var(--background))",
+          borderColor: "hsl(var(--border))",
           ":hover": {
-            borderColor: "#e2e8f0",
+            borderColor: "hsl(var(--border))",
           },
+        }),
+        menu: (base) => ({
+          ...base,
+          backgroundColor: "hsl(var(--popover))",
+        }),
+        option: (base, state) => ({
+          ...base,
+          backgroundColor: state.isFocused
+            ? "hsl(var(--accent))"
+            : "hsl(var(--popover))",
+          color: "hsl(var(--popover-foreground))",
+          ":active": {
+            backgroundColor: "hsl(var(--accent))",
+          },
+        }),
+        input: (base) => ({
+          ...base,
+          color: "hsl(var(--foreground))",
+        }),
+        singleValue: (base) => ({
+          ...base,
+          color: "hsl(var(--foreground))",
+        }),
+        placeholder: (base) => ({
+          ...base,
+          color: "hsl(var(--muted-foreground))",
+        }),
+        indicatorSeparator: () => ({
+          display: "none",
         }),
       }}
       value={formattedValue}
