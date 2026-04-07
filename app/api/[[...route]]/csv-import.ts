@@ -127,7 +127,7 @@ const app = new Hono<AppEnv>()
       const userId = c.var.userId;
       const { transactions } = c.req.valid("json");
 
-      console.log('[CSV Import API] Categorize request:', {
+      console.log("[CSV Import API] Categorize request:", {
         userId,
         transactionCount: transactions.length,
         firstTransaction: transactions[0],
@@ -175,9 +175,12 @@ const app = new Hono<AppEnv>()
 
     try {
       const whereConditions = accountId
-        ? and(eq(importTemplates.userId, userId), eq(importTemplates.accountId, accountId))
+        ? and(
+            eq(importTemplates.userId, userId),
+            eq(importTemplates.accountId, accountId),
+          )
         : eq(importTemplates.userId, userId);
-        
+
       const templates = await db
         .select({
           id: importTemplates.id,
@@ -226,9 +229,10 @@ const app = new Hono<AppEnv>()
           if (error.constraint === "import_templates_user_account_unique") {
             return c.json(
               {
-                error: "A template already exists for this account. Only one template per account is allowed.",
+                error:
+                  "A template already exists for this account. Only one template per account is allowed.",
               },
-              409
+              409,
             );
           }
           return c.json(API_ERRORS.DUPLICATE_TEMPLATE_NAME, 409);
@@ -352,6 +356,40 @@ const app = new Hono<AppEnv>()
           return c.json(API_ERRORS.INVALID_ACCOUNT, 404);
         }
 
+        // Check for duplicates before inserting
+        const duplicateCheckResult = await detectDuplicates(
+          userId,
+          txs.map((tx) => ({
+            date: tx.date,
+            amount: tx.amount,
+            payee: tx.payee,
+          })),
+        );
+
+        if (duplicateCheckResult.duplicates.length > 0) {
+          console.log(
+            `⚠️  Found ${duplicateCheckResult.duplicates.length} duplicates`,
+          );
+          return c.json(
+            {
+              error: "Duplicate transactions detected",
+              duplicates: duplicateCheckResult.duplicates.map((dup) => ({
+                csvIndex: dup.csvIndex,
+                matchType: dup.matchType,
+                existingTransaction: {
+                  id: dup.existingTransaction.id,
+                  date: dup.existingTransaction.date
+                    .toISOString()
+                    .split("T")[0],
+                  amount: dup.existingTransaction.amount,
+                  payee: dup.existingTransaction.payee,
+                },
+              })),
+            },
+            409,
+          );
+        }
+
         const transactionsToInsert = txs.map((tx) => ({
           id: createId(),
           accountId,
@@ -364,7 +402,7 @@ const app = new Hono<AppEnv>()
         }));
 
         console.log("=".repeat(80));
-        console.log("🔍 BULK IMPORT - DRY RUN MODE");
+        console.log("🔍 BULK IMPORT");
         console.log("=".repeat(80));
         console.log(`Account ID: ${accountId}`);
         console.log(`User ID: ${userId}`);
@@ -374,10 +412,12 @@ const app = new Hono<AppEnv>()
           console.log(`\n--- Transaction ${index + 1} ---`);
           console.log(`ID: ${tx.id}`);
           console.log(`Date: ${tx.date.toISOString()}`);
-          console.log(`Amount: ${tx.amount} milliunits (${tx.amount / 1000} EUR)`);
+          console.log(
+            `Amount: ${tx.amount} milliunits (${tx.amount / 1000} EUR)`,
+          );
           console.log(`Payee: ${tx.payee}`);
-          console.log(`Notes: ${tx.notes || '(none)'}`);
-          console.log(`Category ID: ${tx.categoryId || '(none)'}`);
+          console.log(`Notes: ${tx.notes || "(none)"}`);
+          console.log(`Category ID: ${tx.categoryId || "(none)"}`);
           console.log(`Transaction Type ID: ${tx.transactionTypeId}`);
         });
         console.log("\n" + "=".repeat(80));
@@ -399,11 +439,69 @@ const app = new Hono<AppEnv>()
       } catch (error: any) {
         console.error("Bulk import error:", error);
 
-        if (error.code === "23503") {
-          return c.json(API_ERRORS.INVALID_FOREIGN_KEY, 400);
+        // Drizzle/Neon wraps PostgreSQL errors - extract the real error
+        const pgError = error.cause || error;
+        const errorCode = pgError.code || error.code;
+        const errorMessage = error.message || "";
+        const errorDetail = pgError.detail || error.detail;
+        const errorConstraint = pgError.constraint || error.constraint;
+
+        console.error("Error details:", {
+          code: errorCode,
+          message: errorMessage,
+          constraint: errorConstraint,
+          detail: errorDetail,
+          stack: error.stack?.split("\n").slice(0, 3),
+        });
+
+        // Foreign key constraint violation (invalid category/transaction type)
+        if (
+          errorCode === "23503" ||
+          errorMessage.includes("violates foreign key constraint") ||
+          errorMessage.includes("foreign key")
+        ) {
+          // Extract which constraint failed
+          let fieldName = "category or transaction type";
+          if (errorConstraint?.includes("category")) fieldName = "category";
+          else if (errorConstraint?.includes("transaction_type"))
+            fieldName = "transaction type";
+          else if (errorConstraint?.includes("account")) fieldName = "account";
+
+          return c.json(
+            {
+              error: `Invalid ${fieldName} ID. Please verify the ID exists in the database.`,
+              detail: errorDetail || errorMessage,
+              constraint: errorConstraint,
+            },
+            400,
+          );
         }
 
-        return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
+        // Duplicate key violation
+        if (
+          errorCode === "23505" ||
+          errorMessage.includes("duplicate key") ||
+          errorMessage.includes("already exists")
+        ) {
+          return c.json(
+            {
+              error:
+                "One or more transactions already exist (duplicates detected).",
+              detail: errorDetail || errorMessage,
+            },
+            409,
+          );
+        }
+
+        // Generic error with full details for debugging
+        return c.json(
+          {
+            error: "Failed to import transactions",
+            detail: errorMessage,
+            code: errorCode,
+          },
+          500,
+        );
       }
     },
   );
