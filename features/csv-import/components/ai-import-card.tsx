@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { AlertCircle } from "lucide-react";
 import Papa from "papaparse";
+import { useCallback, useEffect, useState } from "react";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,26 +13,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-
-import { useImportSession } from "../hooks/use-import-session";
-import { useDuplicateResolution } from "../hooks/use-duplicate-resolution";
-import { useDetectDuplicates } from "../api/use-detect-duplicates";
-import { useCategorizeTransactions } from "../api/use-categorize-transactions";
-import { useBulkImportTransactions } from "../api/use-bulk-import-transactions";
-import { useGetTemplates } from "../api/use-get-templates";
-
-import { ImportStepper } from "./import-stepper";
-import { FileUploadSection } from "./file-upload-section";
-import { ColumnMapping } from "./column-mapping";
-import { AnalysisSection } from "./analysis-section";
-import { AiPreviewTable } from "./ai-preview-table";
-import { DuplicateResolution } from "./duplicate-resolution";
-import { ImportSummary } from "./import-summary";
-
-import type { ParsedCSVRow } from "../types/import-types";
 import { convertAmountToMilliunits, parseAmount } from "@/lib/utils";
+
+import { useBulkImportTransactions } from "../api/use-bulk-import-transactions";
+import { useCategorizeTransactions } from "../api/use-categorize-transactions";
+import { useDetectDuplicates } from "../api/use-detect-duplicates";
+import { useGetTemplates } from "../api/use-get-templates";
+import { useDuplicateResolution } from "../hooks/use-duplicate-resolution";
+import { useImportSession } from "../hooks/use-import-session";
+import type { ParsedCSVRow } from "../types/import-types";
+import { AiPreviewTable } from "./ai-preview-table";
+import { AnalysisSection } from "./analysis-section";
+import { ColumnMapping } from "./column-mapping";
+import { DuplicateResolution } from "./duplicate-resolution";
+import { FileUploadSection } from "./file-upload-section";
+import { ImportStepper } from "./import-stepper";
+import { ImportSummary } from "./import-summary";
 
 type AiImportCardProps = {
   accountId?: string;
@@ -715,20 +713,19 @@ export const AiImportCard = ({
       case "REVIEW":
         return (
           <>
-            {analyzedRows.duplicates.length > 0 &&
-              pendingDuplicatesCount > 0 && (
-                <DuplicateResolution
-                  csvRows={analyzedRows.categorizations.map((cat) => ({
-                    csvRowIndex: cat.csvRowIndex,
-                    date: new Date(cat.date),
-                    payee: cat.payee,
-                    amount: cat.amount,
-                    category: cat.categoryName || undefined,
-                  }))}
-                  pendingCount={pendingDuplicatesCount}
-                  onSkipAll={() => skipAllExact(analyzedRows.duplicates)}
-                />
-              )}
+            {analyzedRows.duplicates.length > 0 && (
+              <DuplicateResolution
+                csvRows={analyzedRows.categorizations.map((cat) => ({
+                  csvRowIndex: cat.csvRowIndex,
+                  date: new Date(cat.date),
+                  payee: cat.payee,
+                  amount: cat.amount,
+                  category: cat.categoryName || undefined,
+                }))}
+                pendingCount={pendingDuplicatesCount}
+                onSkipAll={() => skipAllExact(analyzedRows.duplicates)}
+              />
+            )}
             <AiPreviewTable
               rows={analyzedRows.categorizations.map((cat) => {
                 const duplicate = analyzedRows.duplicates.find(
@@ -812,7 +809,7 @@ export const AiImportCard = ({
           </div>
         );
 
-      case "REVIEW":
+      case "REVIEW": {
         const transactionsToImport = analyzedRows.categorizations.filter(
           (cat) => {
             const resolution = resolutions.find(
@@ -838,6 +835,7 @@ export const AiImportCard = ({
             </Button>
           </div>
         );
+      }
 
       case "IMPORT":
         return null;
