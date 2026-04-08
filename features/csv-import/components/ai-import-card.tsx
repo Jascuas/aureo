@@ -255,7 +255,12 @@ export const AiImportCard = ({
     };
     const dateFormat = columnMapping.detectionResult?.dateFormat || "DD/MM/YY";
 
-    const transactions = csvData.rows.slice(0, 5).map((row) => {
+    console.log("🔍 Date format being used:", {
+      detected: columnMapping.detectionResult?.dateFormat,
+      final: dateFormat,
+    });
+
+    const transactionsForAnalysis = csvData.rows.slice(0, 5).map((row) => {
       const amountValue = parseAmount(
         row.data[mapping.amount!],
         amountFormat.decimalSeparator,
@@ -263,8 +268,27 @@ export const AiImportCard = ({
       );
 
       const dateValue = row.data[mapping.date!];
-      const parsedDate = parseDate(dateValue, dateFormat);
+      let parsedDate = parseDate(dateValue, dateFormat);
+
+      // Fallback: If format has YYYY but parsing fails, try YY variant
+      if (!parsedDate && dateFormat.includes("YYYY")) {
+        const yyFormat = dateFormat.replace("YYYY", "YY") as any;
+        parsedDate = parseDate(dateValue, yyFormat);
+        console.log("📅 Trying fallback format:", {
+          original: dateFormat,
+          fallback: yyFormat,
+          parsed: parsedDate,
+        });
+      }
+
       const dateISO = parsedDate?.toISOString().split("T")[0] || dateValue;
+
+      console.log("📅 Parsing date:", {
+        original: dateValue,
+        format: dateFormat,
+        parsed: parsedDate,
+        iso: dateISO,
+      });
 
       return {
         csvRowIndex: row.index,
@@ -281,21 +305,23 @@ export const AiImportCard = ({
     });
 
     console.log("[AI Import] Sending transactions for analysis:", {
-      count: transactions.length,
-      sample: transactions[0],
+      count: transactionsForAnalysis.length,
+      sample: transactionsForAnalysis[0],
       mapping,
     });
 
     try {
       const [duplicatesResult, categorizeResult] = await Promise.all([
         detectDuplicatesMutation.mutateAsync({
-          transactions: transactions.map((t) => ({
+          transactions: transactionsForAnalysis.map((t) => ({
             date: t.date,
             amount: t.amount,
             payee: t.payee,
           })),
         }),
-        categorizeMutation.mutateAsync({ transactions }),
+        categorizeMutation.mutateAsync({
+          transactions: transactionsForAnalysis,
+        }),
       ]);
 
       if (!("data" in categorizeResult) || !("data" in duplicatesResult)) {
@@ -305,9 +331,14 @@ export const AiImportCard = ({
       // Enrich categorizations with original transaction data
       const enrichedCategorizations = categorizeResult.data.results.map(
         (cat: any) => {
-          const originalTx = transactions.find(
+          const originalTx = transactionsForAnalysis.find(
             (t) => t.csvRowIndex === cat.csvRowIndex,
           );
+          console.log("🔍 Enriching categorization:", {
+            csvRowIndex: cat.csvRowIndex,
+            originalTxDate: originalTx?.date,
+            categoryResult: cat,
+          });
           return {
             ...cat,
             date: originalTx?.date || "",
@@ -463,9 +494,16 @@ export const AiImportCard = ({
     };
     const dateFormat = columnMapping.detectionResult?.dateFormat || "DD/MM/YY";
 
-    const transactions = csvData.rows.map((row) => {
+    const transactionsForDuplicates = csvData.rows.map((row) => {
       const dateValue = row.data[mapping.date!];
-      const parsedDate = parseDate(dateValue, dateFormat);
+      let parsedDate = parseDate(dateValue, dateFormat);
+
+      // Fallback: If format has YYYY but parsing fails, try YY variant
+      if (!parsedDate && dateFormat.includes("YYYY")) {
+        const yyFormat = dateFormat.replace("YYYY", "YY") as any;
+        parsedDate = parseDate(dateValue, yyFormat);
+      }
+
       const dateISO = parsedDate?.toISOString().split("T")[0] || dateValue;
 
       return {
@@ -483,7 +521,7 @@ export const AiImportCard = ({
 
     try {
       const result = await detectDuplicatesMutation.mutateAsync({
-        transactions,
+        transactions: transactionsForDuplicates,
       });
       if ("data" in result) {
         const transformedDuplicates = result.data.duplicates.map(
@@ -523,9 +561,16 @@ export const AiImportCard = ({
     };
     const dateFormat = columnMapping.detectionResult?.dateFormat || "DD/MM/YY";
 
-    const transactions = csvData.rows.map((row) => {
+    const transactionsForCategorize = csvData.rows.map((row) => {
       const dateValue = row.data[mapping.date!];
-      const parsedDate = parseDate(dateValue, dateFormat);
+      let parsedDate = parseDate(dateValue, dateFormat);
+
+      // Fallback: If format has YYYY but parsing fails, try YY variant
+      if (!parsedDate && dateFormat.includes("YYYY")) {
+        const yyFormat = dateFormat.replace("YYYY", "YY") as any;
+        parsedDate = parseDate(dateValue, yyFormat);
+      }
+
       const dateISO = parsedDate?.toISOString().split("T")[0] || dateValue;
 
       return {
@@ -549,10 +594,12 @@ export const AiImportCard = ({
     });
 
     try {
-      const result = await categorizeMutation.mutateAsync({ transactions });
+      const result = await categorizeMutation.mutateAsync({
+        transactions: transactionsForCategorize,
+      });
       if ("data" in result) {
         const enrichedCategorizations = result.data.results.map((cat: any) => {
-          const originalTx = transactions.find(
+          const originalTx = transactionsForCategorize.find(
             (t) => t.csvRowIndex === cat.csvRowIndex,
           );
           return {
@@ -604,14 +651,22 @@ export const AiImportCard = ({
     try {
       const result = await bulkImportMutation.mutateAsync({
         accountId,
-        transactions: rowsToImport.map((cat) => ({
-          date: cat.date,
-          amount: cat.amount,
-          payee: cat.payee,
-          notes: cat.notes || undefined,
-          categoryId: cat.categoryId,
-          transactionTypeId: cat.transactionTypeId,
-        })),
+        transactions: rowsToImport.map((cat) => {
+          console.log("📤 Sending transaction to import:", {
+            csvRowIndex: cat.csvRowIndex,
+            date: cat.date,
+            dateType: typeof cat.date,
+            payee: cat.payee,
+          });
+          return {
+            date: cat.date,
+            amount: cat.amount,
+            payee: cat.payee,
+            notes: cat.notes || undefined,
+            categoryId: cat.categoryId,
+            transactionTypeId: cat.transactionTypeId,
+          };
+        }),
       });
 
       if ("data" in result) {
