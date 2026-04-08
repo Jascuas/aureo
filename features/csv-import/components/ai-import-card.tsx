@@ -4,7 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import Papa from "papaparse";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -53,13 +59,14 @@ export const AiImportCard = ({
     previousStep,
     reset,
   } = useImportSession();
-  
-  const { resolutions, skipAllExact, getPendingCount } = useDuplicateResolution();
+
+  const { resolutions, skipAllExact, getPendingCount } =
+    useDuplicateResolution();
   const detectDuplicatesMutation = useDetectDuplicates();
   const categorizeMutation = useCategorizeTransactions();
   const bulkImportMutation = useBulkImportTransactions();
   const { data: templatesResponse } = useGetTemplates(accountId);
-  
+
   const [isParsingCSV, setIsParsingCSV] = useState(false);
   const [isDetectingColumns, setIsDetectingColumns] = useState(false);
   const [isDetectingDuplicates, setIsDetectingDuplicates] = useState(false);
@@ -67,61 +74,67 @@ export const AiImportCard = ({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [detectionError, setDetectionError] = useState<string | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
-  
+
   const pendingDuplicatesCount = getPendingCount(analyzedRows.duplicates);
 
   // ============================================================================
   // STEP 1: UPLOAD + Column Detection
   // ============================================================================
-  
-  const handleFileSelected = useCallback(async (file: File) => {
-    setUploadError(null);
-    setIsParsingCSV(true);
 
-    try {
-      // Parse CSV
-      Papa.parse<string[]>(file, {
-        complete: async (results) => {
-          if (!results.data || results.data.length < 2) {
-            setUploadError('CSV file is empty or has no data rows');
+  const handleFileSelected = useCallback(
+    async (file: File) => {
+      setUploadError(null);
+      setIsParsingCSV(true);
+
+      try {
+        // Parse CSV
+        Papa.parse<string[]>(file, {
+          complete: async (results) => {
+            if (!results.data || results.data.length < 2) {
+              setUploadError("CSV file is empty or has no data rows");
+              setIsParsingCSV(false);
+              return;
+            }
+
+            const headers = results.data[0];
+            const rows: ParsedCSVRow[] = results.data
+              .slice(1)
+              .filter((row) => row.some((cell) => cell.trim())) // Filter empty rows
+              .map((row, index) => ({
+                index,
+                data: row,
+              }));
+
+            if (rows.length === 0) {
+              setUploadError("CSV contains only headers, no data rows");
+              setIsParsingCSV(false);
+              return;
+            }
+
+            setCSVData(file.name, headers, rows);
             setIsParsingCSV(false);
-            return;
-          }
 
-          const headers = results.data[0];
-          const rows: ParsedCSVRow[] = results.data
-            .slice(1)
-            .filter(row => row.some(cell => cell.trim())) // Filter empty rows
-            .map((row, index) => ({
-              index,
-              data: row,
-            }));
-
-          if (rows.length === 0) {
-            setUploadError('CSV contains only headers, no data rows');
+            // Auto-trigger column detection
+            handleColumnDetection(headers, rows);
+          },
+          error: (error) => {
+            setUploadError(`Failed to parse CSV: ${error.message}`);
             setIsParsingCSV(false);
-            return;
-          }
+          },
+          skipEmptyLines: true,
+        });
+      } catch (error: any) {
+        setUploadError(error?.message || "Failed to process file");
+        setIsParsingCSV(false);
+      }
+    },
+    [setCSVData],
+  );
 
-          setCSVData(file.name, headers, rows);
-          setIsParsingCSV(false);
-          
-          // Auto-trigger column detection
-          handleColumnDetection(headers, rows);
-        },
-        error: (error) => {
-          setUploadError(`Failed to parse CSV: ${error.message}`);
-          setIsParsingCSV(false);
-        },
-        skipEmptyLines: true,
-      });
-    } catch (error: any) {
-      setUploadError(error?.message || 'Failed to process file');
-      setIsParsingCSV(false);
-    }
-  }, [setCSVData]);
-
-  const handleColumnDetection = async (headers: string[], rows: ParsedCSVRow[]) => {
+  const handleColumnDetection = async (
+    headers: string[],
+    rows: ParsedCSVRow[],
+  ) => {
     setDetectionError(null);
     setIsDetectingColumns(true);
 
@@ -129,65 +142,75 @@ export const AiImportCard = ({
       // Simple heuristic detection
       const detectionResult = {
         columns: headers.map((header, index) => {
-          let type: 'date' | 'amount' | 'payee' | 'description' | 'notes' | 'category' | 'balance' | 'unknown' = 'unknown';
+          let type:
+            | "date"
+            | "amount"
+            | "payee"
+            | "description"
+            | "notes"
+            | "category"
+            | "balance"
+            | "unknown" = "unknown";
           let confidence = 0;
-          
+
           const lowerHeader = header.toLowerCase();
-          
+
           if (/(date|fecha|datum)/i.test(lowerHeader)) {
-            type = 'date';
+            type = "date";
             confidence = 0.9;
           } else if (/(amount|importe|monto|valor)/i.test(lowerHeader)) {
-            type = 'amount';
+            type = "amount";
             confidence = 0.9;
-          } else if (/(payee|merchant|tienda|comercio|beneficiario)/i.test(lowerHeader)) {
-            type = 'payee';
+          } else if (
+            /(payee|merchant|tienda|comercio|beneficiario)/i.test(lowerHeader)
+          ) {
+            type = "payee";
             confidence = 0.85;
           } else if (/(description|desc|concepto|detalle)/i.test(lowerHeader)) {
-            type = 'description';
+            type = "description";
             confidence = 0.8;
           } else if (/(note|nota)/i.test(lowerHeader)) {
-            type = 'notes';
+            type = "notes";
             confidence = 0.75;
           } else if (/(category|categor)/i.test(lowerHeader)) {
-            type = 'category';
+            type = "category";
             confidence = 0.8;
           } else if (/(balance|saldo)/i.test(lowerHeader)) {
-            type = 'balance';
+            type = "balance";
             confidence = 0.8;
           }
-          
-          const samples = rows.slice(0, 5).map(r => r.data[index] || '');
-          
-          return { 
-            index, 
+
+          const samples = rows.slice(0, 5).map((r) => r.data[index] || "");
+
+          return {
+            index,
             name: header,
-            type, 
+            type,
             confidence,
             samples,
           };
         }),
-        dateFormat: 'DD/MM/YYYY' as const,
+        dateFormat: "DD/MM/YYYY" as const,
         amountFormat: {
-          decimalSeparator: ',' as const,
-          thousandsSeparator: '.' as const,
+          decimalSeparator: "," as const,
+          thousandsSeparator: "." as const,
           isNegativeExpense: true,
         },
         confidence: 0.85,
-        method: 'heuristic' as const,
+        method: "heuristic" as const,
       };
 
       setDetectionResult(detectionResult);
-      
+
       const autoMapping: Record<string, number> = {};
-      detectionResult.columns.forEach(col => {
-        if (col.type !== 'unknown') {
+      detectionResult.columns.forEach((col) => {
+        if (col.type !== "unknown") {
           autoMapping[col.type] = col.index;
         }
       });
       setFinalMapping(autoMapping);
     } catch (error) {
-      setDetectionError('Failed to detect columns. Please map them manually.');
+      setDetectionError("Failed to detect columns. Please map them manually.");
     } finally {
       setIsDetectingColumns(false);
     }
@@ -196,17 +219,17 @@ export const AiImportCard = ({
   // ============================================================================
   // STEP 2: MAPPING
   // ============================================================================
-  
+
   const handleMappingConfirm = useCallback(() => {
     if (!columnMapping.finalMapping) {
-      setDetectionError('Please complete the column mapping');
+      setDetectionError("Please complete the column mapping");
       return;
     }
 
     // Validate required fields
     const { date, amount, payee } = columnMapping.finalMapping;
     if (date === undefined || amount === undefined || payee === undefined) {
-      setDetectionError('Date, Amount, and Payee columns are required');
+      setDetectionError("Date, Amount, and Payee columns are required");
       return;
     }
 
@@ -217,7 +240,7 @@ export const AiImportCard = ({
   // ============================================================================
   // STEP 3: ANALYSIS (Parallel: Duplicates + Categorization)
   // ============================================================================
-  
+
   const handleAnalysis = useCallback(async () => {
     if (!csvData || !columnMapping.finalMapping) return;
 
@@ -227,31 +250,33 @@ export const AiImportCard = ({
 
     const mapping = columnMapping.finalMapping;
     const amountFormat = columnMapping.detectionResult?.amountFormat || {
-      decimalSeparator: ',' as const,
-      thousandsSeparator: '.' as const,
+      decimalSeparator: "," as const,
+      thousandsSeparator: "." as const,
       isNegativeExpense: true,
     };
-    
-    const transactions = csvData.rows
-      .slice(0, 5)
-      .map((row) => {
-        const amountValue = parseAmount(
-          row.data[mapping.amount!],
-          amountFormat.decimalSeparator,
-          amountFormat.thousandsSeparator
-        );
-        
-        return {
-          csvRowIndex: row.index,
-          date: row.data[mapping.date!],
-          amount: convertAmountToMilliunits(amountValue),
-          payee: row.data[mapping.payee!],
-          description: mapping.description !== undefined ? row.data[mapping.description] : undefined,
-          notes: mapping.notes !== undefined ? row.data[mapping.notes] : undefined,
-        };
-      });
 
-    console.log('[AI Import] Sending transactions for analysis:', {
+    const transactions = csvData.rows.slice(0, 5).map((row) => {
+      const amountValue = parseAmount(
+        row.data[mapping.amount!],
+        amountFormat.decimalSeparator,
+        amountFormat.thousandsSeparator,
+      );
+
+      return {
+        csvRowIndex: row.index,
+        date: row.data[mapping.date!],
+        amount: convertAmountToMilliunits(amountValue),
+        payee: row.data[mapping.payee!],
+        description:
+          mapping.description !== undefined
+            ? row.data[mapping.description]
+            : undefined,
+        notes:
+          mapping.notes !== undefined ? row.data[mapping.notes] : undefined,
+      };
+    });
+
+    console.log("[AI Import] Sending transactions for analysis:", {
       count: transactions.length,
       sample: transactions[0],
       mapping,
@@ -260,7 +285,7 @@ export const AiImportCard = ({
     try {
       const [duplicatesResult, categorizeResult] = await Promise.all([
         detectDuplicatesMutation.mutateAsync({
-          transactions: transactions.map(t => ({
+          transactions: transactions.map((t) => ({
             date: t.date,
             amount: t.amount,
             payee: t.payee,
@@ -268,70 +293,94 @@ export const AiImportCard = ({
         }),
         categorizeMutation.mutateAsync({ transactions }),
       ]);
-      
-      if (!('data' in categorizeResult) || !('data' in duplicatesResult)) {
-        throw new Error('Invalid API response');
+
+      if (!("data" in categorizeResult) || !("data" in duplicatesResult)) {
+        throw new Error("Invalid API response");
       }
-      
+
       // Enrich categorizations with original transaction data
-      const enrichedCategorizations = categorizeResult.data.results.map((cat: any) => {
-        const originalTx = transactions.find(t => t.csvRowIndex === cat.csvRowIndex);
-        return {
-          ...cat,
-          date: originalTx?.date || '',
-          amount: originalTx?.amount || 0,
-          payee: originalTx?.payee || '',
-          notes: originalTx?.notes,
-        };
-      });
-      
-      // Transform duplicates (date string → Date)
-      const transformedDuplicates = duplicatesResult.data.duplicates.map((dup: any) => ({
-        ...dup,
-        existingTransaction: {
-          ...dup.existingTransaction,
-          date: new Date(dup.existingTransaction.date),
+      const enrichedCategorizations = categorizeResult.data.results.map(
+        (cat: any) => {
+          const originalTx = transactions.find(
+            (t) => t.csvRowIndex === cat.csvRowIndex,
+          );
+          return {
+            ...cat,
+            date: originalTx?.date || "",
+            amount: originalTx?.amount || 0,
+            payee: originalTx?.payee || "",
+            notes: originalTx?.notes,
+          };
         },
-      }));
-      
+      );
+
+      // Transform duplicates (date string → Date)
+      const transformedDuplicates = duplicatesResult.data.duplicates.map(
+        (dup: any) => ({
+          ...dup,
+          existingTransaction: {
+            ...dup.existingTransaction,
+            date: new Date(dup.existingTransaction.date),
+          },
+        }),
+      );
+
       setDuplicates(transformedDuplicates);
       setCategorizations(enrichedCategorizations);
     } catch (error: any) {
-      setAnalysisError(error?.message || 'Failed to analyze transactions');
+      setAnalysisError(error?.message || "Failed to analyze transactions");
     } finally {
       setIsDetectingDuplicates(false);
       setIsCategorizing(false);
     }
-  }, [csvData, columnMapping.finalMapping, detectDuplicatesMutation, categorizeMutation, setDuplicates, setCategorizations]);
+  }, [
+    csvData,
+    columnMapping.finalMapping,
+    detectDuplicatesMutation,
+    categorizeMutation,
+    setDuplicates,
+    setCategorizations,
+  ]);
 
   // Auto-apply template and skip to ANALYSIS if template exists for this account
   useEffect(() => {
     if (
-      currentStep === 'MAPPING' &&
+      currentStep === "MAPPING" &&
       csvData &&
       accountId &&
       templatesResponse &&
-      'data' in templatesResponse &&
+      "data" in templatesResponse &&
       templatesResponse.data.length > 0
     ) {
       const template = templatesResponse.data[0]; // Use the most recent template
-      
+
       // Validate template compatibility with current CSV
-      const templateIndices = Object.values(template.columnMapping as Record<string, number>);
+      const templateIndices = Object.values(
+        template.columnMapping as Record<string, number>,
+      );
       const maxIndex = Math.max(...templateIndices);
-      
+
       if (maxIndex >= csvData.headers.length) {
-        console.warn('[AI Import] Template incompatible: requires more columns than CSV has');
-        console.warn(`Template max index: ${maxIndex}, CSV columns: ${csvData.headers.length}`);
+        console.warn(
+          "[AI Import] Template incompatible: requires more columns than CSV has",
+        );
+        console.warn(
+          `Template max index: ${maxIndex}, CSV columns: ${csvData.headers.length}`,
+        );
         // Stay in MAPPING step - user must configure manually
         return;
       }
-      
-      console.log('[AI Import] Auto-applying compatible template:', template.name);
-      
+
+      console.log(
+        "[AI Import] Auto-applying compatible template:",
+        template.name,
+      );
+
       // Apply the template mapping
       setDetectionResult({
-        columns: Object.entries(template.columnMapping as Record<string, number>).map(([type, index]) => ({
+        columns: Object.entries(
+          template.columnMapping as Record<string, number>,
+        ).map(([type, index]) => ({
           index: index,
           name: csvData.headers[index] || `Column ${index}`,
           type: type as any,
@@ -341,30 +390,44 @@ export const AiImportCard = ({
         dateFormat: template.dateFormat as any,
         amountFormat: template.amountFormat as any,
         confidence: 1.0,
-        method: 'heuristic' as const,
+        method: "heuristic" as const,
       });
-      
+
       setFinalMapping(template.columnMapping as Record<string, number>);
-      
+
       // Skip to ANALYSIS
       nextStep();
     }
-  }, [currentStep, csvData, accountId, templatesResponse, setDetectionResult, setFinalMapping, nextStep]);
+  }, [
+    currentStep,
+    csvData,
+    accountId,
+    templatesResponse,
+    setDetectionResult,
+    setFinalMapping,
+    nextStep,
+  ]);
 
   useEffect(() => {
     if (
-      currentStep === 'ANALYSIS' &&
+      currentStep === "ANALYSIS" &&
       !isDetectingDuplicates &&
       !isCategorizing &&
       analyzedRows.categorizations.length === 0
     ) {
       handleAnalysis();
     }
-  }, [currentStep, handleAnalysis, isDetectingDuplicates, isCategorizing, analyzedRows.categorizations.length]);
+  }, [
+    currentStep,
+    handleAnalysis,
+    isDetectingDuplicates,
+    isCategorizing,
+    analyzedRows.categorizations.length,
+  ]);
 
   useEffect(() => {
     if (
-      currentStep === 'ANALYSIS' &&
+      currentStep === "ANALYSIS" &&
       !isDetectingDuplicates &&
       !isCategorizing &&
       !analysisError &&
@@ -373,7 +436,14 @@ export const AiImportCard = ({
     ) {
       nextStep();
     }
-  }, [currentStep, isDetectingDuplicates, isCategorizing, analysisError, analyzedRows, nextStep]);
+  }, [
+    currentStep,
+    isDetectingDuplicates,
+    isCategorizing,
+    analysisError,
+    analyzedRows,
+    nextStep,
+  ]);
 
   const handleRetryDuplicates = useCallback(async () => {
     if (!csvData || !columnMapping.finalMapping) return;
@@ -383,41 +453,50 @@ export const AiImportCard = ({
 
     const mapping = columnMapping.finalMapping;
     const amountFormat = columnMapping.detectionResult?.amountFormat || {
-      decimalSeparator: ',' as const,
-      thousandsSeparator: '.' as const,
+      decimalSeparator: "," as const,
+      thousandsSeparator: "." as const,
       isNegativeExpense: true,
     };
-    
+
     const transactions = csvData.rows.map((row) => ({
       date: row.data[mapping.date!],
       amount: convertAmountToMilliunits(
         parseAmount(
           row.data[mapping.amount!],
           amountFormat.decimalSeparator,
-          amountFormat.thousandsSeparator
-        )
+          amountFormat.thousandsSeparator,
+        ),
       ),
       payee: row.data[mapping.payee!],
     }));
 
     try {
-      const result = await detectDuplicatesMutation.mutateAsync({ transactions });
-      if ('data' in result) {
-        const transformedDuplicates = result.data.duplicates.map((dup: any) => ({
-          ...dup,
-          existingTransaction: {
-            ...dup.existingTransaction,
-            date: new Date(dup.existingTransaction.date),
-          },
-        }));
+      const result = await detectDuplicatesMutation.mutateAsync({
+        transactions,
+      });
+      if ("data" in result) {
+        const transformedDuplicates = result.data.duplicates.map(
+          (dup: any) => ({
+            ...dup,
+            existingTransaction: {
+              ...dup.existingTransaction,
+              date: new Date(dup.existingTransaction.date),
+            },
+          }),
+        );
         setDuplicates(transformedDuplicates);
       }
     } catch (error: any) {
-      setAnalysisError(error?.message || 'Failed to detect duplicates');
+      setAnalysisError(error?.message || "Failed to detect duplicates");
     } finally {
       setIsDetectingDuplicates(false);
     }
-  }, [csvData, columnMapping.finalMapping, detectDuplicatesMutation, setDuplicates]);
+  }, [
+    csvData,
+    columnMapping.finalMapping,
+    detectDuplicatesMutation,
+    setDuplicates,
+  ]);
 
   const handleRetryCategorize = useCallback(async () => {
     if (!csvData || !columnMapping.finalMapping) return;
@@ -427,11 +506,11 @@ export const AiImportCard = ({
 
     const mapping = columnMapping.finalMapping;
     const amountFormat = columnMapping.detectionResult?.amountFormat || {
-      decimalSeparator: ',' as const,
-      thousandsSeparator: '.' as const,
+      decimalSeparator: "," as const,
+      thousandsSeparator: "." as const,
       isNegativeExpense: true,
     };
-    
+
     const transactions = csvData.rows.map((row) => ({
       csvRowIndex: row.index,
       date: row.data[mapping.date!],
@@ -439,62 +518,74 @@ export const AiImportCard = ({
         parseAmount(
           row.data[mapping.amount!],
           amountFormat.decimalSeparator,
-          amountFormat.thousandsSeparator
-        )
+          amountFormat.thousandsSeparator,
+        ),
       ),
       payee: row.data[mapping.payee!],
-      description: mapping.description !== undefined ? row.data[mapping.description] : undefined,
+      description:
+        mapping.description !== undefined
+          ? row.data[mapping.description]
+          : undefined,
       notes: mapping.notes !== undefined ? row.data[mapping.notes] : undefined,
     }));
 
     try {
       const result = await categorizeMutation.mutateAsync({ transactions });
-      if ('data' in result) {
+      if ("data" in result) {
         const enrichedCategorizations = result.data.results.map((cat: any) => {
-          const originalTx = transactions.find(t => t.csvRowIndex === cat.csvRowIndex);
+          const originalTx = transactions.find(
+            (t) => t.csvRowIndex === cat.csvRowIndex,
+          );
           return {
             ...cat,
-            date: originalTx?.date || '',
+            date: originalTx?.date || "",
             amount: originalTx?.amount || 0,
-            payee: originalTx?.payee || '',
+            payee: originalTx?.payee || "",
             notes: originalTx?.notes,
           };
         });
         setCategorizations(enrichedCategorizations);
       }
     } catch (error: any) {
-      setAnalysisError(error?.message || 'Failed to categorize transactions');
+      setAnalysisError(error?.message || "Failed to categorize transactions");
     } finally {
       setIsCategorizing(false);
     }
-  }, [csvData, columnMapping.finalMapping, categorizeMutation, setCategorizations]);
+  }, [
+    csvData,
+    columnMapping.finalMapping,
+    categorizeMutation,
+    setCategorizations,
+  ]);
 
   // ============================================================================
   // STEP 4: REVIEW → IMPORT
   // ============================================================================
-  
+
   const handleImport = useCallback(async () => {
     if (!accountId) {
-      setAnalysisError('No account selected');
+      setAnalysisError("No account selected");
       return;
     }
 
     // Filter transactions to import (exclude skipped duplicates only)
     const rowsToImport = analyzedRows.categorizations.filter((cat) => {
-      const resolution = resolutions.find(r => r.csvIndex === cat.csvRowIndex);
-      if (resolution?.action === 'skip') return false;
+      const resolution = resolutions.find(
+        (r) => r.csvIndex === cat.csvRowIndex,
+      );
+      if (resolution?.action === "skip") return false;
       return true;
     });
 
     if (rowsToImport.length === 0) {
-      setAnalysisError('No transactions to import');
+      setAnalysisError("No transactions to import");
       return;
     }
 
     try {
       const result = await bulkImportMutation.mutateAsync({
         accountId,
-        transactions: rowsToImport.map(cat => ({
+        transactions: rowsToImport.map((cat) => ({
           date: cat.date,
           amount: cat.amount,
           payee: cat.payee,
@@ -504,21 +595,23 @@ export const AiImportCard = ({
         })),
       });
 
-      if ('data' in result) {
+      if ("data" in result) {
         const skippedCount = analyzedRows.duplicates.filter(
-          dup => resolutions.find(r => r.csvIndex === dup.csvIndex)?.action === 'skip'
+          (dup) =>
+            resolutions.find((r) => r.csvIndex === dup.csvIndex)?.action ===
+            "skip",
         ).length;
 
         setImportResult({
           importedCount: result.data.imported,
           skippedCount,
           errorCount: result.data.errors.length,
-          errors: result.data.errors.map((err: any) => ({ 
-            row: 0, 
-            message: err 
+          errors: result.data.errors.map((err: any) => ({
+            row: 0,
+            message: err,
           })),
         });
-        
+
         nextStep(); // Go to IMPORT summary
       }
     } catch (error: any) {
@@ -526,22 +619,31 @@ export const AiImportCard = ({
         importedCount: 0,
         skippedCount: 0,
         errorCount: rowsToImport.length,
-        errors: [{ row: 0, message: error?.message || 'Import failed' }],
+        errors: [{ row: 0, message: error?.message || "Import failed" }],
       });
       nextStep(); // Show error summary
     }
-  }, [accountId, analyzedRows, resolutions, bulkImportMutation, setImportResult, nextStep]);
+  }, [
+    accountId,
+    analyzedRows,
+    resolutions,
+    bulkImportMutation,
+    setImportResult,
+    nextStep,
+  ]);
 
   // ============================================================================
   // UI Handlers
   // ============================================================================
-  
+
   const handleCancel = () => {
-    if (currentStep !== 'UPLOAD' && currentStep !== 'IMPORT') {
-      const confirmed = window.confirm('Are you sure? All progress will be lost.');
+    if (currentStep !== "UPLOAD" && currentStep !== "IMPORT") {
+      const confirmed = window.confirm(
+        "Are you sure? All progress will be lost.",
+      );
       if (!confirmed) return;
     }
-    
+
     reset();
     onCancel?.();
   };
@@ -549,23 +651,23 @@ export const AiImportCard = ({
   // Warn before leaving during import
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (currentStep !== 'UPLOAD' && currentStep !== 'IMPORT') {
+      if (currentStep !== "UPLOAD" && currentStep !== "IMPORT") {
         e.preventDefault();
-        e.returnValue = '';
+        e.returnValue = "";
       }
     };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [currentStep]);
 
   // ============================================================================
   // Render
   // ============================================================================
-  
+
   const renderStepContent = () => {
     switch (currentStep) {
-      case 'UPLOAD':
+      case "UPLOAD":
         return (
           <FileUploadSection
             onFileSelected={handleFileSelected}
@@ -573,8 +675,8 @@ export const AiImportCard = ({
             error={uploadError}
           />
         );
-      
-      case 'MAPPING':
+
+      case "MAPPING":
         return (
           <>
             {detectionError && (
@@ -586,45 +688,52 @@ export const AiImportCard = ({
             <ColumnMapping
               accountId={accountId}
               headers={csvData!.headers}
-              sampleRows={csvData!.rows.slice(0, 5).map(r => r.data)}
+              sampleRows={csvData!.rows.slice(0, 5).map((r) => r.data)}
               detectionResult={columnMapping.detectionResult || undefined}
               onMappingChange={setFinalMapping}
               onFormatChange={() => {}}
             />
           </>
         );
-      
-      case 'ANALYSIS':
+
+      case "ANALYSIS":
         return (
           <AnalysisSection
             isDetectingDuplicates={isDetectingDuplicates}
             isCategorizing={isCategorizing}
-            duplicateError={analysisError && isDetectingDuplicates ? analysisError : null}
-            categorizeError={analysisError && isCategorizing ? analysisError : null}
+            duplicateError={
+              analysisError && isDetectingDuplicates ? analysisError : null
+            }
+            categorizeError={
+              analysisError && isCategorizing ? analysisError : null
+            }
             onRetryDuplicates={handleRetryDuplicates}
             onRetryCategorize={handleRetryCategorize}
           />
         );
-      
-      case 'REVIEW':
+
+      case "REVIEW":
         return (
           <>
-            {analyzedRows.duplicates.length > 0 && pendingDuplicatesCount > 0 && (
-              <DuplicateResolution
-                csvRows={analyzedRows.categorizations.map(cat => ({
-                  csvRowIndex: cat.csvRowIndex,
-                  date: new Date(cat.date),
-                  payee: cat.payee,
-                  amount: cat.amount,
-                  category: cat.categoryName || undefined,
-                }))}
-                pendingCount={pendingDuplicatesCount}
-                onSkipAll={() => skipAllExact(analyzedRows.duplicates)}
-              />
-            )}
+            {analyzedRows.duplicates.length > 0 &&
+              pendingDuplicatesCount > 0 && (
+                <DuplicateResolution
+                  csvRows={analyzedRows.categorizations.map((cat) => ({
+                    csvRowIndex: cat.csvRowIndex,
+                    date: new Date(cat.date),
+                    payee: cat.payee,
+                    amount: cat.amount,
+                    category: cat.categoryName || undefined,
+                  }))}
+                  pendingCount={pendingDuplicatesCount}
+                  onSkipAll={() => skipAllExact(analyzedRows.duplicates)}
+                />
+              )}
             <AiPreviewTable
-              rows={analyzedRows.categorizations.map(cat => {
-                const duplicate = analyzedRows.duplicates.find(dup => dup.csvIndex === cat.csvRowIndex);
+              rows={analyzedRows.categorizations.map((cat) => {
+                const duplicate = analyzedRows.duplicates.find(
+                  (dup) => dup.csvIndex === cat.csvRowIndex,
+                );
                 return {
                   csvRowIndex: cat.csvRowIndex,
                   date: new Date(cat.date),
@@ -637,16 +746,18 @@ export const AiImportCard = ({
                 };
               })}
               onCategoryChange={(csvRowIndex, categoryId) => {
-                const updated = analyzedRows.categorizations.map(cat =>
-                  cat.csvRowIndex === csvRowIndex ? { ...cat, categoryId } : cat
+                const updated = analyzedRows.categorizations.map((cat) =>
+                  cat.csvRowIndex === csvRowIndex
+                    ? { ...cat, categoryId }
+                    : cat,
                 );
                 setCategorizations(updated);
               }}
             />
           </>
         );
-      
-      case 'IMPORT':
+
+      case "IMPORT":
         return (
           <ImportSummary
             importedCount={importResult?.importedCount || 0}
@@ -662,29 +773,27 @@ export const AiImportCard = ({
         );
     }
   };
-  
+
   const renderStepActions = () => {
     switch (currentStep) {
-      case 'UPLOAD':
+      case "UPLOAD":
         return (
           <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
         );
-      
-      case 'MAPPING':
+
+      case "MAPPING":
         return (
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button onClick={handleMappingConfirm}>
-              Continue
-            </Button>
+            <Button onClick={handleMappingConfirm}>Continue</Button>
           </div>
         );
-      
-      case 'ANALYSIS':
+
+      case "ANALYSIS":
         return (
           <div className="flex gap-2">
             <Button variant="outline" onClick={previousStep}>
@@ -695,51 +804,55 @@ export const AiImportCard = ({
             </Button>
             {!isDetectingDuplicates && !isCategorizing && (
               <Button onClick={() => nextStep()}>
-                {analyzedRows.duplicates.length > 0 
+                {analyzedRows.duplicates.length > 0
                   ? `Review ${analyzedRows.duplicates.length} Duplicates`
-                  : 'Continue to Review'
-                }
+                  : "Continue to Review"}
               </Button>
             )}
           </div>
         );
-      
-      case 'REVIEW':
-        const transactionsToImport = analyzedRows.categorizations.filter((cat) => {
-          const resolution = resolutions.find(r => r.csvIndex === cat.csvRowIndex);
-          return resolution?.action !== 'skip';
-        }).length;
-        
+
+      case "REVIEW":
+        const transactionsToImport = analyzedRows.categorizations.filter(
+          (cat) => {
+            const resolution = resolutions.find(
+              (r) => r.csvIndex === cat.csvRowIndex,
+            );
+            return resolution?.action !== "skip";
+          },
+        ).length;
+
+        const hasUnresolvedDuplicates = pendingDuplicatesCount > 0;
+
         return (
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleImport}
-              disabled={transactionsToImport === 0}
+              disabled={transactionsToImport === 0 || hasUnresolvedDuplicates}
             >
-              Import {transactionsToImport} {transactionsToImport === 1 ? 'Transaction' : 'Transactions'}
+              Import {transactionsToImport}{" "}
+              {transactionsToImport === 1 ? "Transaction" : "Transactions"}
             </Button>
           </div>
         );
-      
-      case 'IMPORT':
+
+      case "IMPORT":
         return null;
     }
   };
-  
+
   return (
     <Card className="border-none drop-shadow-sm">
       <CardHeader>
         <CardTitle>AI-Powered CSV Import</CardTitle>
         <ImportStepper currentStep={currentStep} />
       </CardHeader>
-      
-      <CardContent className="min-h-[400px]">
-        {renderStepContent()}
-      </CardContent>
-      
+
+      <CardContent className="min-h-[400px]">{renderStepContent()}</CardContent>
+
       {renderStepActions() && (
         <CardFooter className="flex justify-end">
           {renderStepActions()}

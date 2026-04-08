@@ -67,26 +67,11 @@ export const AiPreviewTable = ({
       ),
     },
     {
-      id: "duplicate",
-      header: "Status",
-      cell: ({ row }) => {
-        const duplicate = row.original.duplicate;
-        if (!duplicate)
-          return <span className="text-muted-foreground text-sm">New</span>;
-
-        const resolution = getResolution(duplicate.csvIndex);
-
-        return (
-          <DuplicateIndicator
-            existingTransaction={duplicate.existingTransaction}
-            matchType={duplicate.matchType}
-            score={duplicate.score}
-            onResolve={() => openResolution(duplicate)}
-            isResolved={!!resolution}
-            resolution={resolution?.action}
-          />
-        );
-      },
+      accessorKey: "payee",
+      header: "Payee",
+      cell: ({ row }) => (
+        <span className="max-w-[200px] truncate">{row.original.payee}</span>
+      ),
     },
     {
       accessorKey: "amount",
@@ -137,18 +122,23 @@ export const AiPreviewTable = ({
       ),
     },
     {
-      id: "duplicate",
+      id: "status",
       header: "Status",
       cell: ({ row }) => {
         const duplicate = row.original.duplicate;
         if (!duplicate)
           return <span className="text-muted-foreground text-sm">New</span>;
 
+        const resolution = getResolution(duplicate.csvIndex);
+
         return (
           <DuplicateIndicator
             existingTransaction={duplicate.existingTransaction}
             matchType={duplicate.matchType}
             score={duplicate.score}
+            onResolve={() => openResolution(duplicate)}
+            isResolved={!!resolution}
+            resolution={resolution?.action}
           />
         );
       },
