@@ -21,6 +21,7 @@ import { useDetectDuplicates } from "../api/use-detect-duplicates";
 import { useGetTemplates } from "../api/use-get-templates";
 import { useDuplicateResolution } from "../hooks/use-duplicate-resolution";
 import { useImportSession } from "../hooks/use-import-session";
+import { parseDate } from "../lib/date-parser";
 import type { ParsedCSVRow } from "../types/import-types";
 import { AiPreviewTable } from "./ai-preview-table";
 import { AnalysisSection } from "./analysis-section";
@@ -252,6 +253,7 @@ export const AiImportCard = ({
       thousandsSeparator: "." as const,
       isNegativeExpense: true,
     };
+    const dateFormat = columnMapping.detectionResult?.dateFormat || "DD/MM/YY";
 
     const transactions = csvData.rows.slice(0, 5).map((row) => {
       const amountValue = parseAmount(
@@ -260,9 +262,13 @@ export const AiImportCard = ({
         amountFormat.thousandsSeparator,
       );
 
+      const dateValue = row.data[mapping.date!];
+      const parsedDate = parseDate(dateValue, dateFormat);
+      const dateISO = parsedDate?.toISOString().split("T")[0] || dateValue;
+
       return {
         csvRowIndex: row.index,
-        date: row.data[mapping.date!],
+        date: dateISO,
         amount: convertAmountToMilliunits(amountValue),
         payee: row.data[mapping.payee!],
         description:
@@ -455,18 +461,25 @@ export const AiImportCard = ({
       thousandsSeparator: "." as const,
       isNegativeExpense: true,
     };
+    const dateFormat = columnMapping.detectionResult?.dateFormat || "DD/MM/YY";
 
-    const transactions = csvData.rows.map((row) => ({
-      date: row.data[mapping.date!],
-      amount: convertAmountToMilliunits(
-        parseAmount(
-          row.data[mapping.amount!],
-          amountFormat.decimalSeparator,
-          amountFormat.thousandsSeparator,
+    const transactions = csvData.rows.map((row) => {
+      const dateValue = row.data[mapping.date!];
+      const parsedDate = parseDate(dateValue, dateFormat);
+      const dateISO = parsedDate?.toISOString().split("T")[0] || dateValue;
+
+      return {
+        date: dateISO,
+        amount: convertAmountToMilliunits(
+          parseAmount(
+            row.data[mapping.amount!],
+            amountFormat.decimalSeparator,
+            amountFormat.thousandsSeparator,
+          ),
         ),
-      ),
-      payee: row.data[mapping.payee!],
-    }));
+        payee: row.data[mapping.payee!],
+      };
+    });
 
     try {
       const result = await detectDuplicatesMutation.mutateAsync({
@@ -508,24 +521,32 @@ export const AiImportCard = ({
       thousandsSeparator: "." as const,
       isNegativeExpense: true,
     };
+    const dateFormat = columnMapping.detectionResult?.dateFormat || "DD/MM/YY";
 
-    const transactions = csvData.rows.map((row) => ({
-      csvRowIndex: row.index,
-      date: row.data[mapping.date!],
-      amount: convertAmountToMilliunits(
-        parseAmount(
-          row.data[mapping.amount!],
-          amountFormat.decimalSeparator,
-          amountFormat.thousandsSeparator,
+    const transactions = csvData.rows.map((row) => {
+      const dateValue = row.data[mapping.date!];
+      const parsedDate = parseDate(dateValue, dateFormat);
+      const dateISO = parsedDate?.toISOString().split("T")[0] || dateValue;
+
+      return {
+        csvRowIndex: row.index,
+        date: dateISO,
+        amount: convertAmountToMilliunits(
+          parseAmount(
+            row.data[mapping.amount!],
+            amountFormat.decimalSeparator,
+            amountFormat.thousandsSeparator,
+          ),
         ),
-      ),
-      payee: row.data[mapping.payee!],
-      description:
-        mapping.description !== undefined
-          ? row.data[mapping.description]
-          : undefined,
-      notes: mapping.notes !== undefined ? row.data[mapping.notes] : undefined,
-    }));
+        payee: row.data[mapping.payee!],
+        description:
+          mapping.description !== undefined
+            ? row.data[mapping.description]
+            : undefined,
+        notes:
+          mapping.notes !== undefined ? row.data[mapping.notes] : undefined,
+      };
+    });
 
     try {
       const result = await categorizeMutation.mutateAsync({ transactions });
