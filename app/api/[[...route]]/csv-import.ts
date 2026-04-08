@@ -356,39 +356,9 @@ const app = new Hono<AppEnv>()
           return c.json(API_ERRORS.INVALID_ACCOUNT, 404);
         }
 
-        // Check for duplicates before inserting
-        const duplicateCheckResult = await detectDuplicates(
-          userId,
-          txs.map((tx) => ({
-            date: tx.date,
-            amount: tx.amount,
-            payee: tx.payee,
-          })),
-        );
-
-        if (duplicateCheckResult.duplicates.length > 0) {
-          console.log(
-            `⚠️  Found ${duplicateCheckResult.duplicates.length} duplicates`,
-          );
-          return c.json(
-            {
-              error: "Duplicate transactions detected",
-              duplicates: duplicateCheckResult.duplicates.map((dup) => ({
-                csvIndex: dup.csvIndex,
-                matchType: dup.matchType,
-                existingTransaction: {
-                  id: dup.existingTransaction.id,
-                  date: dup.existingTransaction.date
-                    .toISOString()
-                    .split("T")[0],
-                  amount: dup.existingTransaction.amount,
-                  payee: dup.existingTransaction.payee,
-                },
-              })),
-            },
-            409,
-          );
-        }
+        // NOTE: Duplicate detection is handled in the ANALYSIS step by the frontend
+        // The user has already resolved duplicates (skip/import) before reaching this endpoint
+        // No need to re-check here - just insert what the frontend sends
 
         const transactionsToInsert = txs.map((tx) => ({
           id: createId(),
