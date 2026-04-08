@@ -27,6 +27,7 @@ import { formatCurrency } from "@/lib/utils";
 import { ConfidenceBadge } from "./confidence-badge";
 import { DuplicateIndicator } from "./duplicate-indicator";
 import { EditableCategoryCell } from "./editable-category-cell";
+import { useDuplicateResolution } from "../hooks/use-duplicate-resolution";
 
 type PreviewRow = {
   csvRowIndex: number;
@@ -41,19 +42,24 @@ type PreviewRow = {
 
 type AiPreviewTableProps = {
   rows: PreviewRow[];
-  onCategoryChange: (rowIndex: number, categoryId: string | null, categoryName: string | null) => void;
+  onCategoryChange: (
+    rowIndex: number,
+    categoryId: string | null,
+    categoryName: string | null,
+  ) => void;
 };
 
-export const AiPreviewTable = ({ 
-  rows, 
+export const AiPreviewTable = ({
+  rows,
   onCategoryChange,
 }: AiPreviewTableProps) => {
   const [sorting, setSorting] = useState<SortingState>([]);
-  
+  const { openResolution, getResolution } = useDuplicateResolution();
+
   const columns: ColumnDef<PreviewRow>[] = [
     {
-      accessorKey: 'date',
-      header: 'Date',
+      accessorKey: "date",
+      header: "Date",
       cell: ({ row }) => (
         <span className="font-medium">
           {row.original.date.toLocaleDateString()}
@@ -61,20 +67,33 @@ export const AiPreviewTable = ({
       ),
     },
     {
-      accessorKey: 'payee',
-      header: 'Payee',
-      cell: ({ row }) => (
-        <span className="max-w-[200px] truncate">
-          {row.original.payee}
-        </span>
-      ),
+      id: "duplicate",
+      header: "Status",
+      cell: ({ row }) => {
+        const duplicate = row.original.duplicate;
+        if (!duplicate)
+          return <span className="text-muted-foreground text-sm">New</span>;
+
+        const resolution = getResolution(duplicate.csvIndex);
+
+        return (
+          <DuplicateIndicator
+            existingTransaction={duplicate.existingTransaction}
+            matchType={duplicate.matchType}
+            score={duplicate.score}
+            onResolve={() => openResolution(duplicate)}
+            isResolved={!!resolution}
+            resolution={resolution?.action}
+          />
+        );
+      },
     },
     {
-      accessorKey: 'amount',
+      accessorKey: "amount",
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="h-8 px-2"
         >
           Amount
@@ -88,25 +107,25 @@ export const AiPreviewTable = ({
       ),
     },
     {
-      accessorKey: 'categoryName',
-      header: 'Category',
+      accessorKey: "categoryName",
+      header: "Category",
       cell: ({ row }) => (
         <EditableCategoryCell
           categoryId={row.original.categoryId}
           categoryName={row.original.categoryName}
           confidence={row.original.confidence}
-          onCategoryChange={(categoryId, categoryName) => 
+          onCategoryChange={(categoryId, categoryName) =>
             onCategoryChange(row.original.csvRowIndex, categoryId, categoryName)
           }
         />
       ),
     },
     {
-      accessorKey: 'confidence',
+      accessorKey: "confidence",
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="h-8 px-2"
         >
           Confidence
@@ -118,12 +137,13 @@ export const AiPreviewTable = ({
       ),
     },
     {
-      id: 'duplicate',
-      header: 'Status',
+      id: "duplicate",
+      header: "Status",
       cell: ({ row }) => {
         const duplicate = row.original.duplicate;
-        if (!duplicate) return <span className="text-sm text-muted-foreground">New</span>;
-        
+        if (!duplicate)
+          return <span className="text-muted-foreground text-sm">New</span>;
+
         return (
           <DuplicateIndicator
             existingTransaction={duplicate.existingTransaction}
@@ -134,7 +154,7 @@ export const AiPreviewTable = ({
       },
     },
   ];
-  
+
   const table = useReactTable({
     data: rows,
     columns,
@@ -145,27 +165,31 @@ export const AiPreviewTable = ({
       sorting,
     },
   });
-  
+
   const totalCount = rows.length;
-  const highConfidenceCount = rows.filter(r => r.confidence >= 0.7).length;
-  const lowConfidenceCount = rows.filter(r => r.confidence < 0.7).length;
-  
+  const highConfidenceCount = rows.filter((r) => r.confidence >= 0.7).length;
+  const lowConfidenceCount = rows.filter((r) => r.confidence < 0.7).length;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <span>{totalCount} transaction{totalCount === 1 ? '' : 's'}</span>
+        <div className="text-muted-foreground flex items-center gap-4 text-sm">
+          <span>
+            {totalCount} transaction{totalCount === 1 ? "" : "s"}
+          </span>
           <span>•</span>
           <span>{highConfidenceCount} high confidence</span>
           {lowConfidenceCount > 0 && (
             <>
               <span>•</span>
-              <span className="text-amber-600">{lowConfidenceCount} need review</span>
+              <span className="text-amber-600">
+                {lowConfidenceCount} need review
+              </span>
             </>
           )}
         </div>
       </div>
-      
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -177,7 +201,7 @@ export const AiPreviewTable = ({
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                   </TableHead>
                 ))}
@@ -189,13 +213,13 @@ export const AiPreviewTable = ({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
+                  data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}

@@ -1,9 +1,14 @@
-import { db } from '@/db/drizzle';
-import { accounts, categories, transactions, transactionTypes } from '@/db/schema';
-import { getDefaultAIProvider } from '@/lib/ai';
-import { normalizePayeeName } from '@/lib/utils';
-import { eq, sql } from 'drizzle-orm';
-import { CSV_IMPORT_CONFIG } from './config';
+import { db } from "@/db/drizzle";
+import {
+  accounts,
+  categories,
+  transactions,
+  transactionTypes,
+} from "@/db/schema";
+import { getDefaultAIProvider } from "@/lib/ai";
+import { normalizePayeeName } from "@/lib/utils";
+import { eq, sql } from "drizzle-orm";
+import { CSV_IMPORT_CONFIG } from "./config";
 
 export type TransactionInput = {
   csvRowIndex: number;
@@ -33,7 +38,7 @@ async function detectTransactionType(amount: number): Promise<{
   id: string;
   name: string;
 }> {
-  const typeName = amount < 0 ? 'expense' : 'income';
+  const typeName = amount < 0 ? "expense" : "income";
 
   const [type] = await db
     .select({
@@ -54,7 +59,7 @@ async function detectTransactionType(amount: number): Promise<{
 async function findSimilarTransactions(
   userId: string,
   payee: string,
-  limit: number = 10
+  limit: number = 10,
 ): Promise<
   Array<{
     payee: string;
@@ -64,7 +69,7 @@ async function findSimilarTransactions(
   }>
 > {
   const normalizedPayee = normalizePayeeName(payee);
-  const searchTerm = normalizedPayee.split(' ')[0];
+  const searchTerm = normalizedPayee.split(" ")[0];
 
   const results = await db
     .select({
@@ -79,7 +84,7 @@ async function findSimilarTransactions(
     .where(
       sql`${accounts.userId} = ${userId} 
           AND ${transactions.payee} ILIKE ${`%${searchTerm}%`}
-          AND ${transactions.categoryId} IS NOT NULL`
+          AND ${transactions.categoryId} IS NOT NULL`,
     )
     .limit(limit);
 
@@ -88,10 +93,12 @@ async function findSimilarTransactions(
 
 export async function categorizeTransactions(
   userId: string,
-  inputs: TransactionInput[]
+  inputs: TransactionInput[],
 ): Promise<CategorizationResult[]> {
   if (inputs.length > CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION) {
-    throw new Error(`Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION} transactions per batch`);
+    throw new Error(
+      `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION} transactions per batch`,
+    );
   }
 
   const userCategories = await db
@@ -103,12 +110,19 @@ export async function categorizeTransactions(
     .where(eq(categories.userId, userId));
 
   if (userCategories.length === 0) {
-    throw new Error('No categories found for user. Please create categories first.');
+    throw new Error(
+      "No categories found for user. Please create categories first.",
+    );
   }
 
   const fewShotMap = new Map<
     number,
-    Array<{ payee: string; description?: string; categoryId: string; categoryName: string }>
+    Array<{
+      payee: string;
+      description?: string;
+      categoryId: string;
+      categoryName: string;
+    }>
   >();
 
   for (const input of inputs) {
@@ -136,7 +150,9 @@ export async function categorizeTransactions(
       notes: tx.notes,
     })),
     availableCategories: userCategories,
-    fewShotExamples: Array.from(fewShotMap.values()).flat().slice(0, CSV_IMPORT_CONFIG.AI.MAX_FEW_SHOT_EXAMPLES),
+    fewShotExamples: Array.from(fewShotMap.values())
+      .flat()
+      .slice(0, CSV_IMPORT_CONFIG.AI.MAX_FEW_SHOT_EXAMPLES),
   });
 
   const results: CategorizationResult[] = [];
@@ -154,7 +170,8 @@ export async function categorizeTransactions(
           transactionTypeId: transactionType.id,
           transactionTypeName: transactionType.name,
           confidence: 0.0,
-          reasoning: 'No similar transactions found. Manual categorization required.',
+          reasoning:
+            "No similar transactions found. Manual categorization required.",
           normalizedPayee: normalizePayeeName(input.payee),
         },
       });
@@ -163,15 +180,45 @@ export async function categorizeTransactions(
 
     const topSuggestion = aiResult.topSuggestion;
 
+    // CRITICAL: Validate that AI returned a valid category ID
+    const categoryExists = topSuggestion.categoryId
+      ? userCategories.some((cat) => cat.id === topSuggestion.categoryId)
+      : true; // null is valid (uncategorized)
+
+    if (!categoryExists) {
+      console.error(
+        `⚠️  AI returned invalid category ID: ${topSuggestion.categoryId} for transaction:`,
+        input.payee,
+      );
+
+      results.push({
+        csvRowIndex: input.csvRowIndex,
+        suggestion: {
+          categoryId: null,
+          categoryName: null,
+          transactionTypeId: transactionType.id,
+          transactionTypeName: transactionType.name,
+          confidence: 0.0,
+          reasoning: `AI suggestion error: Invalid category ID returned. Manual categorization required.`,
+          normalizedPayee: normalizePayeeName(input.payee),
+        },
+      });
+      continue;
+    }
+
     results.push({
       csvRowIndex: input.csvRowIndex,
       suggestion: {
-        categoryId: topSuggestion.confidence >= CSV_IMPORT_CONFIG.AI.MIN_CONFIDENCE_THRESHOLD ? topSuggestion.categoryId : null,
+        categoryId:
+          topSuggestion.confidence >=
+          CSV_IMPORT_CONFIG.AI.MIN_CONFIDENCE_THRESHOLD
+            ? topSuggestion.categoryId
+            : null,
         categoryName: topSuggestion.categoryName,
         transactionTypeId: transactionType.id,
         transactionTypeName: transactionType.name,
         confidence: topSuggestion.confidence,
-        reasoning: topSuggestion.reasoning || 'AI categorization',
+        reasoning: topSuggestion.reasoning || "AI categorization",
         normalizedPayee: normalizePayeeName(input.payee),
       },
     });

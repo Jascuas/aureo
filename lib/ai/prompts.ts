@@ -45,21 +45,21 @@ export function createColumnDetectionPrompt(params: {
   context?: string;
 }): string {
   const { headers, sampleRows, context } = params;
-  
+
   let prompt = `Analyze this CSV data:\n\n`;
-  
+
   if (context) {
     prompt += `Context: ${context}\n\n`;
   }
-  
+
   prompt += `Headers: ${JSON.stringify(headers)}\n\n`;
   prompt += `Sample Rows (first ${sampleRows.length}):\n`;
   sampleRows.forEach((row, idx) => {
     prompt += `${idx + 1}. ${JSON.stringify(row)}\n`;
   });
-  
+
   prompt += `\n\nAnalyze these columns and return the detection result in JSON format.`;
-  
+
   return prompt;
 }
 
@@ -120,25 +120,25 @@ export function createDuplicateDetectionPrompt(params: {
   }>;
 }): string {
   const { newTransactions, existingTransactions } = params;
-  
+
   let prompt = `Compare these new transactions against existing ones:\n\n`;
-  
+
   prompt += `New Transactions:\n`;
   newTransactions.forEach((tx, idx) => {
     prompt += `${idx}. Date: ${tx.date}, Amount: ${tx.amount}, Payee: ${tx.payee}`;
     if (tx.description) prompt += `, Description: ${tx.description}`;
     prompt += `\n`;
   });
-  
+
   prompt += `\n\nExisting Transactions (potential duplicates):\n`;
   existingTransactions.forEach((tx) => {
     prompt += `ID: ${tx.id}, Date: ${tx.date}, Amount: ${tx.amount}, Payee: ${tx.payee}`;
     if (tx.description) prompt += `, Description: ${tx.description}`;
     prompt += `\n`;
   });
-  
+
   prompt += `\n\nIdentify potential duplicates and return the result in JSON format.`;
-  
+
   return prompt;
 }
 
@@ -214,23 +214,27 @@ export function createCategorizationPrompt(params: {
   }>;
 }): string {
   const { transactions, availableCategories, fewShotExamples } = params;
-  
+
   let prompt = `Categorize these transactions:\n\n`;
-  
-  prompt += `Available Categories:\n`;
+
+  prompt += `Available Categories (YOU MUST ONLY USE THESE IDs - DO NOT INVENT NEW ONES):\n`;
   availableCategories.forEach((cat) => {
-    prompt += `- ${cat.id}: ${cat.name}\n`;
+    prompt += `- ID: "${cat.id}" → Name: "${cat.name}"\n`;
   });
-  
+
+  prompt += `\n⚠️  CRITICAL: Every categoryId in your response MUST be from the list above or null.\n`;
+  prompt += `If unsure, use null for categoryId instead of guessing.\n`;
+
   if (fewShotExamples && fewShotExamples.length > 0) {
     prompt += `\n\nLearned Patterns (use these as reference):\n`;
     fewShotExamples.forEach((example) => {
       prompt += `- Payee: "${example.payee}"`;
-      if (example.description) prompt += `, Description: "${example.description}"`;
-      prompt += ` → Category: ${example.categoryName} (${example.categoryId})\n`;
+      if (example.description)
+        prompt += `, Description: "${example.description}"`;
+      prompt += ` → Category: ${example.categoryName} (ID: ${example.categoryId})\n`;
     });
   }
-  
+
   prompt += `\n\nTransactions to Categorize:\n`;
   transactions.forEach((tx) => {
     prompt += `${tx.csvRowIndex}. Date: ${tx.date}, Amount: ${tx.amount}, Payee: "${tx.payee}"`;
@@ -238,8 +242,8 @@ export function createCategorizationPrompt(params: {
     if (tx.notes) prompt += `, Notes: "${tx.notes}"`;
     prompt += `\n`;
   });
-  
-  prompt += `\n\nProvide category suggestions and return the result in JSON format.`;
-  
+
+  prompt += `\n\nProvide category suggestions. Remember: ONLY use IDs from the Available Categories list above.`;
+
   return prompt;
 }
