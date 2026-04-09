@@ -732,6 +732,14 @@ export const AiImportCard = ({
     setCategorizations,
   ]);
 
+  const handleCancelAnalysis = useCallback(() => {
+    abortControllerRef.current?.abort();
+    setAnalysisError("Analysis cancelled by user");
+    setBatchProgress(null);
+    setIsDetectingDuplicates(false);
+    setIsCategorizing(false);
+  }, []);
+
   // ============================================================================
   // STEP 4: REVIEW → IMPORT
   // ============================================================================
