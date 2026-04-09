@@ -1,11 +1,11 @@
-import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 import type {
   AIProvider,
   AIProviderConfig,
   ColumnDetectionResult,
   DuplicateDetectionResult,
   CategorizationResult,
-} from './types';
+} from "./types";
 import {
   COLUMN_DETECTION_SYSTEM_PROMPT,
   createColumnDetectionPrompt,
@@ -13,7 +13,7 @@ import {
   createDuplicateDetectionPrompt,
   CATEGORIZATION_SYSTEM_PROMPT,
   createCategorizationPrompt,
-} from './prompts';
+} from "./prompts";
 
 export class GeminiProvider implements AIProvider {
   private client: GoogleGenerativeAI;
@@ -24,9 +24,9 @@ export class GeminiProvider implements AIProvider {
   constructor(config: AIProviderConfig) {
     this.client = new GoogleGenerativeAI(config.apiKey);
     this.temperature = config.temperature ?? 0.1;
-    this.maxTokens = config.maxTokens ?? 2048;
-    
-    const modelName = config.model ?? 'gemini-2.5-flash-lite';
+    this.maxTokens = config.maxTokens ?? 8192;
+
+    const modelName = config.model ?? "gemini-2.5-flash-lite";
     this.model = this.client.getGenerativeModel({
       model: modelName,
       generationConfig: {
@@ -38,17 +38,17 @@ export class GeminiProvider implements AIProvider {
 
   private cleanJsonResponse(text: string): string {
     let cleaned = text.trim();
-    
-    if (cleaned.startsWith('```json')) {
+
+    if (cleaned.startsWith("```json")) {
       cleaned = cleaned.slice(7);
-    } else if (cleaned.startsWith('```')) {
+    } else if (cleaned.startsWith("```")) {
       cleaned = cleaned.slice(3);
     }
-    
-    if (cleaned.endsWith('```')) {
+
+    if (cleaned.endsWith("```")) {
       cleaned = cleaned.slice(0, -3);
     }
-    
+
     return cleaned.trim();
   }
 
@@ -69,13 +69,26 @@ export class GeminiProvider implements AIProvider {
       const response = result.response;
       const text = response.text();
       const cleanedText = this.cleanJsonResponse(text);
-      
-      const parsed = JSON.parse(cleanedText) as ColumnDetectionResult;
-      
-      return parsed;
+
+      try {
+        const parsed = JSON.parse(cleanedText) as ColumnDetectionResult;
+        return parsed;
+      } catch (parseError) {
+        console.error("JSON parse error for column detection:");
+        console.error("Raw text length:", text.length);
+        console.error("Cleaned text length:", cleanedText.length);
+        console.error("First 500 chars:", cleanedText.substring(0, 500));
+        console.error(
+          "Last 500 chars:",
+          cleanedText.substring(cleanedText.length - 500),
+        );
+        throw parseError;
+      }
     } catch (error) {
-      console.error('Gemini column detection error:', error);
-      throw new Error('Failed to detect columns with AI', { cause: error });
+      console.error("Gemini categorization error:", error);
+      throw new Error("Failed to categorize transactions with AI", {
+        cause: error,
+      });
     }
   }
 
@@ -106,13 +119,26 @@ export class GeminiProvider implements AIProvider {
       const response = result.response;
       const text = response.text();
       const cleanedText = this.cleanJsonResponse(text);
-      
-      const parsed = JSON.parse(cleanedText) as { results: DuplicateDetectionResult[] };
-      
-      return parsed.results;
+
+      try {
+        const parsed = JSON.parse(cleanedText) as {
+          results: DuplicateDetectionResult[];
+        };
+        return parsed.results;
+      } catch (parseError) {
+        console.error("JSON parse error for duplicate detection:");
+        console.error("Raw text length:", text.length);
+        console.error("Cleaned text length:", cleanedText.length);
+        console.error("First 500 chars:", cleanedText.substring(0, 500));
+        console.error(
+          "Last 500 chars:",
+          cleanedText.substring(cleanedText.length - 500),
+        );
+        throw parseError;
+      }
     } catch (error) {
-      console.error('Gemini duplicate detection error:', error);
-      throw new Error('Failed to detect duplicates with AI', { cause: error });
+      console.error("Gemini duplicate detection error:", error);
+      throw new Error("Failed to detect duplicates with AI", { cause: error });
     }
   }
 
@@ -148,13 +174,17 @@ export class GeminiProvider implements AIProvider {
       const response = result.response;
       const text = response.text();
       const cleanedText = this.cleanJsonResponse(text);
-      
-      const parsed = JSON.parse(cleanedText) as { results: CategorizationResult[] };
-      
+
+      const parsed = JSON.parse(cleanedText) as {
+        results: CategorizationResult[];
+      };
+
       return parsed.results;
     } catch (error) {
-      console.error('Gemini categorization error:', error);
-      throw new Error('Failed to categorize transactions with AI', { cause: error });
+      console.error("Gemini categorization error:", error);
+      throw new Error("Failed to categorize transactions with AI", {
+        cause: error,
+      });
     }
   }
 }
