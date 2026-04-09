@@ -1,4 +1,4 @@
-import type { ColumnType } from '@/features/csv-import/types/import-types';
+import type { ColumnType } from "@/features/csv-import/types/import-types";
 
 export type ColumnDetectionResult = {
   columns: Array<{
@@ -10,8 +10,8 @@ export type ColumnDetectionResult = {
   }>;
   dateFormat?: string; // e.g., "DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD"
   amountFormat?: {
-    decimalSeparator: '.' | ',';
-    thousandsSeparator: ',' | '.' | ' ' | '';
+    decimalSeparator: "." | ",";
+    thousandsSeparator: "," | "." | " " | "";
     isNegativeExpense: boolean; // True if expenses are negative numbers
   };
 };
@@ -19,7 +19,7 @@ export type ColumnDetectionResult = {
 export type DuplicateMatch = {
   existingTransactionId: string;
   similarity: number; // 0-1
-  matchType: 'exact' | 'fuzzy' | 'semantic';
+  matchType: "exact" | "fuzzy" | "semantic";
   matchedFields: string[]; // Fields that matched (e.g., ['date', 'amount', 'payee'])
   reasoning?: string; // AI explanation of why it's a duplicate
 };
@@ -27,12 +27,12 @@ export type DuplicateMatch = {
 export type DuplicateDetectionResult = {
   csvRowIndex: number;
   duplicates: DuplicateMatch[];
-  recommendation: 'skip' | 'import' | 'review'; // AI suggestion
+  recommendation: "skip" | "import" | "review"; // AI suggestion
 };
 
 export type CategorySuggestion = {
   categoryId: string;
-  categoryName: string;
+  categoryName?: string; // Optional - frontend will map from categoryId
   confidence: number; // 0-1
   reasoning?: string; // AI explanation
 };
@@ -95,7 +95,7 @@ export type AIProvider = {
   }): Promise<CategorizationResult[]>;
 };
 
-export type AIProviderType = 'gemini' | 'claude';
+export type AIProviderType = "gemini" | "claude";
 
 export type CreateAIProviderOptions = AIProviderConfig & {
   provider: AIProviderType;

@@ -160,9 +160,9 @@ Categorization Guidelines:
 5. NEVER create new categories - only use provided categories
 
 For each transaction, provide:
-1. Top 1-3 category suggestions (ONLY categoryId, categoryName, confidence)
+1. Top 1-3 category suggestions (ONLY categoryId and confidence)
 2. Confidence score for each (0-1)
-3. NO reasoning field - keep response compact
+3. NO categoryName or reasoning - keep response minimal
 
 ⚠️ CRITICAL: Return ONLY valid, complete JSON. DO NOT truncate the response.
 
@@ -174,18 +174,15 @@ Return JSON matching this structure:
       "suggestions": [
         {
           "categoryId": "cat123",
-          "categoryName": "Groceries",
           "confidence": 0.92
         },
         {
           "categoryId": "cat456",
-          "categoryName": "Dining Out",
           "confidence": 0.15
         }
       ],
       "topSuggestion": {
         "categoryId": "cat123",
-        "categoryName": "Groceries",
         "confidence": 0.92
       }
     }

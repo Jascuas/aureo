@@ -181,11 +181,11 @@ export async function categorizeTransactions(
     const topSuggestion = aiResult.topSuggestion;
 
     // CRITICAL: Validate that AI returned a valid category ID
-    const categoryExists = topSuggestion.categoryId
-      ? userCategories.some((cat) => cat.id === topSuggestion.categoryId)
-      : true; // null is valid (uncategorized)
+    const categoryMatch = topSuggestion.categoryId
+      ? userCategories.find((cat) => cat.id === topSuggestion.categoryId)
+      : null;
 
-    if (!categoryExists) {
+    if (topSuggestion.categoryId && !categoryMatch) {
       console.error(
         `⚠️  AI returned invalid category ID: ${topSuggestion.categoryId} for transaction:`,
         input.payee,
@@ -214,7 +214,7 @@ export async function categorizeTransactions(
           CSV_IMPORT_CONFIG.AI.MIN_CONFIDENCE_THRESHOLD
             ? topSuggestion.categoryId
             : null,
-        categoryName: topSuggestion.categoryName,
+        categoryName: categoryMatch?.name || null,
         transactionTypeId: transactionType.id,
         transactionTypeName: transactionType.name,
         confidence: topSuggestion.confidence,
