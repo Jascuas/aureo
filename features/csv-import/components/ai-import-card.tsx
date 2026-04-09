@@ -2,7 +2,7 @@
 
 import { AlertCircle } from "lucide-react";
 import Papa from "papaparse";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -77,6 +77,13 @@ export const AiImportCard = ({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [detectionError, setDetectionError] = useState<string | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [batchProgress, setBatchProgress] = useState<{
+    current: number;
+    total: number;
+    stage: "duplicates" | "categorization";
+  } | null>(null);
+
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const pendingDuplicatesCount = getPendingCount(analyzedRows.duplicates);
 
