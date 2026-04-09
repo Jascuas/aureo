@@ -21,6 +21,10 @@ import { useDetectDuplicates } from "../api/use-detect-duplicates";
 import { useGetTemplates } from "../api/use-get-templates";
 import { useDuplicateResolution } from "../hooks/use-duplicate-resolution";
 import { useImportSession } from "../hooks/use-import-session";
+import {
+  processBatchesWithConcurrency,
+  partitionBatchResults,
+} from "../lib/batch-processor";
 import { parseDate } from "../lib/date-parser";
 import type { ParsedCSVRow } from "../types/import-types";
 import { AiPreviewTable } from "./ai-preview-table";
@@ -259,6 +263,9 @@ export const AiImportCard = ({
     setIsDetectingDuplicates(true);
     setIsCategorizing(true);
 
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     const mapping = columnMapping.finalMapping;
     const amountFormat = columnMapping.detectionResult?.amountFormat || {
       decimalSeparator: "," as const,
@@ -300,68 +307,86 @@ export const AiImportCard = ({
     });
 
     try {
-      // Batch processing to respect API limits
-      const DUPLICATE_BATCH_SIZE = 100;
-      const CATEGORIZE_BATCH_SIZE = 50;
-
-      // Process duplicates in batches
-      const duplicateBatches = [];
-      for (
-        let i = 0;
-        i < transactionsForAnalysis.length;
-        i += DUPLICATE_BATCH_SIZE
-      ) {
-        const batch = transactionsForAnalysis.slice(
-          i,
-          i + DUPLICATE_BATCH_SIZE,
-        );
-        duplicateBatches.push(
-          detectDuplicatesMutation.mutateAsync({
-            transactions: batch.map((t) => ({
-              date: t.date,
-              amount: t.amount,
-              payee: t.payee,
-            })),
-          }),
-        );
-      }
-
-      // Process categorization in batches
-      const categorizeBatches = [];
-      for (
-        let i = 0;
-        i < transactionsForAnalysis.length;
-        i += CATEGORIZE_BATCH_SIZE
-      ) {
-        const batch = transactionsForAnalysis.slice(
-          i,
-          i + CATEGORIZE_BATCH_SIZE,
-        );
-        categorizeBatches.push(
-          categorizeMutation.mutateAsync({
-            transactions: batch,
-          }),
-        );
-      }
-
-      // Wait for all batches to complete
-      const [duplicateResults, categorizeResults] = await Promise.all([
-        Promise.all(duplicateBatches),
-        Promise.all(categorizeBatches),
-      ]);
-
-      // Combine duplicate results
-      const allDuplicates = duplicateResults.flatMap((result) => {
-        if (!("data" in result))
-          throw new Error("Invalid duplicate detection response");
-        return result.data.duplicates;
+      // ========== DUPLICATE DETECTION ==========
+      const duplicateBatchCount = Math.ceil(
+        transactionsForAnalysis.length / 100,
+      );
+      setBatchProgress({
+        current: 0,
+        total: duplicateBatchCount,
+        stage: "duplicates",
       });
 
-      // Combine categorization results
-      const allCategorizations = categorizeResults.flatMap((result) => {
-        if (!("data" in result))
-          throw new Error("Invalid categorization response");
-        return result.data.results;
+      const duplicateResults = await processBatchesWithConcurrency(
+        transactionsForAnalysis.map((t) => ({
+          date: t.date,
+          amount: t.amount,
+          payee: t.payee,
+        })),
+        100, // batch size
+        (batch) =>
+          detectDuplicatesMutation.mutateAsync({ transactions: batch }),
+        {
+          maxConcurrent: 3,
+          retries: 2,
+          onProgress: (current, total) =>
+            setBatchProgress({ current, total, stage: "duplicates" }),
+          signal: abortController.signal,
+        },
+      );
+
+      const { successful: successfulDuplicates, failed: failedDuplicates } =
+        partitionBatchResults(duplicateResults);
+
+      if (failedDuplicates.length > 0) {
+        console.error("Failed duplicate detection batches:", failedDuplicates);
+        // Continue with successful batches - duplicate detection is non-blocking
+      }
+
+      const allDuplicates = successfulDuplicates.flatMap((r) => {
+        if (!("data" in r.data)) return [];
+        return r.data.data.duplicates;
+      });
+
+      // ========== CATEGORIZATION ==========
+      const categorizeBatchCount = Math.ceil(
+        transactionsForAnalysis.length / 50,
+      );
+      setBatchProgress({
+        current: 0,
+        total: categorizeBatchCount,
+        stage: "categorization",
+      });
+
+      const categorizeResults = await processBatchesWithConcurrency(
+        transactionsForAnalysis,
+        50, // batch size
+        (batch) => categorizeMutation.mutateAsync({ transactions: batch }),
+        {
+          maxConcurrent: 3,
+          retries: 2,
+          onProgress: (current, total) =>
+            setBatchProgress({ current, total, stage: "categorization" }),
+          signal: abortController.signal,
+        },
+      );
+
+      const {
+        successful: successfulCategorizations,
+        failed: failedCategorizations,
+      } = partitionBatchResults(categorizeResults);
+
+      if (failedCategorizations.length > 0) {
+        console.error("Failed categorization batches:", failedCategorizations);
+        setAnalysisError(
+          `${failedCategorizations.length} categorization batch(es) failed. Cannot proceed with incomplete data.`,
+        );
+        return;
+      }
+
+      const allCategorizations = successfulCategorizations.flatMap((r) => {
+        if (!("data" in r.data)) return [];
+        return r.data.data.results;
       });
 
       // Enrich categorizations with original transaction data
@@ -390,10 +415,16 @@ export const AiImportCard = ({
       setDuplicates(transformedDuplicates);
       setCategorizations(enrichedCategorizations);
     } catch (error: any) {
-      setAnalysisError(error?.message || "Failed to analyze transactions");
+      if (error.message === "Cancelled") {
+        setAnalysisError("Analysis cancelled by user");
+      } else {
+        setAnalysisError(error?.message || "Failed to analyze transactions");
+      }
     } finally {
       setIsDetectingDuplicates(false);
       setIsCategorizing(false);
+      setBatchProgress(null);
+      abortControllerRef.current = null;
     }
   }, [
     csvData,
