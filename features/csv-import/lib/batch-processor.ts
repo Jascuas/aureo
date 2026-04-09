@@ -7,7 +7,10 @@
  * - Progress callbacks
  * - Cancellation support
  * - Partial success handling (failed batches don't stop processing)
+ * - Rate limit detection (stops immediately on 429 errors)
  */
+
+import { isRateLimitError } from "@/lib/errors";
 
 export type BatchResult<T> =
   | { success: true; data: T; batchIndex: number }
@@ -88,6 +91,15 @@ export async function processBatchesWithConcurrency<TInput, TOutput>(
           const data = await processFn(batch);
           return { success: true, data, batchIndex };
         } catch (error) {
+          // CRITICAL: Stop immediately on rate limit errors (don't retry)
+          if (isRateLimitError(error)) {
+            return {
+              success: false,
+              error: error as Error,
+              batchIndex,
+            };
+          }
+
           const isLastAttempt = attempt === retries;
 
           if (isLastAttempt) {
@@ -120,6 +132,23 @@ export async function processBatchesWithConcurrency<TInput, TOutput>(
 
     results.push(...chunkResults);
     completed += chunk.length;
+
+    // CRITICAL: Stop immediately if any batch hit rate limit
+    const hasRateLimitError = chunkResults.some(
+      (r) => !r.success && isRateLimitError(r.error),
+    );
+    if (hasRateLimitError) {
+      // Return results collected so far + mark remaining batches as failed
+      const remainingBatches = batchFunctions.length - completed;
+      for (let j = 0; j < remainingBatches; j++) {
+        results.push({
+          success: false,
+          error: new Error("Stopped due to rate limit on previous batch"),
+          batchIndex: completed + j,
+        });
+      }
+      break; // Stop processing
+    }
 
     // Notify progress
     onProgress?.(completed, batchFunctions.length);

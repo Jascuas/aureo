@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
+import { RateLimitError } from "@/lib/errors";
 import type {
   AIProvider,
   AIProviderConfig,
@@ -34,6 +35,31 @@ export class GeminiProvider implements AIProvider {
         maxOutputTokens: this.maxTokens,
       },
     });
+  }
+
+  private handleError(error: unknown, operation: string): never {
+    // Check for rate limit error (429)
+    const errorMessage = String(error);
+
+    if (
+      errorMessage.includes("429") ||
+      errorMessage.includes("Too Many Requests") ||
+      errorMessage.includes("Quota exceeded")
+    ) {
+      // Extract retry time if available
+      const retryMatch = errorMessage.match(/retry in ([\d.]+)s/i);
+      const retryAfter = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) : 60;
+
+      throw new RateLimitError(
+        `Gemini API rate limit exceeded. Please wait ${retryAfter} seconds before trying again.`,
+        retryAfter,
+        "Gemini",
+      );
+    }
+
+    // Generic error
+    console.error(`Gemini ${operation} error:`, error);
+    throw new Error(`Failed to ${operation} with AI`, { cause: error });
   }
 
   private cleanJsonResponse(text: string): string {
@@ -208,10 +234,7 @@ export class GeminiProvider implements AIProvider {
         throw parseError;
       }
     } catch (error) {
-      console.error("Gemini categorization error:", error);
-      throw new Error("Failed to categorize transactions with AI", {
-        cause: error,
-      });
+      this.handleError(error, "categorize transactions");
     }
   }
 }

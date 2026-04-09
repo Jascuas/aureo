@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { convertAmountToMilliunits, parseAmount } from "@/lib/utils";
+import { isRateLimitError } from "@/lib/errors";
 
 import { useBulkImportTransactions } from "../api/use-bulk-import-transactions";
 import { useCategorizeTransactions } from "../api/use-categorize-transactions";
@@ -365,9 +366,23 @@ export const AiImportCard = ({
 
       if (failedCategorizations.length > 0) {
         console.error("Failed categorization batches:", failedCategorizations);
-        setAnalysisError(
-          `${failedCategorizations.length} categorization batch(es) failed. Cannot proceed with incomplete data.`,
+
+        // Check if any failure is due to rate limiting
+        const rateLimitError = failedCategorizations.find((f) =>
+          isRateLimitError(f.error),
         );
+
+        if (rateLimitError && isRateLimitError(rateLimitError.error)) {
+          setAnalysisError(
+            `⚠️ API Rate Limit Exceeded: ${rateLimitError.error.message}\n\n` +
+              `Processing stopped to avoid further errors. ` +
+              `Please wait ${rateLimitError.error.retryAfter || 60} seconds before retrying.`,
+          );
+        } else {
+          setAnalysisError(
+            `${failedCategorizations.length} categorization batch(es) failed. Cannot proceed with incomplete data.`,
+          );
+        }
         return;
       }
 
@@ -676,7 +691,20 @@ export const AiImportCard = ({
         },
       );
 
-      const { successful } = partitionBatchResults(results);
+      const { successful, failed } = partitionBatchResults(results);
+
+      // Check for rate limit errors
+      if (failed.length > 0) {
+        const rateLimitError = failed.find((f) => isRateLimitError(f.error));
+        if (rateLimitError && isRateLimitError(rateLimitError.error)) {
+          setAnalysisError(
+            `⚠️ API Rate Limit Exceeded: ${rateLimitError.error.message}\n\n` +
+              `Please wait ${rateLimitError.error.retryAfter || 60} seconds before retrying.`,
+          );
+          return;
+        }
+      }
+
       const allCategorizations = successful.flatMap((r) => {
         if (!("data" in r.data)) return [];
         return r.data.data.results;
