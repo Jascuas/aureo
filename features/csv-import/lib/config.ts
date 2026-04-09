@@ -5,8 +5,8 @@ export const CSV_IMPORT_CONFIG = {
     SIMILARITY_THRESHOLD: 0.85,
   },
   BATCH_LIMITS: {
-    DUPLICATE_CHECK: 100,
-    CATEGORIZATION: 50,
+    DUPLICATE_CHECK: 1000, // High limit - deterministic SQL, no AI
+    CATEGORIZATION: 100, // Optimized response size allows larger batches
     BULK_IMPORT: 500,
   },
   AI: {

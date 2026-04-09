@@ -1,7 +1,7 @@
-import { db } from '@/db/drizzle';
-import { accounts, transactions } from '@/db/schema';
-import { and, between, eq, sql } from 'drizzle-orm';
-import { CSV_IMPORT_CONFIG } from './config';
+import { db } from "@/db/drizzle";
+import { accounts, transactions } from "@/db/schema";
+import { and, between, eq, sql } from "drizzle-orm";
+import { CSV_IMPORT_CONFIG } from "./config";
 
 export type TransactionInput = {
   date: Date;
@@ -9,7 +9,7 @@ export type TransactionInput = {
   payee: string;
 };
 
-export type MatchType = 'exact' | 'fuzzy';
+export type MatchType = "exact" | "fuzzy";
 
 export type DuplicateMatch = {
   csvIndex: number;
@@ -33,7 +33,7 @@ export type DuplicateDetectionResult = {
 
 async function findExactMatches(
   userId: string,
-  inputs: TransactionInput[]
+  inputs: TransactionInput[],
 ): Promise<Map<number, DuplicateMatch>> {
   const matches = new Map<number, DuplicateMatch>();
 
@@ -55,8 +55,8 @@ async function findExactMatches(
           eq(accounts.userId, userId),
           eq(transactions.date, input.date),
           eq(transactions.amount, input.amount),
-          sql`LOWER(${transactions.payee}) = LOWER(${input.payee})`
-        )
+          sql`LOWER(${transactions.payee}) = LOWER(${input.payee})`,
+        ),
       )
       .limit(1);
 
@@ -64,7 +64,7 @@ async function findExactMatches(
       matches.set(i, {
         csvIndex: i,
         existingTransaction: results[0],
-        matchType: 'exact',
+        matchType: "exact",
         score: 1.0,
       });
     }
@@ -76,7 +76,7 @@ async function findExactMatches(
 async function findFuzzyMatches(
   userId: string,
   inputs: TransactionInput[],
-  exactMatches: Map<number, DuplicateMatch>
+  exactMatches: Map<number, DuplicateMatch>,
 ): Promise<Map<number, DuplicateMatch>> {
   const matches = new Map<number, DuplicateMatch>();
 
@@ -86,12 +86,24 @@ async function findFuzzyMatches(
     const input = inputs[i];
 
     const dateMin = new Date(input.date);
-    dateMin.setDate(dateMin.getDate() - CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.DATE_TOLERANCE_DAYS);
+    dateMin.setDate(
+      dateMin.getDate() -
+        CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.DATE_TOLERANCE_DAYS,
+    );
     const dateMax = new Date(input.date);
-    dateMax.setDate(dateMax.getDate() + CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.DATE_TOLERANCE_DAYS);
+    dateMax.setDate(
+      dateMax.getDate() +
+        CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.DATE_TOLERANCE_DAYS,
+    );
 
-    const amountMin = Math.floor(input.amount * (1 - CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.AMOUNT_TOLERANCE_PERCENT));
-    const amountMax = Math.ceil(input.amount * (1 + CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.AMOUNT_TOLERANCE_PERCENT));
+    const amountMin = Math.floor(
+      input.amount *
+        (1 - CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.AMOUNT_TOLERANCE_PERCENT),
+    );
+    const amountMax = Math.ceil(
+      input.amount *
+        (1 + CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.AMOUNT_TOLERANCE_PERCENT),
+    );
 
     const results = await db
       .select({
@@ -109,10 +121,12 @@ async function findFuzzyMatches(
           eq(accounts.userId, userId),
           between(transactions.date, dateMin, dateMax),
           between(transactions.amount, amountMin, amountMax),
-          sql`similarity(${transactions.payee}, ${input.payee}::text) > ${CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.SIMILARITY_THRESHOLD}`
-        )
+          sql`similarity(${transactions.payee}, ${input.payee}::text) > ${CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.SIMILARITY_THRESHOLD}`,
+        ),
       )
-      .orderBy(sql`similarity(${transactions.payee}, ${input.payee}::text) DESC`)
+      .orderBy(
+        sql`similarity(${transactions.payee}, ${input.payee}::text) DESC`,
+      )
       .limit(1);
 
     if (results.length > 0) {
@@ -126,7 +140,7 @@ async function findFuzzyMatches(
           payee: result.payee,
           accountId: result.accountId,
         },
-        matchType: 'fuzzy',
+        matchType: "fuzzy",
         score: result.similarity,
       });
     }
@@ -137,18 +151,17 @@ async function findFuzzyMatches(
 
 export async function detectDuplicates(
   userId: string,
-  inputs: TransactionInput[]
+  inputs: TransactionInput[],
 ): Promise<DuplicateDetectionResult> {
-  if (inputs.length > 100) {
-    throw new Error('Maximum 100 transactions per batch');
-  }
+  // No batch limit - duplicate detection is deterministic SQL queries
+  // TODO: Optimize to use bulk queries instead of N+1 pattern
 
   const exactMatches = await findExactMatches(userId, inputs);
   const fuzzyMatches = await findFuzzyMatches(userId, inputs, exactMatches);
 
   const allMatches = new Map([...exactMatches, ...fuzzyMatches]);
   const duplicates = Array.from(allMatches.values()).sort(
-    (a, b) => a.csvIndex - b.csvIndex
+    (a, b) => a.csvIndex - b.csvIndex,
   );
 
   return {
