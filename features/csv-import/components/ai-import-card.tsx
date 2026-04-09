@@ -338,7 +338,7 @@ export const AiImportCard = ({
 
       // ========== CATEGORIZATION (Batched - AI calls) ==========
       const categorizeBatchCount = Math.ceil(
-        transactionsForAnalysis.length / 100,
+        transactionsForAnalysis.length / 30,
       );
       setBatchProgress({
         current: 0,
@@ -348,7 +348,7 @@ export const AiImportCard = ({
 
       const categorizeResults = await processBatchesWithConcurrency(
         transactionsForAnalysis,
-        100, // batch size increased from 50
+        30, // batch size reduced to 30 for free AI models (faster response)
         (batch) => categorizeMutation.mutateAsync({ transactions: batch }),
         {
           maxConcurrent: 3,
