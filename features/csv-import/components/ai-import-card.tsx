@@ -260,12 +260,7 @@ export const AiImportCard = ({
     };
     const dateFormat = columnMapping.detectionResult?.dateFormat || "DD/MM/YY";
 
-    console.log("🔍 Date format being used:", {
-      detected: columnMapping.detectionResult?.dateFormat,
-      final: dateFormat,
-    });
-
-    const transactionsForAnalysis = csvData.rows.slice(0, 5).map((row) => {
+    const transactionsForAnalysis = csvData.rows.map((row) => {
       const amountValue = parseAmount(
         row.data[mapping.amount!],
         amountFormat.decimalSeparator,
@@ -279,21 +274,9 @@ export const AiImportCard = ({
       if (!parsedDate && dateFormat.includes("YYYY")) {
         const yyFormat = dateFormat.replace("YYYY", "YY") as any;
         parsedDate = parseDate(dateValue, yyFormat);
-        console.log("📅 Trying fallback format:", {
-          original: dateFormat,
-          fallback: yyFormat,
-          parsed: parsedDate,
-        });
       }
 
       const dateISO = parsedDate?.toISOString().split("T")[0] || dateValue;
-
-      console.log("📅 Parsing date:", {
-        original: dateValue,
-        format: dateFormat,
-        parsed: parsedDate,
-        iso: dateISO,
-      });
 
       return {
         csvRowIndex: row.index,
@@ -307,12 +290,6 @@ export const AiImportCard = ({
         notes:
           mapping.notes !== undefined ? row.data[mapping.notes] : undefined,
       };
-    });
-
-    console.log("[AI Import] Sending transactions for analysis:", {
-      count: transactionsForAnalysis.length,
-      sample: transactionsForAnalysis[0],
-      mapping,
     });
 
     try {
@@ -339,11 +316,6 @@ export const AiImportCard = ({
           const originalTx = transactionsForAnalysis.find(
             (t) => t.csvRowIndex === cat.csvRowIndex,
           );
-          console.log("🔍 Enriching categorization:", {
-            csvRowIndex: cat.csvRowIndex,
-            originalTxDate: originalTx?.date,
-            categoryResult: cat,
-          });
           return {
             ...cat,
             date: originalTx?.date || "",
@@ -401,20 +373,9 @@ export const AiImportCard = ({
       const maxIndex = Math.max(...templateIndices);
 
       if (maxIndex >= csvData.headers.length) {
-        console.warn(
-          "[AI Import] Template incompatible: requires more columns than CSV has",
-        );
-        console.warn(
-          `Template max index: ${maxIndex}, CSV columns: ${csvData.headers.length}`,
-        );
-        // Stay in MAPPING step - user must configure manually
+        // Template incompatible - stay in MAPPING step
         return;
       }
-
-      console.log(
-        "[AI Import] Auto-applying compatible template:",
-        template.name,
-      );
 
       // Apply the template mapping
       setDetectionResult({
@@ -644,20 +605,8 @@ export const AiImportCard = ({
       const resolution = resolutions.find(
         (r) => r.csvIndex === cat.csvRowIndex,
       );
-      console.log("🔍 Filtering transaction:", {
-        csvRowIndex: cat.csvRowIndex,
-        hasResolution: !!resolution,
-        action: resolution?.action,
-        willImport: resolution?.action !== "skip",
-      });
       if (resolution?.action === "skip") return false;
       return true;
-    });
-
-    console.log("📊 Import summary:", {
-      totalCategorizations: analyzedRows.categorizations.length,
-      totalResolutions: resolutions.length,
-      rowsToImport: rowsToImport.length,
     });
 
     if (rowsToImport.length === 0) {
@@ -669,12 +618,6 @@ export const AiImportCard = ({
       const result = await bulkImportMutation.mutateAsync({
         accountId,
         transactions: rowsToImport.map((cat) => {
-          console.log("📤 Sending transaction to import:", {
-            csvRowIndex: cat.csvRowIndex,
-            date: cat.date,
-            dateType: typeof cat.date,
-            payee: cat.payee,
-          });
           return {
             date: cat.date,
             amount: cat.amount,
