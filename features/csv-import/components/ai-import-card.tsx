@@ -307,50 +307,37 @@ export const AiImportCard = ({
     });
 
     try {
-      // ========== DUPLICATE DETECTION ==========
-      const duplicateBatchCount = Math.ceil(
-        transactionsForAnalysis.length / 100,
-      );
+      // ========== DUPLICATE DETECTION (No batching - deterministic SQL) ==========
       setBatchProgress({
         current: 0,
-        total: duplicateBatchCount,
+        total: 1,
         stage: "duplicates",
       });
 
-      const duplicateResults = await processBatchesWithConcurrency(
-        transactionsForAnalysis.map((t) => ({
+      const duplicateResult = await detectDuplicatesMutation.mutateAsync({
+        transactions: transactionsForAnalysis.map((t) => ({
           date: t.date,
           amount: t.amount,
           payee: t.payee,
         })),
-        100, // batch size
-        (batch) =>
-          detectDuplicatesMutation.mutateAsync({ transactions: batch }),
-        {
-          maxConcurrent: 3,
-          retries: 2,
-          onProgress: (current, total) =>
-            setBatchProgress({ current, total, stage: "duplicates" }),
-          signal: abortController.signal,
-        },
-      );
-
-      const { successful: successfulDuplicates, failed: failedDuplicates } =
-        partitionBatchResults(duplicateResults);
-
-      if (failedDuplicates.length > 0) {
-        console.error("Failed duplicate detection batches:", failedDuplicates);
-        // Continue with successful batches - duplicate detection is non-blocking
-      }
-
-      const allDuplicates = successfulDuplicates.flatMap((r) => {
-        if (!("data" in r.data)) return [];
-        return r.data.data.duplicates;
       });
 
-      // ========== CATEGORIZATION ==========
+      setBatchProgress({
+        current: 1,
+        total: 1,
+        stage: "duplicates",
+      });
+
+      if (abortController.signal.aborted) {
+        throw new Error("Cancelled");
+      }
+
+      const allDuplicates =
+        "data" in duplicateResult ? duplicateResult.data.duplicates : [];
+
+      // ========== CATEGORIZATION (Batched - AI calls) ==========
       const categorizeBatchCount = Math.ceil(
-        transactionsForAnalysis.length / 50,
+        transactionsForAnalysis.length / 100,
       );
       setBatchProgress({
         current: 0,
@@ -360,7 +347,7 @@ export const AiImportCard = ({
 
       const categorizeResults = await processBatchesWithConcurrency(
         transactionsForAnalysis,
-        50, // batch size
+        100, // batch size increased from 50
         (batch) => categorizeMutation.mutateAsync({ transactions: batch }),
         {
           maxConcurrent: 3,
@@ -572,34 +559,28 @@ export const AiImportCard = ({
     });
 
     try {
-      const batchCount = Math.ceil(transactionsForDuplicates.length / 100);
+      // No batching needed - deterministic SQL
       setBatchProgress({
         current: 0,
-        total: batchCount,
+        total: 1,
         stage: "duplicates",
       });
 
-      const results = await processBatchesWithConcurrency(
-        transactionsForDuplicates,
-        100,
-        (batch) =>
-          detectDuplicatesMutation.mutateAsync({ transactions: batch }),
-        {
-          maxConcurrent: 3,
-          retries: 2,
-          onProgress: (current, total) =>
-            setBatchProgress({ current, total, stage: "duplicates" }),
-          signal: abortController.signal,
-        },
-      );
-
-      const { successful } = partitionBatchResults(results);
-      const allDuplicates = successful.flatMap((r) => {
-        if (!("data" in r.data)) return [];
-        return r.data.data.duplicates;
+      const result = await detectDuplicatesMutation.mutateAsync({
+        transactions: transactionsForDuplicates,
       });
 
-      const transformedDuplicates = allDuplicates.map((dup: any) => ({
+      setBatchProgress({
+        current: 1,
+        total: 1,
+        stage: "duplicates",
+      });
+
+      if (!("data" in result)) {
+        throw new Error("Invalid duplicate detection response");
+      }
+
+      const transformedDuplicates = result.data.duplicates.map((dup: any) => ({
         ...dup,
         existingTransaction: {
           ...dup.existingTransaction,
@@ -675,7 +656,7 @@ export const AiImportCard = ({
     });
 
     try {
-      const batchCount = Math.ceil(transactionsForCategorize.length / 50);
+      const batchCount = Math.ceil(transactionsForCategorize.length / 100);
       setBatchProgress({
         current: 0,
         total: batchCount,
@@ -684,7 +665,7 @@ export const AiImportCard = ({
 
       const results = await processBatchesWithConcurrency(
         transactionsForCategorize,
-        50,
+        100, // batch size increased from 50
         (batch) => categorizeMutation.mutateAsync({ transactions: batch }),
         {
           maxConcurrent: 3,
