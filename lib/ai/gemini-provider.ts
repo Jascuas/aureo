@@ -174,8 +174,6 @@ export class GeminiProvider implements AIProvider {
   async categorizeTransactions(params: {
     transactions: Array<{
       csvRowIndex: number;
-      date: string;
-      amount: number;
       payee: string;
       description?: string;
       notes?: string;

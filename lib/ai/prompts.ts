@@ -144,7 +144,7 @@ export function createDuplicateDetectionPrompt(params: {
 
 export const CATEGORIZATION_SYSTEM_PROMPT = `You are a transaction categorization expert for a personal finance application.
 
-Your task is to suggest appropriate categories for transactions based on the payee, description, amount, and learned patterns from past transactions.
+Your task is to suggest appropriate categories for transactions based ONLY on the payee name and description.
 
 Categorization Guidelines:
 1. Use few-shot examples as the primary learning source
@@ -155,32 +155,20 @@ Categorization Guidelines:
    - Utility companies → Utilities
    - Salary deposits → Income/Salary
    - Rent payments → Housing/Rent
-3. Consider amount patterns (e.g., recurring same amounts are likely subscriptions)
-4. For unclear transactions, provide multiple suggestions with lower confidence
-5. NEVER create new categories - only use provided categories
+3. For unclear transactions, return lower confidence
+4. NEVER create new categories - only use provided category IDs
 
-For each transaction, provide:
-1. Top 1-3 category suggestions (ONLY categoryId and confidence)
-2. Confidence score for each (0-1)
-3. NO categoryName or reasoning - keep response minimal
+For each transaction, provide ONLY:
+1. categoryId (string from available list, or null if unsure)
+2. confidence (0-1 number)
 
-⚠️ CRITICAL: Return ONLY valid, complete JSON. DO NOT truncate the response.
+⚠️ CRITICAL: Return ONLY valid, complete JSON. DO NOT include categoryName or reasoning to save tokens.
 
 Return JSON matching this structure:
 {
   "results": [
     {
       "csvRowIndex": 0,
-      "suggestions": [
-        {
-          "categoryId": "cat123",
-          "confidence": 0.92
-        },
-        {
-          "categoryId": "cat456",
-          "confidence": 0.15
-        }
-      ],
       "topSuggestion": {
         "categoryId": "cat123",
         "confidence": 0.92
@@ -192,8 +180,6 @@ Return JSON matching this structure:
 export function createCategorizationPrompt(params: {
   transactions: Array<{
     csvRowIndex: number;
-    date: string;
-    amount: number;
     payee: string;
     description?: string;
     notes?: string;
@@ -233,7 +219,7 @@ export function createCategorizationPrompt(params: {
 
   prompt += `\n\nTransactions to Categorize:\n`;
   transactions.forEach((tx) => {
-    prompt += `${tx.csvRowIndex}. Date: ${tx.date}, Amount: ${tx.amount}, Payee: "${tx.payee}"`;
+    prompt += `${tx.csvRowIndex}. Payee: "${tx.payee}"`;
     if (tx.description) prompt += `, Description: "${tx.description}"`;
     if (tx.notes) prompt += `, Notes: "${tx.notes}"`;
     prompt += `\n`;

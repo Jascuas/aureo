@@ -143,8 +143,6 @@ export async function categorizeTransactions(
   const aiResults = await aiProvider.categorizeTransactions({
     transactions: inputs.map((tx) => ({
       csvRowIndex: tx.csvRowIndex,
-      date: tx.date,
-      amount: tx.amount,
       payee: tx.payee,
       description: tx.description,
       notes: tx.notes,
@@ -218,7 +216,7 @@ export async function categorizeTransactions(
         transactionTypeId: transactionType.id,
         transactionTypeName: transactionType.name,
         confidence: topSuggestion.confidence,
-        reasoning: topSuggestion.reasoning || "AI categorization",
+        reasoning: "AI categorization",
         normalizedPayee: normalizePayeeName(input.payee),
       },
     });

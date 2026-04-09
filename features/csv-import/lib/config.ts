@@ -6,7 +6,7 @@ export const CSV_IMPORT_CONFIG = {
   },
   BATCH_LIMITS: {
     DUPLICATE_CHECK: 1000, // High limit - deterministic SQL, no AI
-    CATEGORIZATION: 100, // Optimized response size allows larger batches
+    CATEGORIZATION: 30, // Smaller batches for free AI models (faster response)
     BULK_IMPORT: 500,
   },
   AI: {

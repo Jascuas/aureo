@@ -31,15 +31,12 @@ export type DuplicateDetectionResult = {
 };
 
 export type CategorySuggestion = {
-  categoryId: string;
-  categoryName?: string; // Optional - frontend will map from categoryId
+  categoryId: string | null; // null if AI is unsure
   confidence: number; // 0-1
-  reasoning?: string; // AI explanation
 };
 
 export type CategorizationResult = {
   csvRowIndex: number;
-  suggestions: CategorySuggestion[];
   topSuggestion: CategorySuggestion;
 };
 
@@ -76,8 +73,6 @@ export type AIProvider = {
   categorizeTransactions(params: {
     transactions: Array<{
       csvRowIndex: number;
-      date: string;
-      amount: number;
       payee: string;
       description?: string;
       notes?: string;
