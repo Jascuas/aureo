@@ -886,6 +886,8 @@ export const AiImportCard = ({
             }
             onRetryDuplicates={handleRetryDuplicates}
             onRetryCategorize={handleRetryCategorize}
+            batchProgress={batchProgress}
+            onCancelAnalysis={handleCancelAnalysis}
           />
         );
 
