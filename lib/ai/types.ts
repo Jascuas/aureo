@@ -95,7 +95,7 @@ export type AIProvider = {
   }): Promise<CategorizationResult[]>;
 };
 
-export type AIProviderType = "gemini" | "claude";
+export type AIProviderType = "gemini" | "claude" | "openrouter";
 
 export type CreateAIProviderOptions = AIProviderConfig & {
   provider: AIProviderType;
