@@ -28,7 +28,7 @@ export class OpenRouterProvider implements AIProvider {
     this.client = new OpenRouter({
       apiKey: config.apiKey,
     });
-    this.model = config.model ?? "google/gemini-flash-1.5";
+    this.model = config.model ?? "openrouter/free";
     this.temperature = config.temperature ?? 0.1;
     this.maxTokens = config.maxTokens ?? 16384;
   }
@@ -79,21 +79,27 @@ export class OpenRouterProvider implements AIProvider {
     userPrompt: string,
   ): Promise<T> {
     try {
-      const result = this.client.callModel({
-        model: this.model,
-        instructions: systemPrompt,
-        input: [
-          {
-            role: "user",
-            content: userPrompt,
-          },
-        ],
-        temperature: this.temperature,
-        maxOutputTokens: this.maxTokens,
+      // Use standard chat.send API (compatible with openrouter/free)
+      const response = await this.client.chat.send({
+        chatRequest: {
+          model: this.model,
+          messages: [
+            {
+              role: "system",
+              content: systemPrompt,
+            },
+            {
+              role: "user",
+              content: userPrompt,
+            },
+          ],
+          temperature: this.temperature,
+          maxTokens: this.maxTokens,
+        },
       });
 
-      // Get text synchronously (OpenRouter SDK handles streaming internally)
-      const text = await result.getText();
+      // Extract text from response
+      const text = response.choices?.[0]?.message?.content || "";
       const cleanedText = this.cleanJsonResponse(text);
 
       return JSON.parse(cleanedText) as T;
