@@ -1,20 +1,22 @@
-import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
+import { GenerativeModel, GoogleGenerativeAI } from "@google/generative-ai";
+
 import { RateLimitError } from "@/lib/errors";
+
+import {
+  CATEGORIZATION_SYSTEM_PROMPT,
+  COLUMN_DETECTION_SYSTEM_PROMPT,
+  createCategorizationPrompt,
+  createColumnDetectionPrompt,
+  createDuplicateDetectionPrompt,
+  DUPLICATE_DETECTION_SYSTEM_PROMPT,
+} from "./prompts";
 import type {
   AIProvider,
   AIProviderConfig,
+  CategorizationResult,
   ColumnDetectionResult,
   DuplicateDetectionResult,
-  CategorizationResult,
 } from "./types";
-import {
-  COLUMN_DETECTION_SYSTEM_PROMPT,
-  createColumnDetectionPrompt,
-  DUPLICATE_DETECTION_SYSTEM_PROMPT,
-  createDuplicateDetectionPrompt,
-  CATEGORIZATION_SYSTEM_PROMPT,
-  createCategorizationPrompt,
-} from "./prompts";
 
 export class GeminiProvider implements AIProvider {
   private client: GoogleGenerativeAI;

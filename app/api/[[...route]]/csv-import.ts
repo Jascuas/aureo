@@ -19,6 +19,7 @@ import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
 import { requireId } from "@/lib/validation-middleware";
+import { isRateLimitError } from "@/lib/errors";
 
 // ============================================================================
 // Validation Schemas
@@ -162,6 +163,19 @@ const app = new Hono<AppEnv>()
         });
       } catch (error) {
         console.error("Categorization error:", error);
+
+        // Handle rate limit errors specifically
+        if (isRateLimitError(error)) {
+          return c.json(
+            {
+              error: error.message,
+              retryAfter: error.retryAfter,
+              provider: error.provider,
+            },
+            429,
+          );
+        }
+
         return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
       }
     },

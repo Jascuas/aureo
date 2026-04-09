@@ -124,21 +124,11 @@ export async function processBatchesWithConcurrency<TInput, TOutput>(
   // Process batches with controlled concurrency
   const results: BatchResult<TOutput>[] = [];
   let completed = 0;
+  let rateLimitDetected = false;
 
   for (let i = 0; i < batchFunctions.length; i += maxConcurrent) {
-    // Process chunk of batches in parallel
-    const chunk = batchFunctions.slice(i, i + maxConcurrent);
-    const chunkResults = await Promise.all(chunk.map((fn) => fn()));
-
-    results.push(...chunkResults);
-    completed += chunk.length;
-
-    // CRITICAL: Stop immediately if any batch hit rate limit
-    const hasRateLimitError = chunkResults.some(
-      (r) => !r.success && isRateLimitError(r.error),
-    );
-    if (hasRateLimitError) {
-      // Return results collected so far + mark remaining batches as failed
+    // Stop immediately if rate limit was detected in previous iteration
+    if (rateLimitDetected) {
       const remainingBatches = batchFunctions.length - completed;
       for (let j = 0; j < remainingBatches; j++) {
         results.push({
@@ -147,8 +137,36 @@ export async function processBatchesWithConcurrency<TInput, TOutput>(
           batchIndex: completed + j,
         });
       }
-      break; // Stop processing
+      break;
     }
+
+    // Process chunk of batches in parallel
+    const chunk = batchFunctions.slice(i, i + maxConcurrent);
+
+    // Execute batches and check for rate limit after EACH completes
+    const chunkResults: BatchResult<TOutput>[] = [];
+    for (const fn of chunk) {
+      if (rateLimitDetected) {
+        // Skip remaining batches in this chunk
+        chunkResults.push({
+          success: false,
+          error: new Error("Stopped due to rate limit"),
+          batchIndex: completed + chunkResults.length,
+        });
+        continue;
+      }
+
+      const result = await fn();
+      chunkResults.push(result);
+
+      // Check immediately if this batch hit rate limit
+      if (!result.success && isRateLimitError(result.error)) {
+        rateLimitDetected = true;
+      }
+    }
+
+    results.push(...chunkResults);
+    completed += chunkResults.length;
 
     // Notify progress
     onProgress?.(completed, batchFunctions.length);

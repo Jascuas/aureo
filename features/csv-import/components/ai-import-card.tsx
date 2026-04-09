@@ -892,20 +892,26 @@ export const AiImportCard = ({
 
       case "ANALYSIS":
         return (
-          <AnalysisSection
-            isDetectingDuplicates={isDetectingDuplicates}
-            isCategorizing={isCategorizing}
-            duplicateError={
-              analysisError && isDetectingDuplicates ? analysisError : null
-            }
-            categorizeError={
-              analysisError && isCategorizing ? analysisError : null
-            }
-            onRetryDuplicates={handleRetryDuplicates}
-            onRetryCategorize={handleRetryCategorize}
-            batchProgress={batchProgress}
-            onCancelAnalysis={handleCancelAnalysis}
-          />
+          <>
+            {analysisError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="size-4" />
+                <AlertDescription className="whitespace-pre-line">
+                  {analysisError}
+                </AlertDescription>
+              </Alert>
+            )}
+            <AnalysisSection
+              isDetectingDuplicates={isDetectingDuplicates}
+              isCategorizing={isCategorizing}
+              duplicateError={null}
+              categorizeError={null}
+              onRetryDuplicates={handleRetryDuplicates}
+              onRetryCategorize={handleRetryCategorize}
+              batchProgress={batchProgress}
+              onCancelAnalysis={handleCancelAnalysis}
+            />
+          </>
         );
 
       case "REVIEW":
@@ -997,7 +1003,7 @@ export const AiImportCard = ({
             <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            {!isDetectingDuplicates && !isCategorizing && (
+            {!isDetectingDuplicates && !isCategorizing && !analysisError && (
               <Button onClick={() => nextStep()}>
                 {analyzedRows.duplicates.length > 0
                   ? `Review ${analyzedRows.duplicates.length} Duplicates`
