@@ -535,6 +535,9 @@ export const AiImportCard = ({
     setAnalysisError(null);
     setIsDetectingDuplicates(true);
 
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     const mapping = columnMapping.finalMapping;
     const amountFormat = columnMapping.detectionResult?.amountFormat || {
       decimalSeparator: "," as const,
@@ -569,24 +572,31 @@ export const AiImportCard = ({
     });
 
     try {
-      // Batch processing for duplicates (max 100 per batch)
-      const BATCH_SIZE = 100;
-      const batches = [];
+      const batchCount = Math.ceil(transactionsForDuplicates.length / 100);
+      setBatchProgress({
+        current: 0,
+        total: batchCount,
+        stage: "duplicates",
+      });
 
-      for (let i = 0; i < transactionsForDuplicates.length; i += BATCH_SIZE) {
-        const batch = transactionsForDuplicates.slice(i, i + BATCH_SIZE);
-        batches.push(
-          detectDuplicatesMutation.mutateAsync({
-            transactions: batch,
-          }),
-        );
-      }
+      const results = await processBatchesWithConcurrency(
+        transactionsForDuplicates,
+        100,
+        (batch) =>
+          detectDuplicatesMutation.mutateAsync({ transactions: batch }),
+        {
+          maxConcurrent: 3,
+          retries: 2,
+          onProgress: (current, total) =>
+            setBatchProgress({ current, total, stage: "duplicates" }),
+          signal: abortController.signal,
+        },
+      );
 
-      const results = await Promise.all(batches);
-      const allDuplicates = results.flatMap((result) => {
-        if (!("data" in result))
-          throw new Error("Invalid duplicate detection response");
-        return result.data.duplicates;
+      const { successful } = partitionBatchResults(results);
+      const allDuplicates = successful.flatMap((r) => {
+        if (!("data" in r.data)) return [];
+        return r.data.data.duplicates;
       });
 
       const transformedDuplicates = allDuplicates.map((dup: any) => ({
@@ -598,9 +608,15 @@ export const AiImportCard = ({
       }));
       setDuplicates(transformedDuplicates);
     } catch (error: any) {
-      setAnalysisError(error?.message || "Failed to detect duplicates");
+      if (error.message === "Cancelled") {
+        setAnalysisError("Duplicate detection cancelled");
+      } else {
+        setAnalysisError(error?.message || "Failed to detect duplicates");
+      }
     } finally {
       setIsDetectingDuplicates(false);
+      setBatchProgress(null);
+      abortControllerRef.current = null;
     }
   }, [
     csvData,
@@ -614,6 +630,9 @@ export const AiImportCard = ({
 
     setAnalysisError(null);
     setIsCategorizing(true);
+
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
     const mapping = columnMapping.finalMapping;
     const amountFormat = columnMapping.detectionResult?.amountFormat || {
@@ -656,24 +675,30 @@ export const AiImportCard = ({
     });
 
     try {
-      // Batch processing for categorization (max 50 per batch)
-      const BATCH_SIZE = 50;
-      const batches = [];
+      const batchCount = Math.ceil(transactionsForCategorize.length / 50);
+      setBatchProgress({
+        current: 0,
+        total: batchCount,
+        stage: "categorization",
+      });
 
-      for (let i = 0; i < transactionsForCategorize.length; i += BATCH_SIZE) {
-        const batch = transactionsForCategorize.slice(i, i + BATCH_SIZE);
-        batches.push(
-          categorizeMutation.mutateAsync({
-            transactions: batch,
-          }),
-        );
-      }
+      const results = await processBatchesWithConcurrency(
+        transactionsForCategorize,
+        50,
+        (batch) => categorizeMutation.mutateAsync({ transactions: batch }),
+        {
+          maxConcurrent: 3,
+          retries: 2,
+          onProgress: (current, total) =>
+            setBatchProgress({ current, total, stage: "categorization" }),
+          signal: abortController.signal,
+        },
+      );
 
-      const results = await Promise.all(batches);
-      const allCategorizations = results.flatMap((result) => {
-        if (!("data" in result))
-          throw new Error("Invalid categorization response");
-        return result.data.results;
+      const { successful } = partitionBatchResults(results);
+      const allCategorizations = successful.flatMap((r) => {
+        if (!("data" in r.data)) return [];
+        return r.data.data.results;
       });
 
       const enrichedCategorizations = allCategorizations.map((cat: any) => {
@@ -690,9 +715,15 @@ export const AiImportCard = ({
       });
       setCategorizations(enrichedCategorizations);
     } catch (error: any) {
-      setAnalysisError(error?.message || "Failed to categorize transactions");
+      if (error.message === "Cancelled") {
+        setAnalysisError("Categorization cancelled");
+      } else {
+        setAnalysisError(error?.message || "Failed to categorize transactions");
+      }
     } finally {
       setIsCategorizing(false);
+      setBatchProgress(null);
+      abortControllerRef.current = null;
     }
   }, [
     csvData,
