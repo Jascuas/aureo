@@ -24,7 +24,7 @@ export class GeminiProvider implements AIProvider {
   constructor(config: AIProviderConfig) {
     this.client = new GoogleGenerativeAI(config.apiKey);
     this.temperature = config.temperature ?? 0.1;
-    this.maxTokens = config.maxTokens ?? 8192;
+    this.maxTokens = config.maxTokens ?? 16384; // Increased for batch processing
 
     const modelName = config.model ?? "gemini-2.5-flash-lite";
     this.model = this.client.getGenerativeModel({

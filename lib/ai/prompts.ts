@@ -160,11 +160,13 @@ Categorization Guidelines:
 5. NEVER create new categories - only use provided categories
 
 For each transaction, provide:
-1. Top 1-3 category suggestions
+1. Top 1-3 category suggestions (ONLY categoryId, categoryName, confidence)
 2. Confidence score for each (0-1)
-3. Brief reasoning
+3. NO reasoning field - keep response compact
 
-Return ONLY valid JSON matching this structure:
+⚠️ CRITICAL: Return ONLY valid, complete JSON. DO NOT truncate the response.
+
+Return JSON matching this structure:
 {
   "results": [
     {
@@ -173,21 +175,18 @@ Return ONLY valid JSON matching this structure:
         {
           "categoryId": "cat123",
           "categoryName": "Groceries",
-          "confidence": 0.92,
-          "reasoning": "Payee 'Whole Foods' is a supermarket"
+          "confidence": 0.92
         },
         {
           "categoryId": "cat456",
           "categoryName": "Dining Out",
-          "confidence": 0.15,
-          "reasoning": "Some grocery stores have prepared food sections"
+          "confidence": 0.15
         }
       ],
       "topSuggestion": {
         "categoryId": "cat123",
         "categoryName": "Groceries",
-        "confidence": 0.92,
-        "reasoning": "Payee 'Whole Foods' is a supermarket"
+        "confidence": 0.92
       }
     }
   ]
