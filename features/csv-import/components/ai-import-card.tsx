@@ -59,8 +59,12 @@ export const AiImportCard = ({
     reset,
   } = useImportSession();
 
-  const { resolutions, skipAllExact, getPendingCount } =
-    useDuplicateResolution();
+  const {
+    resolutions,
+    skipAllExact,
+    getPendingCount,
+    reset: resetResolutions,
+  } = useDuplicateResolution();
   const detectDuplicatesMutation = useDetectDuplicates();
   const categorizeMutation = useCategorizeTransactions();
   const bulkImportMutation = useBulkImportTransactions();
@@ -111,6 +115,7 @@ export const AiImportCard = ({
             }
 
             setCSVData(file.name, headers, rows);
+            resetResolutions(); // Reset duplicate resolutions for new import
             setIsParsingCSV(false);
 
             // Auto-trigger column detection
@@ -127,7 +132,7 @@ export const AiImportCard = ({
         setIsParsingCSV(false);
       }
     },
-    [setCSVData],
+    [setCSVData, resetResolutions],
   );
 
   const handleColumnDetection = async (
@@ -639,8 +644,20 @@ export const AiImportCard = ({
       const resolution = resolutions.find(
         (r) => r.csvIndex === cat.csvRowIndex,
       );
+      console.log("🔍 Filtering transaction:", {
+        csvRowIndex: cat.csvRowIndex,
+        hasResolution: !!resolution,
+        action: resolution?.action,
+        willImport: resolution?.action !== "skip",
+      });
       if (resolution?.action === "skip") return false;
       return true;
+    });
+
+    console.log("📊 Import summary:", {
+      totalCategorizations: analyzedRows.categorizations.length,
+      totalResolutions: resolutions.length,
+      rowsToImport: rowsToImport.length,
     });
 
     if (rowsToImport.length === 0) {
@@ -719,6 +736,7 @@ export const AiImportCard = ({
     }
 
     reset();
+    resetResolutions(); // Clear duplicate resolution state
     onCancel?.();
   };
 
