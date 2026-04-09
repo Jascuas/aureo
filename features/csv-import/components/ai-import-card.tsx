@@ -293,49 +293,92 @@ export const AiImportCard = ({
     });
 
     try {
-      const [duplicatesResult, categorizeResult] = await Promise.all([
-        detectDuplicatesMutation.mutateAsync({
-          transactions: transactionsForAnalysis.map((t) => ({
-            date: t.date,
-            amount: t.amount,
-            payee: t.payee,
-          })),
-        }),
-        categorizeMutation.mutateAsync({
-          transactions: transactionsForAnalysis,
-        }),
-      ]);
+      // Batch processing to respect API limits
+      const DUPLICATE_BATCH_SIZE = 100;
+      const CATEGORIZE_BATCH_SIZE = 50;
 
-      if (!("data" in categorizeResult) || !("data" in duplicatesResult)) {
-        throw new Error("Invalid API response");
+      // Process duplicates in batches
+      const duplicateBatches = [];
+      for (
+        let i = 0;
+        i < transactionsForAnalysis.length;
+        i += DUPLICATE_BATCH_SIZE
+      ) {
+        const batch = transactionsForAnalysis.slice(
+          i,
+          i + DUPLICATE_BATCH_SIZE,
+        );
+        duplicateBatches.push(
+          detectDuplicatesMutation.mutateAsync({
+            transactions: batch.map((t) => ({
+              date: t.date,
+              amount: t.amount,
+              payee: t.payee,
+            })),
+          }),
+        );
       }
 
+      // Process categorization in batches
+      const categorizeBatches = [];
+      for (
+        let i = 0;
+        i < transactionsForAnalysis.length;
+        i += CATEGORIZE_BATCH_SIZE
+      ) {
+        const batch = transactionsForAnalysis.slice(
+          i,
+          i + CATEGORIZE_BATCH_SIZE,
+        );
+        categorizeBatches.push(
+          categorizeMutation.mutateAsync({
+            transactions: batch,
+          }),
+        );
+      }
+
+      // Wait for all batches to complete
+      const [duplicateResults, categorizeResults] = await Promise.all([
+        Promise.all(duplicateBatches),
+        Promise.all(categorizeBatches),
+      ]);
+
+      // Combine duplicate results
+      const allDuplicates = duplicateResults.flatMap((result) => {
+        if (!("data" in result))
+          throw new Error("Invalid duplicate detection response");
+        return result.data.duplicates;
+      });
+
+      // Combine categorization results
+      const allCategorizations = categorizeResults.flatMap((result) => {
+        if (!("data" in result))
+          throw new Error("Invalid categorization response");
+        return result.data.results;
+      });
+
       // Enrich categorizations with original transaction data
-      const enrichedCategorizations = categorizeResult.data.results.map(
-        (cat: any) => {
-          const originalTx = transactionsForAnalysis.find(
-            (t) => t.csvRowIndex === cat.csvRowIndex,
-          );
-          return {
-            ...cat,
-            date: originalTx?.date || "",
-            amount: originalTx?.amount || 0,
-            payee: originalTx?.payee || "",
-            notes: originalTx?.notes,
-          };
-        },
-      );
+      const enrichedCategorizations = allCategorizations.map((cat: any) => {
+        const originalTx = transactionsForAnalysis.find(
+          (t) => t.csvRowIndex === cat.csvRowIndex,
+        );
+        return {
+          ...cat,
+          date: originalTx?.date || "",
+          amount: originalTx?.amount || 0,
+          payee: originalTx?.payee || "",
+          notes: originalTx?.notes,
+        };
+      });
 
       // Transform duplicates (date string → Date)
-      const transformedDuplicates = duplicatesResult.data.duplicates.map(
-        (dup: any) => ({
-          ...dup,
-          existingTransaction: {
-            ...dup.existingTransaction,
-            date: new Date(dup.existingTransaction.date),
-          },
-        }),
-      );
+      const transformedDuplicates = allDuplicates.map((dup: any) => ({
+        ...dup,
+        existingTransaction: {
+          ...dup.existingTransaction,
+          date: new Date(dup.existingTransaction.date),
+        },
+      }));
 
       setDuplicates(transformedDuplicates);
       setCategorizations(enrichedCategorizations);
@@ -414,6 +457,7 @@ export const AiImportCard = ({
       currentStep === "ANALYSIS" &&
       !isDetectingDuplicates &&
       !isCategorizing &&
+      !analysisError &&
       analyzedRows.categorizations.length === 0
     ) {
       handleAnalysis();
@@ -423,6 +467,7 @@ export const AiImportCard = ({
     handleAnalysis,
     isDetectingDuplicates,
     isCategorizing,
+    analysisError,
     analyzedRows.categorizations.length,
   ]);
 
@@ -486,21 +531,34 @@ export const AiImportCard = ({
     });
 
     try {
-      const result = await detectDuplicatesMutation.mutateAsync({
-        transactions: transactionsForDuplicates,
-      });
-      if ("data" in result) {
-        const transformedDuplicates = result.data.duplicates.map(
-          (dup: any) => ({
-            ...dup,
-            existingTransaction: {
-              ...dup.existingTransaction,
-              date: new Date(dup.existingTransaction.date),
-            },
+      // Batch processing for duplicates (max 100 per batch)
+      const BATCH_SIZE = 100;
+      const batches = [];
+
+      for (let i = 0; i < transactionsForDuplicates.length; i += BATCH_SIZE) {
+        const batch = transactionsForDuplicates.slice(i, i + BATCH_SIZE);
+        batches.push(
+          detectDuplicatesMutation.mutateAsync({
+            transactions: batch,
           }),
         );
-        setDuplicates(transformedDuplicates);
       }
+
+      const results = await Promise.all(batches);
+      const allDuplicates = results.flatMap((result) => {
+        if (!("data" in result))
+          throw new Error("Invalid duplicate detection response");
+        return result.data.duplicates;
+      });
+
+      const transformedDuplicates = allDuplicates.map((dup: any) => ({
+        ...dup,
+        existingTransaction: {
+          ...dup.existingTransaction,
+          date: new Date(dup.existingTransaction.date),
+        },
+      }));
+      setDuplicates(transformedDuplicates);
     } catch (error: any) {
       setAnalysisError(error?.message || "Failed to detect duplicates");
     } finally {
@@ -560,24 +618,39 @@ export const AiImportCard = ({
     });
 
     try {
-      const result = await categorizeMutation.mutateAsync({
-        transactions: transactionsForCategorize,
-      });
-      if ("data" in result) {
-        const enrichedCategorizations = result.data.results.map((cat: any) => {
-          const originalTx = transactionsForCategorize.find(
-            (t) => t.csvRowIndex === cat.csvRowIndex,
-          );
-          return {
-            ...cat,
-            date: originalTx?.date || "",
-            amount: originalTx?.amount || 0,
-            payee: originalTx?.payee || "",
-            notes: originalTx?.notes,
-          };
-        });
-        setCategorizations(enrichedCategorizations);
+      // Batch processing for categorization (max 50 per batch)
+      const BATCH_SIZE = 50;
+      const batches = [];
+
+      for (let i = 0; i < transactionsForCategorize.length; i += BATCH_SIZE) {
+        const batch = transactionsForCategorize.slice(i, i + BATCH_SIZE);
+        batches.push(
+          categorizeMutation.mutateAsync({
+            transactions: batch,
+          }),
+        );
       }
+
+      const results = await Promise.all(batches);
+      const allCategorizations = results.flatMap((result) => {
+        if (!("data" in result))
+          throw new Error("Invalid categorization response");
+        return result.data.results;
+      });
+
+      const enrichedCategorizations = allCategorizations.map((cat: any) => {
+        const originalTx = transactionsForCategorize.find(
+          (t) => t.csvRowIndex === cat.csvRowIndex,
+        );
+        return {
+          ...cat,
+          date: originalTx?.date || "",
+          amount: originalTx?.amount || 0,
+          payee: originalTx?.payee || "",
+          notes: originalTx?.notes,
+        };
+      });
+      setCategorizations(enrichedCategorizations);
     } catch (error: any) {
       setAnalysisError(error?.message || "Failed to categorize transactions");
     } finally {
