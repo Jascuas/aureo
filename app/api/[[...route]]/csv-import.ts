@@ -17,9 +17,9 @@ import { detectDuplicates } from "@/features/csv-import/lib/duplicate-matcher";
 import { categorizeTransactions } from "@/features/csv-import/lib/transaction-categorizer";
 import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
+import { isRateLimitError } from "@/lib/errors";
 import type { AppEnv } from "@/lib/hono-env";
 import { requireId } from "@/lib/validation-middleware";
-import { isRateLimitError } from "@/lib/errors";
 
 // ============================================================================
 // Validation Schemas

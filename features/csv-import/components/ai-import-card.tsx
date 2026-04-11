@@ -13,8 +13,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { convertAmountToMilliunits, parseAmount } from "@/lib/utils";
 import { isRateLimitError } from "@/lib/errors";
+import { convertAmountToMilliunits, parseAmount } from "@/lib/utils";
 
 import { useBulkImportTransactions } from "../api/use-bulk-import-transactions";
 import { useCategorizeTransactions } from "../api/use-categorize-transactions";
@@ -23,8 +23,8 @@ import { useGetTemplates } from "../api/use-get-templates";
 import { useDuplicateResolution } from "../hooks/use-duplicate-resolution";
 import { useImportSession } from "../hooks/use-import-session";
 import {
-  processBatchesWithConcurrency,
   partitionBatchResults,
+  processBatchesWithConcurrency,
 } from "../lib/batch-processor";
 import { parseDate } from "../lib/date-parser";
 import type { ParsedCSVRow } from "../types/import-types";

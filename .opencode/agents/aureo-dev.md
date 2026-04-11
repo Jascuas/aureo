@@ -1,8 +1,9 @@
 ---
 description: Senior Engineer. Implements code: bugs, features, refactors, API, DB, UI. Direct execution <3 files. Delegates to @aureo-architect for planning (any non-trivial task). Delegates to @aureo-pm for documentation. Next.js 16 + Hono + PostgreSQL + Drizzle. Amounts=milliunits, balances=DB triggers, no tests, no comments, kebab-case, type>interface.
-mode: primary
+mode: subagent
 temperature: 0.2
 color: "#3b82f6"
+model: minimax-m2.5-free
 permission:
   edit: allow
   bash: { "*": allow }
