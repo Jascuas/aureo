@@ -1,73 +1,73 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import type { ColumnDetectionResult, ParsedCSVRow, ImportTemplate } from '../types/import-types';
-import type { DuplicateMatch } from '../lib/duplicate-matcher';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import type {
+  ColumnDetectionResult,
+  EnrichedCategorization,
+  ParsedCSVRow,
+  ImportTemplate,
+  ImportStep,
+} from "@/features/csv-import/types/import-types";
+import { IMPORT_STEPS } from "@/features/csv-import/types/import-types";
+import type { DuplicateMatch } from "@/features/csv-import/lib/duplicate-matcher";
 
-export type ImportStep = 'UPLOAD' | 'MAPPING' | 'ANALYSIS' | 'REVIEW' | 'IMPORT';
-
-// Enriched categorization with transaction data (flattened from API)
-export type EnrichedCategorization = {
-  csvRowIndex: number;
-  date: string;
-  amount: number;
-  payee: string;
-  notes?: string;
-  categoryId: string | null;
-  categoryName: string | null;
-  transactionTypeId: string;
-  transactionTypeName: string;
-  confidence: number;
-  reasoning: string;
-  normalizedPayee: string;
-  requiresManualReview: boolean;
-};
+export type { EnrichedCategorization };
 
 type ImportSessionState = {
   currentStep: ImportStep;
-  
+
   csvData: {
     fileName: string;
     headers: string[];
     rows: ParsedCSVRow[];
   } | null;
-  
+
   columnMapping: {
     detectionResult: ColumnDetectionResult | null;
     selectedTemplate: ImportTemplate | null;
     finalMapping: Record<string, number> | null;
   };
-  
+
   analyzedRows: {
     duplicates: DuplicateMatch[];
     categorizations: EnrichedCategorization[];
   };
-  
+
   importResult: {
     importedCount: number;
     skippedCount: number;
     errorCount: number;
     errors: Array<{ row: number; message: string }>;
   } | null;
-  
-  setCSVData: (fileName: string, headers: string[], rows: ParsedCSVRow[]) => void;
+
+  setCSVData: (
+    fileName: string,
+    headers: string[],
+    rows: ParsedCSVRow[],
+  ) => void;
   setDetectionResult: (result: ColumnDetectionResult) => void;
   setSelectedTemplate: (template: ImportTemplate | null) => void;
   setFinalMapping: (mapping: Record<string, number>) => void;
-  
+
   setDuplicates: (duplicates: DuplicateMatch[]) => void;
   setCategorizations: (categorizations: EnrichedCategorization[]) => void;
-  setImportResult: (result: ImportSessionState['importResult']) => void;
-  
+  setImportResult: (result: ImportSessionState["importResult"]) => void;
+
   nextStep: () => void;
   previousStep: () => void;
   goToStep: (step: ImportStep) => void;
   reset: () => void;
 };
 
-const STEP_ORDER: ImportStep[] = ['UPLOAD', 'MAPPING', 'ANALYSIS', 'REVIEW', 'IMPORT'];
+const STEP_ORDER: ImportStep[] = [
+  IMPORT_STEPS.UPLOAD,
+  IMPORT_STEPS.MAPPING,
+  IMPORT_STEPS.ANALYSIS,
+  IMPORT_STEPS.REVIEW,
+  IMPORT_STEPS.IMPORT,
+];
 
 const initialState = {
-  currentStep: 'UPLOAD' as ImportStep,
+  currentStep: IMPORT_STEPS.UPLOAD,
   csvData: null,
   columnMapping: {
     detectionResult: null,
@@ -85,14 +85,14 @@ export const useImportSession = create<ImportSessionState>()(
   persist(
     (set, get) => ({
       ...initialState,
-      
+
       setCSVData: (fileName, headers, rows) => {
-        set({ 
+        set({
           csvData: { fileName, headers, rows },
-          currentStep: 'MAPPING',
+          currentStep: IMPORT_STEPS.MAPPING,
         });
       },
-      
+
       setDetectionResult: (result) => {
         set((state) => ({
           columnMapping: {
@@ -101,7 +101,7 @@ export const useImportSession = create<ImportSessionState>()(
           },
         }));
       },
-      
+
       setSelectedTemplate: (template) => {
         set((state) => ({
           columnMapping: {
@@ -110,7 +110,7 @@ export const useImportSession = create<ImportSessionState>()(
           },
         }));
       },
-      
+
       setFinalMapping: (mapping) => {
         set((state) => ({
           columnMapping: {
@@ -119,7 +119,7 @@ export const useImportSession = create<ImportSessionState>()(
           },
         }));
       },
-      
+
       setDuplicates: (duplicates) => {
         set((state) => ({
           analyzedRows: {
@@ -128,7 +128,7 @@ export const useImportSession = create<ImportSessionState>()(
           },
         }));
       },
-      
+
       setCategorizations: (categorizations) => {
         set((state) => ({
           analyzedRows: {
@@ -137,14 +137,14 @@ export const useImportSession = create<ImportSessionState>()(
           },
         }));
       },
-      
+
       setImportResult: (result) => {
-        set({ 
+        set({
           importResult: result,
-          currentStep: 'IMPORT',
+          currentStep: IMPORT_STEPS.IMPORT,
         });
       },
-      
+
       nextStep: () => {
         const { currentStep } = get();
         const currentIndex = STEP_ORDER.indexOf(currentStep);
@@ -152,7 +152,7 @@ export const useImportSession = create<ImportSessionState>()(
           set({ currentStep: STEP_ORDER[currentIndex + 1] });
         }
       },
-      
+
       previousStep: () => {
         const { currentStep } = get();
         const currentIndex = STEP_ORDER.indexOf(currentStep);
@@ -160,57 +160,62 @@ export const useImportSession = create<ImportSessionState>()(
           set({ currentStep: STEP_ORDER[currentIndex - 1] });
         }
       },
-      
+
       goToStep: (step) => {
         set({ currentStep: step });
       },
-      
+
       reset: () => {
         set(initialState);
       },
     }),
     {
-      name: 'aureo-import-session',
+      name: "aureo-import-session",
       storage: {
         getItem: (name) => {
           const str = sessionStorage.getItem(name);
           if (!str) return null;
-          
+
           const stored = JSON.parse(str);
-          
+
           if (stored.state?.csvData?.rows) {
-            stored.state.csvData.rows = stored.state.csvData.rows.map((row: ParsedCSVRow) => ({
-              ...row,
-              mapped: row.mapped ? {
-                ...row.mapped,
-                date: row.mapped.date ? new Date(row.mapped.date) : null,
-              } : undefined,
-            }));
+            stored.state.csvData.rows = stored.state.csvData.rows.map(
+              (row: ParsedCSVRow) => ({
+                ...row,
+                mapped: row.mapped
+                  ? {
+                      ...row.mapped,
+                      date: row.mapped.date ? new Date(row.mapped.date) : null,
+                    }
+                  : undefined,
+              }),
+            );
           }
-          
+
           if (stored.state?.columnMapping?.selectedTemplate?.createdAt) {
             stored.state.columnMapping.selectedTemplate.createdAt = new Date(
-              stored.state.columnMapping.selectedTemplate.createdAt
+              stored.state.columnMapping.selectedTemplate.createdAt,
             );
           }
           if (stored.state?.columnMapping?.selectedTemplate?.updatedAt) {
             stored.state.columnMapping.selectedTemplate.updatedAt = new Date(
-              stored.state.columnMapping.selectedTemplate.updatedAt
+              stored.state.columnMapping.selectedTemplate.updatedAt,
             );
           }
-          
+
           if (stored.state?.analyzedRows?.duplicates) {
-            stored.state.analyzedRows.duplicates = stored.state.analyzedRows.duplicates.map(
-              (dup: DuplicateMatch) => ({
-                ...dup,
-                existingTransaction: {
-                  ...dup.existingTransaction,
-                  date: new Date(dup.existingTransaction.date),
-                },
-              })
-            );
+            stored.state.analyzedRows.duplicates =
+              stored.state.analyzedRows.duplicates.map(
+                (dup: DuplicateMatch) => ({
+                  ...dup,
+                  existingTransaction: {
+                    ...dup.existingTransaction,
+                    date: new Date(dup.existingTransaction.date),
+                  },
+                }),
+              );
           }
-          
+
           return stored;
         },
         setItem: (name, value) => {
@@ -220,6 +225,6 @@ export const useImportSession = create<ImportSessionState>()(
           sessionStorage.removeItem(name);
         },
       },
-    }
-  )
+    },
+  ),
 );

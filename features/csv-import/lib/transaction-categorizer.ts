@@ -8,7 +8,7 @@ import {
 import { getDefaultAIProvider } from "@/lib/ai";
 import { normalizePayeeName } from "@/lib/utils";
 import { eq, sql } from "drizzle-orm";
-import { CSV_IMPORT_CONFIG } from "./config";
+import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
 
 export type TransactionInput = {
   csvRowIndex: number;
@@ -21,11 +21,8 @@ export type TransactionInput = {
 
 export type CategorizationSuggestion = {
   categoryId: string | null;
-  categoryName: string | null;
   transactionTypeId: string;
-  transactionTypeName: string;
   confidence: number;
-  reasoning: string;
   normalizedPayee: string;
 };
 
@@ -164,12 +161,8 @@ export async function categorizeTransactions(
         csvRowIndex: input.csvRowIndex,
         suggestion: {
           categoryId: null,
-          categoryName: null,
           transactionTypeId: transactionType.id,
-          transactionTypeName: transactionType.name,
           confidence: 0.0,
-          reasoning:
-            "No similar transactions found. Manual categorization required.",
           normalizedPayee: normalizePayeeName(input.payee),
         },
       });
@@ -193,11 +186,8 @@ export async function categorizeTransactions(
         csvRowIndex: input.csvRowIndex,
         suggestion: {
           categoryId: null,
-          categoryName: null,
           transactionTypeId: transactionType.id,
-          transactionTypeName: transactionType.name,
           confidence: 0.0,
-          reasoning: `AI suggestion error: Invalid category ID returned. Manual categorization required.`,
           normalizedPayee: normalizePayeeName(input.payee),
         },
       });
@@ -212,11 +202,8 @@ export async function categorizeTransactions(
           CSV_IMPORT_CONFIG.AI.MIN_CONFIDENCE_THRESHOLD
             ? topSuggestion.categoryId
             : null,
-        categoryName: categoryMatch?.name || null,
         transactionTypeId: transactionType.id,
-        transactionTypeName: transactionType.name,
         confidence: topSuggestion.confidence,
-        reasoning: "AI categorization",
         normalizedPayee: normalizePayeeName(input.payee),
       },
     });

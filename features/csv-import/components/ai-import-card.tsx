@@ -129,12 +129,10 @@ export const AiImportCard = ({
     (
       csvRowIndex: number,
       categoryId: string | null,
-      categoryName: string | null,
+      _categoryName: string | null,
     ) => {
       const updated = analyzedRows.categorizations.map((cat) =>
-        cat.csvRowIndex === csvRowIndex
-          ? { ...cat, categoryId, categoryName }
-          : cat,
+        cat.csvRowIndex === csvRowIndex ? { ...cat, categoryId } : cat,
       );
       setCategorizations(updated);
     },

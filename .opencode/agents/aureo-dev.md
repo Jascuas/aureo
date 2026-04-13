@@ -3,7 +3,6 @@ description: Senior Engineer. Implements code: bugs, features, refactors, API, D
 mode: subagent
 temperature: 0.2
 color: "#3b82f6"
-model: minimax-m2.5-free
 permission:
   edit: allow
   bash: { "*": allow }

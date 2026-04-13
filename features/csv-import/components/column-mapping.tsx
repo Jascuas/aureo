@@ -17,10 +17,13 @@ import { useGetTemplates } from "@/features/csv-import/api/use-get-templates";
 import { useSaveTemplate } from "@/features/csv-import/api/use-save-template";
 import { AlertCircle, Check, Save } from "lucide-react";
 
-import type { ColumnDetectionResult, ColumnType } from "../types/import-types";
-import { ColumnPreview } from "./column-preview";
-import { ConfidenceBadge } from "./confidence-badge";
-import { FormatDetector } from "./format-detector";
+import type {
+  ColumnDetectionResult,
+  ColumnType,
+} from "@/features/csv-import/types/import-types";
+import { ColumnPreview } from "@/features/csv-import/components/column-preview";
+import { ConfidenceBadge } from "@/features/csv-import/components/confidence-badge";
+import { FormatDetector } from "@/features/csv-import/components/format-detector";
 
 type ColumnMappingProps = {
   accountId?: string;

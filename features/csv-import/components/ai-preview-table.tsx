@@ -24,10 +24,10 @@ import type { CategorizationResult } from "@/features/csv-import/lib/transaction
 import type { DuplicateMatch } from "@/features/csv-import/lib/duplicate-matcher";
 import { formatCurrency } from "@/lib/utils";
 
-import { ConfidenceBadge } from "./confidence-badge";
-import { DuplicateIndicator } from "./duplicate-indicator";
-import { EditableCategoryCell } from "./editable-category-cell";
-import { useDuplicateResolution } from "../hooks/use-duplicate-resolution";
+import { ConfidenceBadge } from "@/features/csv-import/components/confidence-badge";
+import { DuplicateIndicator } from "@/features/csv-import/components/duplicate-indicator";
+import { EditableCategoryCell } from "@/features/csv-import/components/editable-category-cell";
+import { useDuplicateResolution } from "@/features/csv-import/hooks/use-duplicate-resolution";
 
 type PreviewRow = {
   csvRowIndex: number;
@@ -35,7 +35,6 @@ type PreviewRow = {
   payee: string;
   amount: number;
   categoryId: string | null;
-  categoryName: string | null;
   confidence: number;
   duplicate: DuplicateMatch | null;
 };
@@ -97,7 +96,6 @@ export const AiPreviewTable = ({
       cell: ({ row }) => (
         <EditableCategoryCell
           categoryId={row.original.categoryId}
-          categoryName={row.original.categoryName}
           confidence={row.original.confidence}
           onCategoryChange={(categoryId, categoryName) =>
             onCategoryChange(row.original.csvRowIndex, categoryId, categoryName)

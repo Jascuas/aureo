@@ -142,23 +142,10 @@ const app = new Hono<AppEnv>()
             results: results.map((result) => ({
               csvRowIndex: result.csvRowIndex,
               categoryId: result.suggestion.categoryId,
-              categoryName: result.suggestion.categoryName,
               transactionTypeId: result.suggestion.transactionTypeId,
-              transactionTypeName: result.suggestion.transactionTypeName,
               confidence: Math.round(result.suggestion.confidence * 100) / 100,
-              reasoning: result.suggestion.reasoning,
               normalizedPayee: result.suggestion.normalizedPayee,
-              requiresManualReview: result.suggestion.confidence < 0.7,
             })),
-            summary: {
-              totalProcessed: results.length,
-              highConfidence: results.filter(
-                (r) => r.suggestion.confidence >= 0.7,
-              ).length,
-              requiresReview: results.filter(
-                (r) => r.suggestion.confidence < 0.7,
-              ).length,
-            },
           },
         });
       } catch (error) {

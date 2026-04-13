@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { DuplicateMatch } from "../lib/duplicate-matcher";
+import type { DuplicateMatch } from "@/features/csv-import/lib/duplicate-matcher";
 
 type DuplicateResolution = {
   csvIndex: number;

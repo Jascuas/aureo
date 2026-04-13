@@ -36,13 +36,6 @@ export const AnalysisSection = ({
 }: AnalysisSectionProps) => {
   const isProcessing = isDetectingDuplicates || isCategorizing;
 
-  const getProgress = () => {
-    if (!isDetectingDuplicates && !isCategorizing) return 100;
-    if (isDetectingDuplicates && isCategorizing) return 25;
-    if (!isDetectingDuplicates && isCategorizing) return 75;
-    return 50;
-  };
-
   const getCurrentTask = () => {
     if (isDetectingDuplicates) return "Detecting duplicates...";
     if (isCategorizing) return "Categorizing transactions...";
@@ -98,9 +91,7 @@ export const AnalysisSection = ({
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">{getCurrentTask()}</span>
-            <span className="font-medium">{getProgress()}%</span>
           </div>
-          <Progress value={getProgress()} className="h-2" />
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">

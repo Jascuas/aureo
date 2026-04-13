@@ -1,7 +1,7 @@
 import { db } from "@/db/drizzle";
 import { accounts, transactions } from "@/db/schema";
 import { and, between, eq, sql } from "drizzle-orm";
-import { CSV_IMPORT_CONFIG } from "./config";
+import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
 
 export type TransactionInput = {
   date: Date;

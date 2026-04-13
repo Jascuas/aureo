@@ -1,12 +1,12 @@
-export type ColumnType = 
-  | 'date'
-  | 'amount'
-  | 'payee'
-  | 'description'
-  | 'notes'
-  | 'balance'
-  | 'category'
-  | 'unknown';
+export type ColumnType =
+  | "date"
+  | "amount"
+  | "payee"
+  | "description"
+  | "notes"
+  | "balance"
+  | "category"
+  | "unknown";
 
 export type DetectedColumn = {
   index: number;
@@ -16,21 +16,21 @@ export type DetectedColumn = {
   samples: string[]; // Sample values used for detection
 };
 
-export type DateFormat = 
-  | 'DD/MM/YYYY'
-  | 'MM/DD/YYYY'
-  | 'YYYY-MM-DD'
-  | 'DD-MM-YYYY'
-  | 'DD/MM/YY'
-  | 'MM/DD/YY'
-  | 'DD-MMM-YYYY' // 15-Jan-2024
-  | 'DD-MMM-YY'   // 15-Jan-24
-  | 'YYYY/MM/DD'
-  | 'unknown';
+export type DateFormat =
+  | "DD/MM/YYYY"
+  | "MM/DD/YYYY"
+  | "YYYY-MM-DD"
+  | "DD-MM-YYYY"
+  | "DD/MM/YY"
+  | "MM/DD/YY"
+  | "DD-MMM-YYYY" // 15-Jan-2024
+  | "DD-MMM-YY" // 15-Jan-24
+  | "YYYY/MM/DD"
+  | "unknown";
 
 export type AmountFormat = {
-  decimalSeparator: '.' | ',';
-  thousandsSeparator: ',' | '.' | ' ' | '';
+  decimalSeparator: "." | ",";
+  thousandsSeparator: "," | "." | " " | "";
   isNegativeExpense: boolean; // True if expenses are negative numbers
 };
 
@@ -39,7 +39,7 @@ export type ColumnDetectionResult = {
   dateFormat: DateFormat;
   amountFormat: AmountFormat;
   confidence: number; // Overall confidence 0-1
-  method: 'heuristic' | 'ai'; // How it was detected
+  method: "heuristic" | "ai"; // How it was detected
 };
 
 export type ParsedCSVRow = {
@@ -55,7 +55,7 @@ export type MappedTransaction = {
   description?: string;
   notes?: string;
   category?: string;
-  
+
   // Validation
   errors: string[];
   warnings: string[];
@@ -72,49 +72,86 @@ export type ImportTemplate = {
   updatedAt: Date;
 };
 
-export type ImportSessionState = 
-  | 'idle'
-  | 'uploading'
-  | 'detecting-columns'
-  | 'mapping-columns'
-  | 'analyzing'
-  | 'reviewing'
-  | 'importing'
-  | 'completed'
-  | 'error';
+export type ImportSessionState =
+  | "idle"
+  | "uploading"
+  | "detecting-columns"
+  | "mapping-columns"
+  | "analyzing"
+  | "reviewing"
+  | "importing"
+  | "completed"
+  | "error";
 
 export type ImportSession = {
   state: ImportSessionState;
-  
+
   // CSV Data
   fileName: string;
   headers: string[];
   rows: ParsedCSVRow[];
-  
+
   // Detection
   detectedColumns?: ColumnDetectionResult;
   selectedTemplate?: ImportTemplate;
-  
+
   // User decisions
   columnMapping: Record<string, number>; // Final mapping after user confirmation
-  
+
   // Import results
   importedCount: number;
   skippedCount: number;
   errorCount: number;
-  
+
   // Error handling
   error?: string;
 };
 
 export type HeuristicConfig = {
-  minConfidence: number; // Minimum confidence to accept heuristic result
-  sampleSize: number; // Number of rows to sample for detection
-  enableAIFallback: boolean; // Use AI if heuristic confidence is low
+  minConfidence: number;
+  sampleSize: number;
+  enableAIFallback: boolean;
 };
 
 export const DEFAULT_HEURISTIC_CONFIG: HeuristicConfig = {
   minConfidence: 0.7,
   sampleSize: 10,
   enableAIFallback: true,
+};
+
+export const IMPORT_STEPS = {
+  UPLOAD: "UPLOAD",
+  MAPPING: "MAPPING",
+  ANALYSIS: "ANALYSIS",
+  REVIEW: "REVIEW",
+  IMPORT: "IMPORT",
+} as const;
+
+export type ImportStep = (typeof IMPORT_STEPS)[keyof typeof IMPORT_STEPS];
+
+export type BatchProgress = {
+  current: number;
+  total: number;
+  stage: "duplicates" | "categorization";
+};
+
+export type TransactionForAnalysis = {
+  csvRowIndex: number;
+  date: string;
+  amount: number;
+  payee: string;
+  description?: string;
+  notes?: string;
+};
+
+export type EnrichedCategorization = {
+  csvRowIndex: number;
+  date: string;
+  amount: number;
+  payee: string;
+  notes?: string;
+  categoryId: string | null;
+  transactionTypeId: string;
+  confidence: number;
+  normalizedPayee: string;
 };
