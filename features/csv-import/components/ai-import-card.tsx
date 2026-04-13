@@ -52,6 +52,7 @@ export const AiImportCard = ({
     setCategorizations,
     nextStep,
     previousStep,
+    goToStep,
     reset,
   } = useImportSession();
 
@@ -173,11 +174,7 @@ export const AiImportCard = ({
             analyzedRows={analyzedRows}
             onDuplicatesDetected={setDuplicates}
             onCategorizationsReady={setCategorizations}
-            onComplete={() => {
-              if (analyzedRows.duplicates.length === 0) {
-                nextStep();
-              }
-            }}
+            onComplete={nextStep}
           />
         );
 
@@ -259,7 +256,14 @@ export const AiImportCard = ({
     <Card className="border-none drop-shadow-sm">
       <CardHeader>
         <CardTitle>AI-Powered CSV Import</CardTitle>
-        <ImportStepper currentStep={currentStep} />
+        <ImportStepper
+          currentStep={currentStep}
+          onStepClick={(step) => {
+            if (step === IMPORT_STEPS.UPLOAD || step === IMPORT_STEPS.MAPPING) {
+              goToStep(step);
+            }
+          }}
+        />
       </CardHeader>
 
       <CardContent className="min-h-[400px]">{renderStepContent()}</CardContent>

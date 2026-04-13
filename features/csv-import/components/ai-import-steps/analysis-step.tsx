@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -40,6 +40,7 @@ export function AnalysisStep({
 }: AnalysisStepProps) {
   const { loading, errors, batchProgress } = useImportUIState();
   const hasStartedRef = useRef(false);
+  const [duplicatesComplete, setDuplicatesComplete] = useState(false);
 
   const detectionResultForAnalyzer = columnMapping.detectionResult
     ? {
@@ -54,7 +55,10 @@ export function AnalysisStep({
     columnMapping: columnMapping.finalMapping,
     detectionResult: detectionResultForAnalyzer,
     callbacks: {
-      onDuplicatesDetected,
+      onDuplicatesDetected: (duplicates) => {
+        setDuplicatesComplete(true);
+        onDuplicatesDetected(duplicates);
+      },
       onCategorizationsReady,
       onError: () => {},
       onComplete: () => {},
@@ -92,8 +96,7 @@ export function AnalysisStep({
       !isDetectingDuplicates &&
       !isCategorizing &&
       !errors.analysis &&
-      analyzedRows.categorizations.length > 0 &&
-      analyzedRows.duplicates.length === 0
+      analyzedRows.categorizations.length > 0
     ) {
       onComplete();
     }
@@ -118,6 +121,7 @@ export function AnalysisStep({
       <AnalysisSection
         isDetectingDuplicates={isDetectingDuplicates}
         isCategorizing={isCategorizing}
+        isDuplicatesComplete={duplicatesComplete}
         duplicateError={null}
         categorizeError={null}
         onRetryDuplicates={retryDuplicates}

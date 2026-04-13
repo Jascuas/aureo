@@ -29,12 +29,12 @@ export const ImportStepper = ({
 
   return (
     <div className="w-full py-4">
-      <div className="flex items-center justify-between">
+      <div className="flex w-full items-center">
         {STEPS.map((step, index) => {
           const isComplete = step.order < currentOrder;
           const isCurrent = step.key === currentStep;
           const isPending = step.order > currentOrder;
-          const isClickable = onStepClick && step.order < currentOrder;
+          const isClickable = !!(onStepClick && isComplete);
 
           return (
             <div key={step.key} className="flex flex-1 items-center">
@@ -49,7 +49,8 @@ export const ImportStepper = ({
                     isCurrent &&
                       "animate-pulse border-blue-500 bg-blue-500 text-white",
                     isPending && "border-gray-300 bg-white text-gray-400",
-                    isClickable && "cursor-pointer hover:border-blue-400",
+                    isClickable &&
+                      "cursor-pointer hover:border-blue-400 hover:bg-emerald-400",
                   )}
                   aria-label={`Step ${step.order}: ${step.label}`}
                   aria-current={isCurrent ? "step" : undefined}
@@ -62,7 +63,7 @@ export const ImportStepper = ({
                 </button>
                 <span
                   className={cn(
-                    "mt-2 text-xs font-medium",
+                    "mt-2 text-center text-xs font-medium",
                     (isComplete || isCurrent) && "text-foreground",
                     isPending && "text-muted-foreground",
                   )}
@@ -72,7 +73,7 @@ export const ImportStepper = ({
               </div>
 
               {index < STEPS.length - 1 && (
-                <div className="flex-1 px-2">
+                <div className="min-w-0 flex-1 px-2">
                   <div
                     className={cn(
                       "h-0.5 w-full transition-all",

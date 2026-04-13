@@ -8,6 +8,7 @@ import { AlertCircle, Loader2, X } from "lucide-react";
 type AnalysisSectionProps = {
   isDetectingDuplicates: boolean;
   isCategorizing: boolean;
+  isDuplicatesComplete?: boolean;
   duplicateError: string | null;
   categorizeError: string | null;
   onRetryDuplicates: () => void;
@@ -25,6 +26,7 @@ type AnalysisSectionProps = {
 export const AnalysisSection = ({
   isDetectingDuplicates,
   isCategorizing,
+  isDuplicatesComplete = false,
   duplicateError,
   categorizeError,
   onRetryDuplicates,
@@ -106,9 +108,11 @@ export const AnalysisSection = ({
               {isDetectingDuplicates && (
                 <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
               )}
-              {!isDetectingDuplicates && !duplicateError && (
-                <span className="text-xs text-emerald-500">✓ Complete</span>
-              )}
+              {isDuplicatesComplete &&
+                !isDetectingDuplicates &&
+                !duplicateError && (
+                  <span className="text-xs text-emerald-500">✓ Complete</span>
+                )}
             </div>
 
             {duplicateError && (
