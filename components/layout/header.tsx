@@ -5,7 +5,11 @@ import { Filters } from "@/components/filters/filters";
 import { HeaderLogo } from "@/components/layout/header-logo";
 import { Navigation } from "@/components/layout/navigation";
 
-export const Header = () => {
+type HeaderProps = {
+  showFilters?: boolean;
+};
+
+export const Header = ({ showFilters = true }: HeaderProps) => {
   return (
     <header className="dark:to-background bg-linear-to-b from-teal-700 to-teal-500 px-4 pt-4 pb-8 lg:px-14 lg:pb-32 dark:from-[hsl(210_60%_10%)]">
       <div className="mx-auto max-w-screen-2xl">
@@ -26,7 +30,7 @@ export const Header = () => {
           </div>
         </div>
 
-        <Filters />
+        {showFilters && <Filters />}
       </div>
     </header>
   );

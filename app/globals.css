@@ -30,6 +30,9 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
+  /* Brand tokens */
+  --color-brand-green: #10b981;
+
   /* Radius tokens */
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
