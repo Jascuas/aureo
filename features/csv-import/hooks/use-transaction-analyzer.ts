@@ -105,6 +105,7 @@ export function useTransactionAnalyzer({
       });
 
       setBatchProgress({ current: 1, total: 1, stage: "duplicates" });
+      setLoading("detectingDuplicates", false);
 
       if (abortController.signal.aborted) {
         callbacks.onError("Analysis cancelled by user");
@@ -186,7 +187,6 @@ export function useTransactionAnalyzer({
       }
     } finally {
       isAnalyzingRef.current = false;
-      setLoading("detectingDuplicates", false);
       setLoading("categorizing", false);
       setBatchProgress(null);
       abortControllerRef.current = null;

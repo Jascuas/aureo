@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
+import React, { useCallback } from "react";
+
+import { useConfirm } from "@/hooks/use-confirm";
 
 import {
   Card,
@@ -10,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
 import { useGetTemplates } from "@/features/csv-import/api/use-get-templates";
 import { AnalysisActions } from "@/features/csv-import/components/ai-import-actions/analysis-actions";
 import { MappingActions } from "@/features/csv-import/components/ai-import-actions/mapping-actions";
@@ -27,18 +30,23 @@ import { useTemplateAutoApply } from "@/features/csv-import/hooks/use-template-a
 import { useUnloadWarning } from "@/features/csv-import/hooks/use-unload-warning";
 import { validateColumnMapping } from "@/features/csv-import/lib/validators";
 import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
-import { IMPORT_STEPS } from "@/features/csv-import/types/import-types";
+import {
+  IMPORT_STEPS,
+  type ImportStep,
+} from "@/features/csv-import/types/import-types";
 
 type AiImportCardProps = {
   accountId?: string;
   onComplete?: () => void;
   onCancel?: () => void;
+  onImportAnother?: () => void;
 };
 
 export const AiImportCard = ({
   accountId,
   onComplete,
   onCancel,
+  onImportAnother,
 }: AiImportCardProps) => {
   const {
     currentStep,
@@ -64,7 +72,16 @@ export const AiImportCard = ({
   } = useDuplicateResolution();
 
   const { data: templatesResponse } = useGetTemplates(accountId);
+  const { data: accounts } = useGetAccounts();
+  const accountName = accountId
+    ? accounts?.find((a) => a.id === accountId)?.name
+    : undefined;
   const { loading, errors, setError } = useImportUIState();
+
+  const [ConfirmDialog, confirm] = useConfirm(
+    "Are you sure?",
+    "All progress will be lost.",
+  );
 
   const pendingDuplicatesCount = getPendingCount(analyzedRows.duplicates);
 
@@ -98,21 +115,19 @@ export const AiImportCard = ({
 
   useUnloadWarning(currentStep);
 
-  const handleCancel = useCallback(() => {
+  const handleCancel = useCallback(async () => {
     if (
       currentStep !== IMPORT_STEPS.UPLOAD &&
       currentStep !== IMPORT_STEPS.IMPORT
     ) {
-      const confirmed = window.confirm(
-        "Are you sure? All progress will be lost.",
-      );
+      const confirmed = await confirm();
       if (!confirmed) return;
     }
 
     reset();
     resetResolutions();
     onCancel?.();
-  }, [currentStep, reset, resetResolutions, onCancel]);
+  }, [currentStep, confirm, reset, resetResolutions, onCancel]);
 
   const handleMappingConfirm = useCallback(() => {
     const { isValid, error } = validateColumnMapping(
@@ -191,7 +206,11 @@ export const AiImportCard = ({
 
       case IMPORT_STEPS.IMPORT:
         return (
-          <ImportStepComponent accountId={accountId} onComplete={onComplete} />
+          <ImportStepComponent
+            accountId={accountId}
+            onComplete={onComplete}
+            onImportAnother={onImportAnother}
+          />
         );
 
       default:
@@ -252,10 +271,42 @@ export const AiImportCard = ({
     }
   };
 
+  const STEP_TITLES: Record<ImportStep, React.ReactNode> = {
+    [IMPORT_STEPS.UPLOAD]: (
+      <>
+        Uploading data to{" "}
+        <span className="text-brand-green">{accountName}</span>
+      </>
+    ),
+    [IMPORT_STEPS.MAPPING]: (
+      <>
+        Mapping columns for{" "}
+        <span className="text-brand-green">{accountName}</span>
+      </>
+    ),
+    [IMPORT_STEPS.ANALYSIS]: (
+      <>
+        Analyzing <span className="text-brand-green">{accountName}</span>{" "}
+        transactions
+      </>
+    ),
+    [IMPORT_STEPS.REVIEW]: (
+      <>
+        Reviewing <span className="text-brand-green">{accountName}</span> import
+      </>
+    ),
+    [IMPORT_STEPS.IMPORT]: (
+      <>
+        Importing data to{" "}
+        <span className="text-brand-green">{accountName}</span>
+      </>
+    ),
+  };
+
   return (
     <Card className="border-none drop-shadow-sm">
+      <ConfirmDialog />
       <CardHeader>
-        <CardTitle>AI-Powered CSV Import</CardTitle>
         <ImportStepper
           currentStep={currentStep}
           onStepClick={(step) => {
@@ -264,6 +315,7 @@ export const AiImportCard = ({
             }
           }}
         />
+        <CardTitle>{STEP_TITLES[currentStep]}</CardTitle>
       </CardHeader>
 
       <CardContent className="min-h-[400px]">{renderStepContent()}</CardContent>

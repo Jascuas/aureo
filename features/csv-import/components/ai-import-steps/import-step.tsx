@@ -9,9 +9,14 @@ import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
 interface ImportStepProps {
   accountId?: string;
   onComplete?: () => void;
+  onImportAnother?: () => void;
 }
 
-export function ImportStep({ accountId, onComplete }: ImportStepProps) {
+export function ImportStep({
+  accountId,
+  onComplete,
+  onImportAnother,
+}: ImportStepProps) {
   const { analyzedRows, importResult, setImportResult, reset } =
     useImportSession();
   const { resolutions } = useDuplicateResolution();
@@ -45,7 +50,7 @@ export function ImportStep({ accountId, onComplete }: ImportStepProps) {
       skippedCount={importResult.skippedCount}
       errorCount={importResult.errorCount}
       errors={importResult.errors}
-      onImportAnother={reset}
+      onImportAnother={onImportAnother ?? reset}
       onViewTransactions={() => {
         reset();
         onComplete?.();

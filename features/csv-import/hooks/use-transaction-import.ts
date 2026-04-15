@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useBulkImportTransactions } from "@/features/csv-import/api/use-bulk-import-transactions";
 import type { EnrichedCategorization } from "@/features/csv-import/hooks/use-import-session";
 
@@ -29,7 +29,23 @@ export function useTransactionImport({
 }: UseTransactionImportOptions): UseTransactionImportReturn {
   const bulkImportMutation = useBulkImportTransactions();
 
+  // Keep a stable ref to mutateAsync so it never appears in useCallback deps.
+  // React Query recreates the mutation object on every render; without this,
+  // importTransactions would get a new reference each render and the useEffect
+  // in ImportStep would re-fire on every render, causing an infinite loop.
+  const bulkImportMutateRef = useRef(bulkImportMutation.mutateAsync);
+  useEffect(() => {
+    bulkImportMutateRef.current = bulkImportMutation.mutateAsync;
+  });
+
+  // Guard against concurrent calls (e.g. StrictMode double-invoke or any
+  // residual effect re-fire before importResult is set).
+  const isImportingRef = useRef(false);
+
   const importTransactions = useCallback(async () => {
+    if (isImportingRef.current) return;
+    isImportingRef.current = true;
+
     if (!accountId) {
       setImportResult({
         importedCount: 0,
@@ -37,6 +53,7 @@ export function useTransactionImport({
         errorCount: categorizations.length,
         errors: [{ row: 0, message: "No account selected" }],
       });
+      isImportingRef.current = false;
       return;
     }
 
@@ -55,11 +72,12 @@ export function useTransactionImport({
         errorCount: categorizations.length,
         errors: [{ row: 0, message: "No transactions to import" }],
       });
+      isImportingRef.current = false;
       return;
     }
 
     try {
-      const result = await bulkImportMutation.mutateAsync({
+      const result = await bulkImportMutateRef.current({
         accountId,
         transactions: rowsToImport.map((cat) => ({
           date: cat.date,
@@ -91,15 +109,10 @@ export function useTransactionImport({
         errors: [{ row: 0, message: error?.message || "Import failed" }],
       });
       onComplete();
+    } finally {
+      isImportingRef.current = false;
     }
-  }, [
-    accountId,
-    categorizations,
-    resolutions,
-    bulkImportMutation,
-    setImportResult,
-    onComplete,
-  ]);
+  }, [accountId, categorizations, resolutions, setImportResult, onComplete]);
 
   return {
     importTransactions,

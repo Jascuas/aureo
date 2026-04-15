@@ -1,14 +1,17 @@
 "use client";
 
+import { AlertCircle, CheckCircle2, Clock, Loader2 } from "lucide-react";
+
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { AlertCircle, Loader2, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type AnalysisSectionProps = {
   isDetectingDuplicates: boolean;
   isCategorizing: boolean;
   isDuplicatesComplete?: boolean;
+  isCategorizationStarted: boolean;
   duplicateError: string | null;
   categorizeError: string | null;
   onRetryDuplicates: () => void;
@@ -21,181 +24,147 @@ type AnalysisSectionProps = {
     stage: "duplicates" | "categorization";
   } | null;
   onCancelAnalysis?: () => void;
+  simulatedProgress?: number;
+  totalTransactions?: number;
 };
 
 export const AnalysisSection = ({
   isDetectingDuplicates,
   isCategorizing,
   isDuplicatesComplete = false,
+  isCategorizationStarted,
   duplicateError,
   categorizeError,
   onRetryDuplicates,
   onRetryCategorize,
-  onSkipDuplicates,
-  onSkipCategorize,
   batchProgress,
-  onCancelAnalysis,
+  simulatedProgress,
+  totalTransactions,
 }: AnalysisSectionProps) => {
-  const isProcessing = isDetectingDuplicates || isCategorizing;
-
-  const getCurrentTask = () => {
+  const getDynamicTitle = () => {
     if (isDetectingDuplicates) return "Detecting duplicates...";
-    if (isCategorizing) return "Categorizing transactions...";
+    if (isCategorizing) return "Categorizing transactions with AI...";
     return "Analysis complete";
   };
 
+  const progressValue = (() => {
+    if (batchProgress != null) {
+      if (batchProgress.stage === "duplicates") {
+        return (
+          simulatedProgress ??
+          (batchProgress.current / batchProgress.total) * 100
+        );
+      }
+      return (batchProgress.current / batchProgress.total) * 100;
+    }
+    if (isDetectingDuplicates && simulatedProgress != null) {
+      return simulatedProgress;
+    }
+    return 100;
+  })();
+
+  const progressLabel = (() => {
+    if (
+      batchProgress?.stage === "categorization" &&
+      totalTransactions != null
+    ) {
+      const done = Math.min(batchProgress.current * 30, totalTransactions);
+      return `${done} of ${totalTransactions} transactions`;
+    }
+    return null;
+  })();
+
   return (
     <div className="space-y-6">
-      {/* Batch Progress UI */}
-      {batchProgress && (
-        <div className="border-border bg-muted/50 space-y-3 rounded-lg border p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Loader2 className="text-primary size-4 animate-spin" />
-              <span className="font-medium">
-                {batchProgress.stage === "duplicates"
-                  ? "Checking for duplicates..."
-                  : "Categorizing with AI..."}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-muted-foreground text-sm">
-                Batch {batchProgress.current} of {batchProgress.total}
-              </span>
-              {onCancelAnalysis && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onCancelAnalysis}
-                  className="h-8 px-3"
-                >
-                  <X className="mr-1 size-3" />
-                  Cancel
-                </Button>
-              )}
-            </div>
-          </div>
-          <Progress
-            value={(batchProgress.current / batchProgress.total) * 100}
-            className="h-2"
-          />
-        </div>
-      )}
+      {/* Row 1 — Dynamic Title */}
+      <h3 className="text-lg font-medium">{getDynamicTitle()}</h3>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">Analyzing Transactions</h3>
-          {isProcessing && (
-            <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+      {/* Row 2 — Progress Bar */}
+      <div className="space-y-1">
+        <Progress value={progressValue} className="h-2" />
+        {progressLabel != null ? (
+          <p className="text-muted-foreground text-xs">{progressLabel}</p>
+        ) : null}
+      </div>
+
+      {/* Row 3 — Two Cards */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Duplicate Detection Card */}
+        <div className="rounded-lg border p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Duplicate Detection</p>
+              <p className="text-muted-foreground text-xs">
+                Checking existing transactions
+              </p>
+            </div>
+            {isDetectingDuplicates && (
+              <Loader2 className="text-primary size-4 animate-spin" />
+            )}
+            {isDuplicatesComplete &&
+              !isDetectingDuplicates &&
+              !duplicateError && (
+                <CheckCircle2 className="size-4 text-emerald-500" />
+              )}
+            {duplicateError && (
+              <AlertCircle className="text-destructive size-4" />
+            )}
+          </div>
+
+          {duplicateError && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertCircle className="size-4" />
+              <AlertDescription className="flex items-center justify-between">
+                <span className="text-xs">{duplicateError}</span>
+                <Button size="sm" variant="outline" onClick={onRetryDuplicates}>
+                  Retry
+                </Button>
+              </AlertDescription>
+            </Alert>
           )}
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{getCurrentTask()}</span>
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-lg border p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Duplicate Detection</p>
-                <p className="text-muted-foreground text-xs">
-                  Checking existing transactions
-                </p>
-              </div>
-              {isDetectingDuplicates && (
-                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-              )}
-              {isDuplicatesComplete &&
-                !isDetectingDuplicates &&
-                !duplicateError && (
-                  <span className="text-xs text-emerald-500">✓ Complete</span>
-                )}
+        {/* AI Categorization Card */}
+        <div
+          className={cn(
+            "rounded-lg border p-4 transition-opacity duration-300",
+            !isCategorizationStarted && "opacity-50",
+          )}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">AI Categorization</p>
+              <p className="text-muted-foreground text-xs">
+                Suggesting categories
+              </p>
             </div>
-
-            {duplicateError && (
-              <Alert variant="destructive" className="mt-4">
-                <AlertCircle className="size-4" />
-                <AlertDescription className="flex items-center justify-between">
-                  <span className="text-xs">{duplicateError}</span>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={onRetryDuplicates}
-                    >
-                      Retry
-                    </Button>
-                    {onSkipDuplicates && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={onSkipDuplicates}
-                      >
-                        Skip
-                      </Button>
-                    )}
-                  </div>
-                </AlertDescription>
-              </Alert>
+            {!isCategorizationStarted && (
+              <Clock className="text-muted-foreground size-4" />
             )}
-          </div>
-
-          <div className="rounded-lg border p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">AI Categorization</p>
-                <p className="text-muted-foreground text-xs">
-                  Suggesting categories
-                </p>
-              </div>
-              {isCategorizing && (
-                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-              )}
-              {!isCategorizing && !categorizeError && (
-                <span className="text-xs text-emerald-500">✓ Complete</span>
-              )}
-            </div>
-
+            {isCategorizing && (
+              <Loader2 className="text-primary size-4 animate-spin" />
+            )}
+            {!isCategorizing && isCategorizationStarted && !categorizeError && (
+              <CheckCircle2 className="size-4 text-emerald-500" />
+            )}
             {categorizeError && (
-              <Alert variant="destructive" className="mt-4">
-                <AlertCircle className="size-4" />
-                <AlertDescription className="flex items-center justify-between">
-                  <span className="text-xs">{categorizeError}</span>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={onRetryCategorize}
-                    >
-                      Retry
-                    </Button>
-                    {onSkipCategorize && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={onSkipCategorize}
-                      >
-                        Skip
-                      </Button>
-                    )}
-                  </div>
-                </AlertDescription>
-              </Alert>
+              <AlertCircle className="text-destructive size-4" />
             )}
           </div>
+
+          {categorizeError && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertCircle className="size-4" />
+              <AlertDescription className="flex items-center justify-between">
+                <span className="text-xs">{categorizeError}</span>
+                <Button size="sm" variant="outline" onClick={onRetryCategorize}>
+                  Retry
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
       </div>
-
-      {!isProcessing && !duplicateError && !categorizeError && (
-        <Alert>
-          <AlertDescription className="text-sm">
-            Analysis complete! Review the transactions below before importing.
-          </AlertDescription>
-        </Alert>
-      )}
     </div>
   );
 };

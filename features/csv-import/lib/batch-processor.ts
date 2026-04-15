@@ -158,6 +158,10 @@ export async function processBatchesWithConcurrency<TInput, TOutput>(
 
       const result = await fn();
       chunkResults.push(result);
+      completed += 1;
+
+      // Notify progress after each individual batch
+      onProgress?.(completed, batchFunctions.length);
 
       // Check immediately if this batch hit rate limit
       if (!result.success && isRateLimitError(result.error)) {
@@ -166,10 +170,6 @@ export async function processBatchesWithConcurrency<TInput, TOutput>(
     }
 
     results.push(...chunkResults);
-    completed += chunkResults.length;
-
-    // Notify progress
-    onProgress?.(completed, batchFunctions.length);
   }
 
   return results;

@@ -1,7 +1,5 @@
 "use client";
 
-import { Check } from "lucide-react";
-
 import { cn } from "@/lib/utils";
 import {
   IMPORT_STEPS,
@@ -37,7 +35,13 @@ export const ImportStepper = ({
           const isClickable = !!(onStepClick && isComplete);
 
           return (
-            <div key={step.key} className="flex flex-1 items-center">
+            <div
+              key={step.key}
+              className={cn(
+                "flex items-center",
+                index < STEPS.length - 1 ? "flex-1" : "flex-none",
+              )}
+            >
               <div className="flex flex-col items-center">
                 <button
                   onClick={() => isClickable && onStepClick(step.key)}
@@ -45,31 +49,18 @@ export const ImportStepper = ({
                   className={cn(
                     "flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all",
                     isComplete &&
-                      "border-emerald-500 bg-emerald-500 text-white",
+                      "border-brand-green bg-brand-green text-white",
                     isCurrent &&
                       "animate-pulse border-blue-500 bg-blue-500 text-white",
                     isPending && "border-gray-300 bg-white text-gray-400",
                     isClickable &&
-                      "cursor-pointer hover:border-blue-400 hover:bg-emerald-400",
+                      "hover:bg-brand-green/80 cursor-pointer hover:border-blue-400",
                   )}
                   aria-label={`Step ${step.order}: ${step.label}`}
                   aria-current={isCurrent ? "step" : undefined}
                 >
-                  {isComplete ? (
-                    <Check className="h-5 w-5" />
-                  ) : (
-                    <span className="text-sm font-semibold">{step.order}</span>
-                  )}
+                  <span className="text-sm font-semibold">{step.order}</span>
                 </button>
-                <span
-                  className={cn(
-                    "mt-2 text-center text-xs font-medium",
-                    (isComplete || isCurrent) && "text-foreground",
-                    isPending && "text-muted-foreground",
-                  )}
-                >
-                  {step.label}
-                </span>
               </div>
 
               {index < STEPS.length - 1 && (
@@ -78,7 +69,7 @@ export const ImportStepper = ({
                     className={cn(
                       "h-0.5 w-full transition-all",
                       step.order < currentOrder
-                        ? "bg-emerald-500"
+                        ? "bg-brand-green"
                         : "bg-gray-300",
                     )}
                   />
