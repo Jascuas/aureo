@@ -2,8 +2,6 @@
 
 import React, { useCallback } from "react";
 
-import { useConfirm } from "@/hooks/use-confirm";
-
 import {
   Card,
   CardContent,
@@ -11,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
 import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
 import { useGetTemplates } from "@/features/csv-import/api/use-get-templates";
 import { AnalysisActions } from "@/features/csv-import/components/ai-import-actions/analysis-actions";
@@ -34,6 +31,7 @@ import {
   IMPORT_STEPS,
   type ImportStep,
 } from "@/features/csv-import/types/import-types";
+import { useConfirm } from "@/hooks/use-confirm";
 
 type AiImportCardProps = {
   accountId?: string;
@@ -318,7 +316,7 @@ export const AiImportCard = ({
         <CardTitle>{STEP_TITLES[currentStep]}</CardTitle>
       </CardHeader>
 
-      <CardContent className="min-h-[400px]">{renderStepContent()}</CardContent>
+      <CardContent className="min-h-100">{renderStepContent()}</CardContent>
 
       {renderStepActions() && (
         <CardFooter className="flex justify-end">

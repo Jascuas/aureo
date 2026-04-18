@@ -1,10 +1,10 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import {
   IMPORT_STEPS,
   type ImportStep,
 } from "@/features/csv-import/types/import-types";
+import { cn } from "@/lib/utils";
 
 type ImportStepperProps = {
   currentStep: ImportStep;
@@ -26,7 +26,7 @@ export const ImportStepper = ({
   const currentOrder = STEPS.find((s) => s.key === currentStep)?.order || 1;
 
   return (
-    <div className="w-full py-4">
+    <div className="w-full pb-4">
       <div className="flex w-full items-center">
         {STEPS.map((step, index) => {
           const isComplete = step.order < currentOrder;
@@ -51,10 +51,10 @@ export const ImportStepper = ({
                     isComplete &&
                       "border-brand-green bg-brand-green text-white",
                     isCurrent &&
-                      "animate-pulse border-blue-500 bg-blue-500 text-white",
+                      "border-brand-green bg-brand-green ring-brand-green/50 animate-pulse text-white ring-4",
                     isPending && "border-gray-300 bg-white text-gray-400",
                     isClickable &&
-                      "hover:bg-brand-green/80 cursor-pointer hover:border-blue-400",
+                      "hover:bg-brand-green/80 hover:border-brand-green cursor-pointer",
                   )}
                   aria-label={`Step ${step.order}: ${step.label}`}
                   aria-current={isCurrent ? "step" : undefined}
