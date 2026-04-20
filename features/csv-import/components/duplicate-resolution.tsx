@@ -12,9 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-import { useDuplicateResolution } from "@/features/csv-import/hooks/use-duplicate-resolution";
 import { DuplicateComparison } from "@/features/csv-import/components/duplicate-comparison";
+import { useDuplicateResolution } from "@/features/csv-import/hooks/use-duplicate-resolution";
 
 type DuplicateResolutionProps = {
   csvRows: Array<{

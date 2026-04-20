@@ -1,6 +1,7 @@
 ---
 description: Project Manager. Sprint management, task tracking, documentation updates. NEVER writes code. Receives hand-off from @aureo-dev, updates GitHub Issues/Projects and .opencode/docs/. Creates bug issues, closes completed issues, updates architecture/rules docs.
 mode: subagent
+model": github-copilot/gpt-4.1
 temperature: 0.1
 color: "#10b981"
 permission:

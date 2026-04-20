@@ -53,8 +53,7 @@ export const ImportStepper = ({
                     isCurrent &&
                       "border-brand-green bg-brand-green ring-brand-green/50 animate-pulse text-white ring-4",
                     isPending && "border-gray-300 bg-white text-gray-400",
-                    isClickable &&
-                      "hover:bg-brand-green/80 hover:border-brand-green cursor-pointer",
+                    isClickable && "hover:bg-brand-green/80 cursor-pointer",
                   )}
                   aria-label={`Step ${step.order}: ${step.label}`}
                   aria-current={isCurrent ? "step" : undefined}
@@ -64,7 +63,7 @@ export const ImportStepper = ({
               </div>
 
               {index < STEPS.length - 1 && (
-                <div className="min-w-0 flex-1 px-2">
+                <div className="min-w-0 flex-1">
                   <div
                     className={cn(
                       "h-0.5 w-full transition-all",

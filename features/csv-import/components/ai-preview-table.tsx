@@ -20,14 +20,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { CategorizationResult } from "@/features/csv-import/lib/transaction-categorizer";
-import type { DuplicateMatch } from "@/features/csv-import/lib/duplicate-matcher";
-import { formatCurrency } from "@/lib/utils";
-
 import { ConfidenceBadge } from "@/features/csv-import/components/confidence-badge";
 import { DuplicateIndicator } from "@/features/csv-import/components/duplicate-indicator";
 import { EditableCategoryCell } from "@/features/csv-import/components/editable-category-cell";
 import { useDuplicateResolution } from "@/features/csv-import/hooks/use-duplicate-resolution";
+import type { DuplicateMatch } from "@/features/csv-import/lib/duplicate-matcher";
+import type { CategorizationResult } from "@/features/csv-import/lib/transaction-categorizer";
+import { formatCurrency } from "@/lib/utils";
 
 type PreviewRow = {
   csvRowIndex: number;
@@ -69,7 +68,7 @@ export const AiPreviewTable = ({
       accessorKey: "payee",
       header: "Payee",
       cell: ({ row }) => (
-        <span className="max-w-[200px] truncate">{row.original.payee}</span>
+        <span className="max-w-50 truncate">{row.original.payee}</span>
       ),
     },
     {
