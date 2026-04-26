@@ -26,6 +26,7 @@ import { EditableCategoryCell } from "@/features/csv-import/components/editable-
 import { useDuplicateResolution } from "@/features/csv-import/hooks/use-duplicate-resolution";
 import type { DuplicateMatch } from "@/features/csv-import/lib/duplicate-matcher";
 import type { CategorizationResult } from "@/features/csv-import/lib/transaction-categorizer";
+import type { PayeeMatchResult } from "@/features/csv-import/lib/payee-category-matcher";
 import { formatCurrency } from "@/lib/utils";
 
 type PreviewRow = {
@@ -40,6 +41,7 @@ type PreviewRow = {
 
 type AiPreviewTableProps = {
   rows: PreviewRow[];
+  payeeMatches?: PayeeMatchResult[];
   onCategoryChange: (
     rowIndex: number,
     categoryId: string | null,
@@ -49,10 +51,21 @@ type AiPreviewTableProps = {
 
 export const AiPreviewTable = ({
   rows,
+  payeeMatches,
   onCategoryChange,
 }: AiPreviewTableProps) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const { openResolution, getResolution } = useDuplicateResolution();
+
+  const suggestionsByRowIndex = new Map(
+    (payeeMatches ?? []).map((pm) => [
+      pm.csvRowIndex,
+      pm.matches.map((m) => ({
+        categoryId: m.categoryId,
+        confidence: m.confidence,
+      })),
+    ]),
+  );
 
   const columns: ColumnDef<PreviewRow>[] = [
     {
@@ -96,6 +109,7 @@ export const AiPreviewTable = ({
         <EditableCategoryCell
           categoryId={row.original.categoryId}
           confidence={row.original.confidence}
+          suggestions={suggestionsByRowIndex.get(row.original.csvRowIndex)}
           onCategoryChange={(categoryId, categoryName) =>
             onCategoryChange(row.original.csvRowIndex, categoryId, categoryName)
           }

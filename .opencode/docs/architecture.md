@@ -119,7 +119,7 @@ PostgreSQL trigger `update_account_balance()` automatically maintains account ba
 - **Function:** `update_account_balance()`
 - **Events:** `AFTER INSERT OR UPDATE OR DELETE ON transactions`
 - **Behavior:**
-  - **Income/Refund:** Adds `amount` to account balance
+  - **Income:** Adds `amount` to account balance
   - **Expense:** Subtracts `amount` from account balance
   - **Case-Insensitive:** Uses `LOWER(transaction_type.name)` for comparison
   - **Handles:** Account transfers, transaction type changes, NULL balances, concurrent updates
@@ -179,12 +179,14 @@ export const CSV_IMPORT_CONFIG = {
 ```
 
 **Benefits:**
+
 - ✅ Single source of truth for magic numbers
 - ✅ Easy to adjust thresholds/limits
 - ✅ Self-documenting through naming
 - ✅ Type-safe with `as const`
 
 **When to use:**
+
 - Features with 5+ hardcoded constants
 - AI/ML features with tunable hyperparameters
 - Batch processing with size limits

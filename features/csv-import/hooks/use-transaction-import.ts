@@ -68,10 +68,11 @@ export function useTransactionImport({
     if (rowsToImport.length === 0) {
       setImportResult({
         importedCount: 0,
-        skippedCount: 0,
-        errorCount: categorizations.length,
-        errors: [{ row: 0, message: "No transactions to import" }],
+        skippedCount: categorizations.length,
+        errorCount: 0,
+        errors: [],
       });
+      onComplete();
       isImportingRef.current = false;
       return;
     }

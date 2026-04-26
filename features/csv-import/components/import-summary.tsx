@@ -1,10 +1,11 @@
 "use client";
 
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 
 type ImportSummaryProps = {
   importedCount: number;
@@ -34,8 +35,11 @@ export const ImportSummary = ({
             <DotLottieReact
               src="/sucess.lottie"
               autoplay
+              loop={true}
+              segment={[0, 58]}
               className="mb-4 h-32 w-32"
             />
+
             <h2 className="text-2xl font-bold text-emerald-600">
               Import Complete!
             </h2>
@@ -45,6 +49,7 @@ export const ImportSummary = ({
             <DotLottieReact
               src="/error.lottie"
               autoplay
+              loop={true}
               className="mb-4 h-32 w-32"
             />
             <h2 className="text-2xl font-bold text-rose-600">Import Failed</h2>

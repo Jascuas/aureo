@@ -5,14 +5,15 @@ type ImportUIState = {
   loading: {
     parsingCSV: boolean;
     detectingColumns: boolean;
-    detectingDuplicates: boolean;
+    analyzing: boolean;
     categorizing: boolean;
   };
 
   errors: {
     upload: string | null;
     detection: string | null;
-    analysis: string | null;
+    analyze: string | null;
+    categorize: string | null;
   };
 
   batchProgress: BatchProgress | null;
@@ -31,14 +32,15 @@ export const useImportUIState = create<ImportUIState>((set) => ({
   loading: {
     parsingCSV: false,
     detectingColumns: false,
-    detectingDuplicates: false,
+    analyzing: false,
     categorizing: false,
   },
 
   errors: {
     upload: null,
     detection: null,
-    analysis: null,
+    analyze: null,
+    categorize: null,
   },
 
   batchProgress: null,
@@ -54,7 +56,14 @@ export const useImportUIState = create<ImportUIState>((set) => ({
     })),
 
   clearErrors: () =>
-    set({ errors: { upload: null, detection: null, analysis: null } }),
+    set({
+      errors: {
+        upload: null,
+        detection: null,
+        analyze: null,
+        categorize: null,
+      },
+    }),
 
   setBatchProgress: (progress) => set({ batchProgress: progress }),
 
@@ -63,10 +72,15 @@ export const useImportUIState = create<ImportUIState>((set) => ({
       loading: {
         parsingCSV: false,
         detectingColumns: false,
-        detectingDuplicates: false,
+        analyzing: false,
         categorizing: false,
       },
-      errors: { upload: null, detection: null, analysis: null },
+      errors: {
+        upload: null,
+        detection: null,
+        analyze: null,
+        categorize: null,
+      },
       batchProgress: null,
     }),
 }));

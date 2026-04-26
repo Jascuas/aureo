@@ -56,6 +56,9 @@ export const AiImportCard = ({
     setFinalMapping,
     setDuplicates,
     setCategorizations,
+    setPayeeMatches,
+    setAutoResolved,
+    setAITransactions,
     nextStep,
     previousStep,
     goToStep,
@@ -187,6 +190,15 @@ export const AiImportCard = ({
             analyzedRows={analyzedRows}
             onDuplicatesDetected={setDuplicates}
             onCategorizationsReady={setCategorizations}
+            onAnalyzeComplete={({
+              autoResolved,
+              aiTransactions,
+              payeeMatches,
+            }) => {
+              setAutoResolved(autoResolved);
+              setAITransactions(aiTransactions);
+              setPayeeMatches(payeeMatches);
+            }}
             onComplete={nextStep}
           />
         );
@@ -196,6 +208,7 @@ export const AiImportCard = ({
           <ReviewStep
             duplicates={analyzedRows.duplicates}
             categorizations={analyzedRows.categorizations}
+            payeeMatches={analyzedRows.payeeMatches}
             pendingDuplicatesCount={pendingDuplicatesCount}
             onSkipAll={() => skipAllExact(analyzedRows.duplicates)}
             onCategoryChange={handleCategoryChange}
@@ -235,8 +248,8 @@ export const AiImportCard = ({
             onCancel={handleCancel}
             onBack={previousStep}
             onContinue={nextStep}
-            isAnalyzing={loading.detectingDuplicates || loading.categorizing}
-            hasError={!!errors.analysis}
+            isAnalyzing={loading.analyzing || loading.categorizing}
+            hasError={!!(errors.analyze || errors.categorize)}
             duplicatesCount={analyzedRows.duplicates.length}
           />
         );

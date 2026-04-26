@@ -5,8 +5,8 @@ import { Hono } from "hono";
 import { db } from "@/db/drizzle";
 import { accounts, transactions, transactionTypes } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
-import { convertAmountFromMilliunits } from "@/lib/utils";
 import type { AppEnv } from "@/lib/hono-env";
+import { convertAmountFromMilliunits } from "@/lib/utils";
 
 const app = new Hono<AppEnv>().get(
   "/verify-balances",
@@ -33,7 +33,7 @@ const app = new Hono<AppEnv>().get(
             calculatedBalance: sql<number>`
             COALESCE(SUM(
               CASE 
-                WHEN LOWER(${transactionTypes.name}) IN ('income', 'refund') THEN ${transactions.amount}
+                WHEN LOWER(${transactionTypes.name}) IN ('income') THEN ${transactions.amount}
                 WHEN LOWER(${transactionTypes.name}) = 'expense' THEN -${transactions.amount}
                 ELSE 0
               END

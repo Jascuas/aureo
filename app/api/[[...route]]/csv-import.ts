@@ -12,8 +12,10 @@ import {
   insertImportTemplateSchema,
   transactions,
 } from "@/db/schema";
+import { analyze } from "@/features/csv-import/lib/analyzer";
 import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
 import { detectDuplicates } from "@/features/csv-import/lib/duplicate-matcher";
+import { matchPayeesToCategories } from "@/features/csv-import/lib/payee-category-matcher";
 import { categorizeTransactions } from "@/features/csv-import/lib/transaction-categorizer";
 import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
@@ -31,6 +33,25 @@ const transactionInputSchema = z.object({
   payee: z.string().min(1),
 });
 
+const analyzeTransactionSchema = z.object({
+  csvRowIndex: z.number().int().min(0),
+  date: z.string(),
+  amount: z.number().int(),
+  payee: z.string().min(1),
+  description: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+const analyzeSchema = z.object({
+  transactions: z
+    .array(analyzeTransactionSchema)
+    .min(1, "At least one transaction required")
+    .max(
+      CSV_IMPORT_CONFIG.BATCH_LIMITS.DUPLICATE_CHECK,
+      `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.DUPLICATE_CHECK} transactions per batch`,
+    ),
+});
+
 const detectDuplicatesSchema = z.object({
   transactions: z
     .array(transactionInputSchema)
@@ -41,6 +62,20 @@ const detectDuplicatesSchema = z.object({
     ),
 });
 
+const payeeCategoryMatchSchema = z.object({
+  csvRowIndex: z.number().int().min(0),
+  matches: z.array(
+    z.object({
+      categoryId: z.string(),
+      transactionTypeId: z.string(),
+      matchCount: z.number().int(),
+      totalMatches: z.number().int(),
+      confidence: z.number(),
+      matchType: z.enum(["exact", "fuzzy"]),
+    }),
+  ),
+});
+
 const categorizeTransactionSchema = z.object({
   csvRowIndex: z.number().int().min(0),
   date: z.string(), // ISO date string
@@ -48,6 +83,15 @@ const categorizeTransactionSchema = z.object({
   payee: z.string().min(1),
   description: z.string().optional(),
   notes: z.string().optional(),
+  historicalHint: z
+    .object({
+      categoryId: z.string(),
+      transactionTypeId: z.string(),
+      confidence: z.number(),
+      matchCount: z.number().int(),
+      matchType: z.enum(["exact", "fuzzy"]),
+    })
+    .optional(),
 });
 
 const categorizeTransactionsSchema = z.object({
@@ -57,6 +101,21 @@ const categorizeTransactionsSchema = z.object({
     .max(
       CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION,
       `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION} transactions per batch`,
+    ),
+});
+
+const matchPayeesSchema = z.object({
+  transactions: z
+    .array(
+      z.object({
+        csvRowIndex: z.number().int().min(0),
+        payee: z.string().min(1),
+      }),
+    )
+    .min(1, "At least one transaction required")
+    .max(
+      CSV_IMPORT_CONFIG.BATCH_LIMITS.PAYEE_MATCH,
+      `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.PAYEE_MATCH} transactions per batch`,
     ),
 });
 
@@ -79,6 +138,54 @@ const updateTemplateSchema = insertImportTemplateSchema.partial().omit({
 // ============================================================================
 
 const app = new Hono<AppEnv>()
+  .post(
+    "/analyze",
+    clerkMiddleware(),
+    requireAuth,
+    zValidator("json", analyzeSchema),
+    async (c) => {
+      const userId = c.var.userId;
+      const { transactions } = c.req.valid("json");
+
+      try {
+        const result = await analyze(userId, transactions);
+
+        return c.json({
+          data: {
+            duplicates: result.duplicates.map((dup) => ({
+              csvIndex: dup.csvIndex,
+              existingTransaction: {
+                id: dup.existingTransaction.id,
+                date: dup.existingTransaction.date.toISOString().split("T")[0],
+                amount: dup.existingTransaction.amount,
+                payee: dup.existingTransaction.payee,
+                accountId: dup.existingTransaction.accountId,
+              },
+              matchType: dup.matchType,
+              score: Math.round(dup.score * 100) / 100,
+            })),
+            duplicateSummary: result.duplicateSummary,
+            payeeMatches: result.payeeMatches.map((r) => ({
+              csvRowIndex: r.csvRowIndex,
+              matches: r.matches.map((m) => ({
+                categoryId: m.categoryId,
+                transactionTypeId: m.transactionTypeId,
+                matchCount: m.matchCount,
+                totalMatches: m.totalMatches,
+                confidence: Math.round(m.confidence * 100) / 100,
+                matchType: m.matchType,
+              })),
+            })),
+            autoResolved: result.autoResolved,
+            aiTransactions: result.aiTransactions,
+          },
+        });
+      } catch (error) {
+        console.error("Analyze error:", error);
+        return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
+      }
+    },
+  )
   .post(
     "/detect-duplicates",
     clerkMiddleware(),
@@ -163,6 +270,40 @@ const app = new Hono<AppEnv>()
           );
         }
 
+        return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
+      }
+    },
+  )
+  .post(
+    "/match-payees",
+    clerkMiddleware(),
+    requireAuth,
+    zValidator("json", matchPayeesSchema),
+    async (c) => {
+      const userId = c.var.userId;
+      const { transactions } = c.req.valid("json");
+
+      try {
+        const result = await matchPayeesToCategories(userId, transactions);
+
+        return c.json({
+          data: {
+            results: result.results.map((r) => ({
+              csvRowIndex: r.csvRowIndex,
+              matches: r.matches.map((m) => ({
+                categoryId: m.categoryId,
+                transactionTypeId: m.transactionTypeId,
+                matchCount: m.matchCount,
+                totalMatches: m.totalMatches,
+                confidence: Math.round(m.confidence * 100) / 100,
+                matchType: m.matchType,
+              })),
+            })),
+            summary: result.summary,
+          },
+        });
+      } catch (error) {
+        console.error("Payee matching error:", error);
         return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
       }
     },

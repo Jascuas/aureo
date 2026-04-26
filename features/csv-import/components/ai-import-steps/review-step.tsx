@@ -2,10 +2,12 @@ import { AiPreviewTable } from "@/features/csv-import/components/ai-preview-tabl
 import { DuplicateResolution } from "@/features/csv-import/components/duplicate-resolution";
 import type { EnrichedCategorization } from "@/features/csv-import/hooks/use-import-session";
 import type { DuplicateMatch } from "@/features/csv-import/lib/duplicate-matcher";
+import type { PayeeMatchResult } from "@/features/csv-import/lib/payee-category-matcher";
 
 interface ReviewStepProps {
   duplicates: DuplicateMatch[];
   categorizations: EnrichedCategorization[];
+  payeeMatches: PayeeMatchResult[];
   pendingDuplicatesCount: number;
   onSkipAll: () => void;
   onCategoryChange: (
@@ -18,6 +20,7 @@ interface ReviewStepProps {
 export function ReviewStep({
   duplicates,
   categorizations,
+  payeeMatches,
   pendingDuplicatesCount,
   onSkipAll,
   onCategoryChange,
@@ -51,6 +54,7 @@ export function ReviewStep({
             duplicate: duplicate || null,
           };
         })}
+        payeeMatches={payeeMatches}
         onCategoryChange={onCategoryChange}
       />
     </>

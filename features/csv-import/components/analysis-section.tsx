@@ -6,61 +6,45 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import type { BatchProgress } from "@/features/csv-import/types/import-types";
 
 type AnalysisSectionProps = {
-  isDetectingDuplicates: boolean;
+  isAnalyzing: boolean;
   isCategorizing: boolean;
-  isDuplicatesComplete?: boolean;
+  isAnalyzeComplete: boolean;
   isCategorizationStarted: boolean;
-  duplicateError: string | null;
+  analyzeError: string | null;
   categorizeError: string | null;
-  onRetryDuplicates: () => void;
+  onRetryAnalyze: () => void;
   onRetryCategorize: () => void;
-  onSkipDuplicates?: () => void;
-  onSkipCategorize?: () => void;
-  batchProgress?: {
-    current: number;
-    total: number;
-    stage: "duplicates" | "categorization";
-  } | null;
   onCancelAnalysis?: () => void;
-  simulatedProgress?: number;
+  batchProgress?: BatchProgress | null;
   totalTransactions?: number;
 };
 
 export const AnalysisSection = ({
-  isDetectingDuplicates,
+  isAnalyzing,
   isCategorizing,
-  isDuplicatesComplete = false,
+  isAnalyzeComplete,
   isCategorizationStarted,
-  duplicateError,
+  analyzeError,
   categorizeError,
-  onRetryDuplicates,
+  onRetryAnalyze,
   onRetryCategorize,
   batchProgress,
-  simulatedProgress,
   totalTransactions,
 }: AnalysisSectionProps) => {
   const getDynamicTitle = () => {
-    if (isDetectingDuplicates) return "Detecting duplicates...";
+    if (isAnalyzing) return "Analyzing transactions...";
     if (isCategorizing) return "Categorizing transactions with AI...";
     return "Analysis complete";
   };
 
   const progressValue = (() => {
-    if (batchProgress != null) {
-      if (batchProgress.stage === "duplicates") {
-        return (
-          simulatedProgress ??
-          (batchProgress.current / batchProgress.total) * 100
-        );
-      }
-      return (batchProgress.current / batchProgress.total) * 100;
-    }
-    if (isDetectingDuplicates && simulatedProgress != null) {
-      return simulatedProgress;
-    }
-    return 100;
+    if (!batchProgress) return isAnalyzeComplete && !isCategorizing ? 100 : 0;
+    if (batchProgress.stage === "analyzing")
+      return (batchProgress.current / batchProgress.total) * 50;
+    return 50 + (batchProgress.current / batchProgress.total) * 50;
   })();
 
   const progressLabel = (() => {
@@ -76,10 +60,10 @@ export const AnalysisSection = ({
 
   return (
     <div className="space-y-6">
-      {/* Row 1 — Dynamic Title */}
+      {/* Title */}
       <h3 className="text-lg font-medium">{getDynamicTitle()}</h3>
 
-      {/* Row 2 — Progress Bar */}
+      {/* Progress Bar */}
       <div className="space-y-1">
         <Progress value={progressValue} className="h-2" />
         {progressLabel != null ? (
@@ -87,36 +71,34 @@ export const AnalysisSection = ({
         ) : null}
       </div>
 
-      {/* Row 3 — Two Cards */}
+      {/* Two Cards */}
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Duplicate Detection Card */}
+        {/* Phase 1 — Analysis Card */}
         <div className="rounded-lg border p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Duplicate Detection</p>
+              <p className="text-sm font-medium">Analysis</p>
               <p className="text-muted-foreground text-xs">
-                Checking existing transactions
+                Duplicate detection &amp; payee matching
               </p>
             </div>
-            {isDetectingDuplicates && (
+            {isAnalyzing && (
               <Loader2 className="text-primary size-4 animate-spin" />
             )}
-            {isDuplicatesComplete &&
-              !isDetectingDuplicates &&
-              !duplicateError && (
-                <CheckCircle2 className="size-4 text-emerald-500" />
-              )}
-            {duplicateError && (
+            {isAnalyzeComplete && !isAnalyzing && !analyzeError && (
+              <CheckCircle2 className="size-4 text-emerald-500" />
+            )}
+            {analyzeError && (
               <AlertCircle className="text-destructive size-4" />
             )}
           </div>
 
-          {duplicateError && (
+          {analyzeError && (
             <Alert variant="destructive" className="mt-4">
               <AlertCircle className="size-4" />
               <AlertDescription className="flex items-center justify-between">
-                <span className="text-xs">{duplicateError}</span>
-                <Button size="sm" variant="outline" onClick={onRetryDuplicates}>
+                <span className="text-xs">{analyzeError}</span>
+                <Button size="sm" variant="outline" onClick={onRetryAnalyze}>
                   Retry
                 </Button>
               </AlertDescription>
@@ -124,7 +106,7 @@ export const AnalysisSection = ({
           )}
         </div>
 
-        {/* AI Categorization Card */}
+        {/* Phase 2 — AI Categorization Card */}
         <div
           className={cn(
             "rounded-lg border p-4 transition-opacity duration-300",
@@ -138,7 +120,7 @@ export const AnalysisSection = ({
                 Suggesting categories
               </p>
             </div>
-            {!isCategorizationStarted && (
+            {!isCategorizationStarted && !categorizeError && (
               <Clock className="text-muted-foreground size-4" />
             )}
             {isCategorizing && (

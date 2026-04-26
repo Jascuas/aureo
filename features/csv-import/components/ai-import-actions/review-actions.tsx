@@ -13,17 +13,17 @@ export function ReviewActions({
   transactionsToImport,
   hasUnresolvedDuplicates,
 }: ReviewActionsProps) {
+  const allSkipped = transactionsToImport === 0;
+
   return (
     <div className="flex gap-2">
       <Button variant="outline" onClick={onCancel}>
         Cancel
       </Button>
-      <Button
-        onClick={onImport}
-        disabled={transactionsToImport === 0 || hasUnresolvedDuplicates}
-      >
-        Import {transactionsToImport}{" "}
-        {transactionsToImport === 1 ? "Transaction" : "Transactions"}
+      <Button onClick={onImport} disabled={hasUnresolvedDuplicates}>
+        {allSkipped
+          ? "Finish"
+          : `Import ${transactionsToImport} ${transactionsToImport === 1 ? "Transaction" : "Transactions"}`}
       </Button>
     </div>
   );

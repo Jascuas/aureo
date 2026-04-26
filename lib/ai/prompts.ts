@@ -194,8 +194,25 @@ export function createCategorizationPrompt(params: {
     categoryId: string;
     categoryName: string;
   }>;
+  historicalHints?: Array<{
+    csvRowIndex: number;
+    topCategoryId: string;
+    confidence: number;
+    matchCount: number;
+    matchType: "exact" | "fuzzy";
+  }>;
 }): string {
-  const { transactions, availableCategories, fewShotExamples } = params;
+  const {
+    transactions,
+    availableCategories,
+    fewShotExamples,
+    historicalHints,
+  } = params;
+
+  // Build a lookup for hints by csvRowIndex
+  const hintsMap = new Map(
+    (historicalHints ?? []).map((h) => [h.csvRowIndex, h]),
+  );
 
   let prompt = `Categorize these transactions:\n\n`;
 
@@ -222,6 +239,12 @@ export function createCategorizationPrompt(params: {
     prompt += `${tx.csvRowIndex}. Payee: "${tx.payee}"`;
     if (tx.description) prompt += `, Description: "${tx.description}"`;
     if (tx.notes) prompt += `, Notes: "${tx.notes}"`;
+
+    const hint = hintsMap.get(tx.csvRowIndex);
+    if (hint) {
+      prompt += ` [Historical hint: category "${hint.topCategoryId}" seen in ${hint.matchCount} past transactions (${Math.round(hint.confidence * 100)}% of matches, ${hint.matchType} match) — strongly consider this]`;
+    }
+
     prompt += `\n`;
   });
 

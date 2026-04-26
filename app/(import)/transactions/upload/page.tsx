@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { AiImportCard } from "@/features/csv-import/components/ai-import-card";
 import { useSelectAccount } from "@/features/accounts/hooks/use-select-account";
+import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
 import { toast } from "sonner";
 
 const UploadPage = () => {
@@ -11,6 +12,7 @@ const UploadPage = () => {
   const searchParams = useSearchParams();
   const accountId = searchParams.get("accountId") || undefined;
   const [AccountDialog, confirm] = useSelectAccount();
+  const { reset } = useImportSession();
 
   const handleComplete = () => {
     router.push("/transactions");
@@ -26,6 +28,7 @@ const UploadPage = () => {
       toast.error("Please select an account to continue.");
       return;
     }
+    reset();
     router.push(`/transactions/upload?accountId=${selectedAccountId}`);
   };
 

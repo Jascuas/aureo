@@ -1,21 +1,26 @@
 import { useCallback, useRef, useEffect } from "react";
-import { useDetectDuplicates } from "@/features/csv-import/api/use-detect-duplicates";
+import { useAnalyze } from "@/features/csv-import/api/use-analyze";
 import { useCategorizeTransactions } from "@/features/csv-import/api/use-categorize-transactions";
 import {
   processBatchesWithConcurrency,
   partitionBatchResults,
 } from "@/features/csv-import/lib/batch-processor";
-import {
-  prepareTransactionsForAnalysis,
-  transformDuplicates,
-} from "@/features/csv-import/lib/transaction-mapper";
+import { prepareTransactionsForAnalysis } from "@/features/csv-import/lib/transaction-mapper";
 import { enrichCategorizations } from "@/features/csv-import/lib/transaction-enricher";
 import { isRateLimitError } from "@/lib/errors";
 import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
+import { transformDuplicates } from "@/features/csv-import/lib/transaction-mapper";
+import type { AITransaction } from "@/features/csv-import/lib/analyzer";
+import type { EnrichedCategorization } from "@/features/csv-import/types/import-types";
 
 interface AnalyzeCallbacks {
   onDuplicatesDetected: (duplicates: any[]) => void;
-  onCategorizationsReady: (categorizations: any[]) => void;
+  onAnalyzeComplete: (opts: {
+    autoResolved: any[];
+    aiTransactions: AITransaction[];
+    payeeMatches: any[];
+  }) => void;
+  onCategorizationsReady: (categorizations: EnrichedCategorization[]) => void;
   onError: (error: string) => void;
   onComplete: () => void;
 }
@@ -41,19 +46,13 @@ export function useTransactionAnalyzer({
 }: UseTransactionAnalyzerOptions): UseTransactionAnalyzerReturn {
   const abortControllerRef = useRef<AbortController | null>(null);
   const isAnalyzingRef = useRef(false);
-  const detectDuplicatesMutation = useDetectDuplicates();
+  const analyzeMutation = useAnalyze();
   const categorizeMutation = useCategorizeTransactions();
 
-  // Keep stable refs to the mutation functions so they don't need to be in
-  // the useCallback dependency array — React Query recreates mutation objects
-  // on every render, which would otherwise cause analyze() to be a new
-  // function reference each render and re-trigger the analysis effect.
-  const detectDuplicatesMutateRef = useRef(
-    detectDuplicatesMutation.mutateAsync,
-  );
+  const analyzeMutateRef = useRef(analyzeMutation.mutateAsync);
   const categorizeMutateRef = useRef(categorizeMutation.mutateAsync);
   useEffect(() => {
-    detectDuplicatesMutateRef.current = detectDuplicatesMutation.mutateAsync;
+    analyzeMutateRef.current = analyzeMutation.mutateAsync;
   });
   useEffect(() => {
     categorizeMutateRef.current = categorizeMutation.mutateAsync;
@@ -63,22 +62,21 @@ export function useTransactionAnalyzer({
     useImportUIState();
 
   const analyze = useCallback(async () => {
-    // Guard: prevent concurrent duplicate calls
     if (isAnalyzingRef.current) return;
     if (!csvData || !columnMapping) {
       callbacks.onError("Missing CSV data or column mapping");
       return;
     }
 
-    setError("analysis", null);
-    setLoading("detectingDuplicates", true);
+    setError("analyze", null);
+    setError("categorize", null);
+    setLoading("analyzing", true);
     setLoading("categorizing", true);
     isAnalyzingRef.current = true;
 
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
-    const mapping = columnMapping;
     const amountFormat = detectionResult?.amountFormat || {
       decimalSeparator: "," as const,
       thousandsSeparator: "." as const,
@@ -88,40 +86,61 @@ export function useTransactionAnalyzer({
 
     const transactionsForAnalysis = prepareTransactionsForAnalysis(
       csvData.rows,
-      mapping,
+      columnMapping,
       dateFormat,
       amountFormat,
     );
 
     try {
-      setBatchProgress({ current: 0, total: 1, stage: "duplicates" });
+      // ── Phase 1: /analyze ─────────────────────────────────────────────────
+      setBatchProgress({ current: 0, total: 1, stage: "analyzing" });
 
-      const duplicateResult = await detectDuplicatesMutateRef.current({
-        transactions: transactionsForAnalysis.map((t) => ({
-          date: t.date,
-          amount: t.amount,
-          payee: t.payee,
-        })),
+      const analyzeResult = await analyzeMutateRef.current({
+        transactions: transactionsForAnalysis,
       });
 
-      setBatchProgress({ current: 1, total: 1, stage: "duplicates" });
-      setLoading("detectingDuplicates", false);
+      setBatchProgress({ current: 1, total: 1, stage: "analyzing" });
+      setLoading("analyzing", false);
 
       if (abortController.signal.aborted) {
         callbacks.onError("Analysis cancelled by user");
         return;
       }
 
-      const allDuplicates =
-        "data" in duplicateResult ? duplicateResult.data.duplicates : [];
+      if (!("data" in analyzeResult)) {
+        throw new Error("Invalid analyze response");
+      }
 
-      const transformedDuplicates = transformDuplicates(allDuplicates);
+      const { duplicates, autoResolved, aiTransactions, payeeMatches } =
+        analyzeResult.data;
 
+      const transformedDuplicates = transformDuplicates(duplicates);
       callbacks.onDuplicatesDetected(transformedDuplicates);
+      callbacks.onAnalyzeComplete({
+        autoResolved,
+        aiTransactions,
+        payeeMatches,
+      });
 
-      const categorizeBatchCount = Math.ceil(
-        transactionsForAnalysis.length / 30,
-      );
+      // ── Phase 2: /categorize (only AI transactions) ───────────────────────
+      if (aiTransactions.length === 0) {
+        // All auto-resolved — build enriched from autoResolved + original data
+        const enriched = enrichCategorizations(
+          autoResolved.map((r: any) => ({
+            csvRowIndex: r.csvRowIndex,
+            categoryId: r.categoryId,
+            transactionTypeId: r.transactionTypeId,
+            confidence: r.confidence,
+            normalizedPayee: r.normalizedPayee,
+          })),
+          transactionsForAnalysis,
+        );
+        callbacks.onCategorizationsReady(enriched);
+        callbacks.onComplete();
+        return;
+      }
+
+      const categorizeBatchCount = Math.ceil(aiTransactions.length / 30);
       setBatchProgress({
         current: 0,
         total: categorizeBatchCount,
@@ -129,7 +148,7 @@ export function useTransactionAnalyzer({
       });
 
       const categorizeResults = await processBatchesWithConcurrency(
-        transactionsForAnalysis,
+        aiTransactions,
         30,
         (batch) => categorizeMutateRef.current({ transactions: batch }),
         {
@@ -153,31 +172,38 @@ export function useTransactionAnalyzer({
 
         if (rateLimitError && isRateLimitError(rateLimitError.error)) {
           setError(
-            "analysis",
+            "categorize",
             `⚠️ API Rate Limit Exceeded: ${rateLimitError.error.message}\n\n` +
-              `Processing stopped to avoid further errors. ` +
-              `Please wait ${rateLimitError.error.retryAfter || 60} seconds before retrying.`,
+              `Processing stopped. Please wait ${rateLimitError.error.retryAfter || 60} seconds before retrying.`,
           );
         } else {
           setError(
-            "analysis",
+            "categorize",
             `${failedCategorizations.length} categorization batch(es) failed. Cannot proceed with incomplete data.`,
           );
         }
         return;
       }
 
-      const allCategorizations = successfulCategorizations.flatMap((r) => {
+      const aiCategorizations = successfulCategorizations.flatMap((r) => {
         if (!("data" in r.data)) return [];
         return r.data.data.results;
       });
 
-      const enrichedCategorizations = enrichCategorizations(
-        allCategorizations,
-        transactionsForAnalysis,
-      );
+      // Merge autoResolved + AI results, enrich, sort
+      const allRaw = [
+        ...autoResolved.map((r: any) => ({
+          csvRowIndex: r.csvRowIndex,
+          categoryId: r.categoryId,
+          transactionTypeId: r.transactionTypeId,
+          confidence: r.confidence,
+          normalizedPayee: r.normalizedPayee,
+        })),
+        ...aiCategorizations,
+      ];
 
-      callbacks.onCategorizationsReady(enrichedCategorizations);
+      const enriched = enrichCategorizations(allRaw, transactionsForAnalysis);
+      callbacks.onCategorizationsReady(enriched);
       callbacks.onComplete();
     } catch (error: any) {
       if (error.message === "Cancelled") {
@@ -187,6 +213,7 @@ export function useTransactionAnalyzer({
       }
     } finally {
       isAnalyzingRef.current = false;
+      setLoading("analyzing", false);
       setLoading("categorizing", false);
       setBatchProgress(null);
       abortControllerRef.current = null;
@@ -203,15 +230,15 @@ export function useTransactionAnalyzer({
 
   const cancel = useCallback(() => {
     abortControllerRef.current?.abort();
-    setError("analysis", "Analysis cancelled by user");
+    setError("analyze", "Analysis cancelled by user");
     setBatchProgress(null);
-    setLoading("detectingDuplicates", false);
+    setLoading("analyzing", false);
     setLoading("categorizing", false);
   }, [setError, setBatchProgress, setLoading]);
 
   return {
     analyze,
     cancel,
-    isAnalyzing: loading.detectingDuplicates || loading.categorizing,
+    isAnalyzing: loading.analyzing || loading.categorizing,
   };
 }

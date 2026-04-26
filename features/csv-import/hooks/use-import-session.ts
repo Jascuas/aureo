@@ -9,8 +9,18 @@ import type {
 } from "@/features/csv-import/types/import-types";
 import { IMPORT_STEPS } from "@/features/csv-import/types/import-types";
 import type { DuplicateMatch } from "@/features/csv-import/lib/duplicate-matcher";
+import type { PayeeMatchResult } from "@/features/csv-import/lib/payee-category-matcher";
+import type { AITransaction } from "@/features/csv-import/lib/analyzer";
 
 export type { EnrichedCategorization };
+
+type AutoResolved = {
+  csvRowIndex: number;
+  categoryId: string;
+  transactionTypeId: string;
+  confidence: number;
+  normalizedPayee: string;
+};
 
 type ImportSessionState = {
   currentStep: ImportStep;
@@ -30,6 +40,11 @@ type ImportSessionState = {
   analyzedRows: {
     duplicates: DuplicateMatch[];
     categorizations: EnrichedCategorization[];
+    // Legacy — kept for review step suggestions UI
+    payeeMatches: PayeeMatchResult[];
+    // New — from /analyze endpoint
+    autoResolved: AutoResolved[];
+    aiTransactions: AITransaction[];
   };
 
   importResult: {
@@ -50,6 +65,9 @@ type ImportSessionState = {
 
   setDuplicates: (duplicates: DuplicateMatch[]) => void;
   setCategorizations: (categorizations: EnrichedCategorization[]) => void;
+  setPayeeMatches: (payeeMatches: PayeeMatchResult[]) => void;
+  setAutoResolved: (autoResolved: AutoResolved[]) => void;
+  setAITransactions: (aiTransactions: AITransaction[]) => void;
   setImportResult: (result: ImportSessionState["importResult"]) => void;
 
   nextStep: () => void;
@@ -77,6 +95,9 @@ const initialState = {
   analyzedRows: {
     duplicates: [],
     categorizations: [],
+    payeeMatches: [],
+    autoResolved: [],
+    aiTransactions: [],
   },
   importResult: null,
 };
@@ -134,6 +155,33 @@ export const useImportSession = create<ImportSessionState>()(
           analyzedRows: {
             ...state.analyzedRows,
             categorizations,
+          },
+        }));
+      },
+
+      setPayeeMatches: (payeeMatches) => {
+        set((state) => ({
+          analyzedRows: {
+            ...state.analyzedRows,
+            payeeMatches,
+          },
+        }));
+      },
+
+      setAutoResolved: (autoResolved) => {
+        set((state) => ({
+          analyzedRows: {
+            ...state.analyzedRows,
+            autoResolved,
+          },
+        }));
+      },
+
+      setAITransactions: (aiTransactions) => {
+        set((state) => ({
+          analyzedRows: {
+            ...state.analyzedRows,
+            aiTransactions,
           },
         }));
       },

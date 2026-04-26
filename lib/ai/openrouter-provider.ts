@@ -176,6 +176,13 @@ export class OpenRouterProvider implements AIProvider {
       categoryId: string;
       categoryName: string;
     }>;
+    historicalHints?: Array<{
+      csvRowIndex: number;
+      topCategoryId: string;
+      confidence: number;
+      matchCount: number;
+      matchType: "exact" | "fuzzy";
+    }>;
   }): Promise<CategorizationResult[]> {
     const systemPrompt = CATEGORIZATION_SYSTEM_PROMPT;
     const userPrompt = createCategorizationPrompt(params);

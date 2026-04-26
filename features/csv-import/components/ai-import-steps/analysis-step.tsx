@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { AnalysisSection } from "@/features/csv-import/components/analysis-section";
 import { useCategorizeRetry } from "@/features/csv-import/hooks/use-categorize-retry";
-import { useDuplicateRetry } from "@/features/csv-import/hooks/use-duplicate-retry";
+import { useAnalyzeRetry } from "@/features/csv-import/hooks/use-analyze-retry";
 import { useTransactionAnalyzer } from "@/features/csv-import/hooks/use-transaction-analyzer";
 import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
 import type {
@@ -11,6 +11,7 @@ import type {
   DateFormat,
   ParsedCSVRow,
 } from "@/features/csv-import/types/import-types";
+import type { AITransaction } from "@/features/csv-import/lib/analyzer";
 
 interface AnalysisStepProps {
   csvData: { fileName: string; headers: string[]; rows: ParsedCSVRow[] } | null;
@@ -24,6 +25,11 @@ interface AnalysisStepProps {
   };
   onDuplicatesDetected: (duplicates: any[]) => void;
   onCategorizationsReady: (categorizations: any[]) => void;
+  onAnalyzeComplete: (opts: {
+    autoResolved: any[];
+    aiTransactions: AITransaction[];
+    payeeMatches: any[];
+  }) => void;
   onComplete: () => void;
 }
 
@@ -33,16 +39,13 @@ export function AnalysisStep({
   analyzedRows,
   onDuplicatesDetected,
   onCategorizationsReady,
+  onAnalyzeComplete,
   onComplete,
 }: AnalysisStepProps) {
   const { loading, errors, batchProgress } = useImportUIState();
   const hasStartedRef = useRef(false);
-  const [duplicatesComplete, setDuplicatesComplete] = useState(false);
+  const [analyzeComplete, setAnalyzeComplete] = useState(false);
   const [isCategorizationStarted, setIsCategorizationStarted] = useState(false);
-  const [simulatedProgress, setSimulatedProgress] = useState(0);
-  const simulatedProgressRef = useRef<ReturnType<typeof setInterval> | null>(
-    null,
-  );
 
   const totalTransactions = csvData?.rows.length ?? 0;
 
@@ -59,9 +62,10 @@ export function AnalysisStep({
     columnMapping: columnMapping.finalMapping,
     detectionResult: detectionResultForAnalyzer,
     callbacks: {
-      onDuplicatesDetected: (duplicates) => {
-        setDuplicatesComplete(true);
-        onDuplicatesDetected(duplicates);
+      onDuplicatesDetected,
+      onAnalyzeComplete: (opts) => {
+        setAnalyzeComplete(true);
+        onAnalyzeComplete(opts);
       },
       onCategorizationsReady,
       onError: () => {},
@@ -69,11 +73,15 @@ export function AnalysisStep({
     },
   });
 
-  const { retry: retryDuplicates } = useDuplicateRetry({
+  const { retry: retryAnalyze } = useAnalyzeRetry({
     csvData,
     columnMapping: columnMapping.finalMapping,
     detectionResult: detectionResultForAnalyzer,
     onDuplicatesDetected,
+    onAnalyzeComplete: (opts) => {
+      setAnalyzeComplete(true);
+      onAnalyzeComplete(opts);
+    },
   });
 
   const { retry: retryCategorize } = useCategorizeRetry({
@@ -88,49 +96,10 @@ export function AnalysisStep({
     if (analyzedRows.categorizations.length > 0) return;
     hasStartedRef.current = true;
     analyze();
-    // analyze is stable (useCallback with no mutation deps), safe to depend on
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isDetectingDuplicates = loading.detectingDuplicates;
+  const isAnalyzing = loading.analyzing;
   const isCategorizing = loading.categorizing;
-
-  // Simulated progress for duplicate detection phase
-  // Animates 0→90% over 4s; jumps to 100% when detection completes
-  useEffect(() => {
-    if (isDetectingDuplicates) {
-      setSimulatedProgress(0);
-      const DURATION_MS = 4000;
-      const TARGET = 90;
-      const TICK_MS = 50;
-      const increment = (TARGET / DURATION_MS) * TICK_MS;
-
-      simulatedProgressRef.current = setInterval(() => {
-        setSimulatedProgress((prev) => {
-          if (prev >= TARGET) {
-            clearInterval(simulatedProgressRef.current!);
-            return TARGET;
-          }
-          return Math.min(prev + increment, TARGET);
-        });
-      }, TICK_MS);
-    } else {
-      if (simulatedProgressRef.current) {
-        clearInterval(simulatedProgressRef.current);
-        simulatedProgressRef.current = null;
-      }
-      if (duplicatesComplete) {
-        setSimulatedProgress(100);
-      }
-    }
-
-    return () => {
-      if (simulatedProgressRef.current) {
-        clearInterval(simulatedProgressRef.current);
-        simulatedProgressRef.current = null;
-      }
-    };
-  }, [isDetectingDuplicates, duplicatesComplete]);
 
   useEffect(() => {
     if (isCategorizing) setIsCategorizationStarted(true);
@@ -138,34 +107,35 @@ export function AnalysisStep({
 
   useEffect(() => {
     if (
-      !isDetectingDuplicates &&
+      !isAnalyzing &&
       !isCategorizing &&
-      !errors.analysis &&
+      !errors.analyze &&
+      !errors.categorize &&
       analyzedRows.categorizations.length > 0
     ) {
       onComplete();
     }
   }, [
-    isDetectingDuplicates,
+    isAnalyzing,
     isCategorizing,
-    errors.analysis,
+    errors.analyze,
+    errors.categorize,
     analyzedRows,
     onComplete,
   ]);
 
   return (
     <AnalysisSection
-      isDetectingDuplicates={isDetectingDuplicates}
+      isAnalyzing={isAnalyzing}
       isCategorizing={isCategorizing}
-      isDuplicatesComplete={duplicatesComplete}
+      isAnalyzeComplete={analyzeComplete}
       isCategorizationStarted={isCategorizationStarted}
-      duplicateError={null}
-      categorizeError={null}
-      onRetryDuplicates={retryDuplicates}
+      analyzeError={errors.analyze}
+      categorizeError={errors.categorize}
+      onRetryAnalyze={retryAnalyze}
       onRetryCategorize={retryCategorize}
       batchProgress={batchProgress}
       onCancelAnalysis={cancel}
-      simulatedProgress={simulatedProgress}
       totalTransactions={totalTransactions}
     />
   );

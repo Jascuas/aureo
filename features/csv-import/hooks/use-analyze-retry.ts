@@ -1,5 +1,5 @@
-import { useCallback } from "react";
-import { useDetectDuplicates } from "@/features/csv-import/api/use-detect-duplicates";
+import { useCallback, useRef } from "react";
+import { useAnalyze } from "@/features/csv-import/api/use-analyze";
 import {
   prepareTransactionsForAnalysis,
   transformDuplicates,
@@ -10,8 +10,9 @@ import type {
   DateFormat,
   AmountFormat,
 } from "@/features/csv-import/types/import-types";
+import type { AITransaction } from "@/features/csv-import/lib/analyzer";
 
-interface UseDuplicateRetryOptions {
+interface UseAnalyzeRetryOptions {
   csvData: { rows: ParsedCSVRow[] } | null;
   columnMapping: Record<string, number> | null;
   detectionResult: {
@@ -19,22 +20,28 @@ interface UseDuplicateRetryOptions {
     amountFormat: AmountFormat;
   } | null;
   onDuplicatesDetected: (duplicates: any[]) => void;
+  onAnalyzeComplete: (opts: {
+    autoResolved: any[];
+    aiTransactions: AITransaction[];
+    payeeMatches: any[];
+  }) => void;
 }
 
-export function useDuplicateRetry({
+export function useAnalyzeRetry({
   csvData,
   columnMapping,
   detectionResult,
   onDuplicatesDetected,
-}: UseDuplicateRetryOptions) {
-  const detectDuplicatesMutation = useDetectDuplicates();
+  onAnalyzeComplete,
+}: UseAnalyzeRetryOptions) {
+  const analyzeMutation = useAnalyze();
   const { setLoading, setError, setBatchProgress } = useImportUIState();
 
   const retry = useCallback(async () => {
     if (!csvData || !columnMapping) return;
 
-    setError("analysis", null);
-    setLoading("detectingDuplicates", true);
+    setError("analyze", null);
+    setLoading("analyzing", true);
 
     const dateFormat =
       detectionResult?.dateFormat || ("DD/MM/YY" as DateFormat);
@@ -52,40 +59,35 @@ export function useDuplicateRetry({
     );
 
     try {
-      setBatchProgress({ current: 0, total: 1, stage: "duplicates" });
+      setBatchProgress({ current: 0, total: 1, stage: "analyzing" });
 
-      const result = await detectDuplicatesMutation.mutateAsync({
-        transactions: transactions.map((t) => ({
-          date: t.date,
-          amount: t.amount,
-          payee: t.payee,
-        })),
-      });
+      const result = await analyzeMutation.mutateAsync({ transactions });
 
-      setBatchProgress({ current: 1, total: 1, stage: "duplicates" });
+      setBatchProgress({ current: 1, total: 1, stage: "analyzing" });
 
       if (!("data" in result)) {
-        throw new Error("Invalid duplicate detection response");
+        throw new Error("Invalid analyze response");
       }
 
-      const transformedDuplicates = transformDuplicates(result.data.duplicates);
+      const { duplicates, autoResolved, aiTransactions, payeeMatches } =
+        result.data;
+
+      const transformedDuplicates = transformDuplicates(duplicates);
       onDuplicatesDetected(transformedDuplicates);
+      onAnalyzeComplete({ autoResolved, aiTransactions, payeeMatches });
     } catch (error: any) {
-      if (error.message === "Cancelled") {
-        setError("analysis", "Duplicate detection cancelled");
-      } else {
-        setError("analysis", error?.message || "Failed to detect duplicates");
-      }
+      setError("analyze", error?.message || "Failed to analyze transactions");
     } finally {
-      setLoading("detectingDuplicates", false);
+      setLoading("analyzing", false);
       setBatchProgress(null);
     }
   }, [
     csvData,
     columnMapping,
     detectionResult,
-    detectDuplicatesMutation,
+    analyzeMutation,
     onDuplicatesDetected,
+    onAnalyzeComplete,
     setLoading,
     setError,
     setBatchProgress,

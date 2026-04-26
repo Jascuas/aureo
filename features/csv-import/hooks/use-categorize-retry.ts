@@ -4,15 +4,17 @@ import {
   processBatchesWithConcurrency,
   partitionBatchResults,
 } from "@/features/csv-import/lib/batch-processor";
-import { prepareTransactionsForAnalysis } from "@/features/csv-import/lib/transaction-mapper";
 import { enrichCategorizations } from "@/features/csv-import/lib/transaction-enricher";
+import { prepareTransactionsForAnalysis } from "@/features/csv-import/lib/transaction-mapper";
 import { isRateLimitError } from "@/lib/errors";
 import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
+import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
 import type {
   ParsedCSVRow,
   DateFormat,
   AmountFormat,
 } from "@/features/csv-import/types/import-types";
+import type { EnrichedCategorization } from "@/features/csv-import/types/import-types";
 
 interface UseCategorizeRetryOptions {
   csvData: { rows: ParsedCSVRow[] } | null;
@@ -21,7 +23,7 @@ interface UseCategorizeRetryOptions {
     dateFormat: DateFormat;
     amountFormat: AmountFormat;
   } | null;
-  onCategorizationsReady: (categorizations: any[]) => void;
+  onCategorizationsReady: (categorizations: EnrichedCategorization[]) => void;
 }
 
 export function useCategorizeRetry({
@@ -32,12 +34,13 @@ export function useCategorizeRetry({
 }: UseCategorizeRetryOptions) {
   const categorizeMutation = useCategorizeTransactions();
   const { setLoading, setError, setBatchProgress } = useImportUIState();
+  const { analyzedRows } = useImportSession();
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const retry = useCallback(async () => {
     if (!csvData || !columnMapping) return;
 
-    setError("analysis", null);
+    setError("categorize", null);
     setLoading("categorizing", true);
 
     const abortController = new AbortController();
@@ -51,15 +54,20 @@ export function useCategorizeRetry({
       isNegativeExpense: true,
     };
 
-    const transactions = prepareTransactionsForAnalysis(
+    // Use stored aiTransactions if available, otherwise fall back to all transactions
+    const aiTransactions = analyzedRows.aiTransactions;
+    const transactionsForAnalysis = prepareTransactionsForAnalysis(
       csvData.rows,
       columnMapping,
       dateFormat,
       amountFormat,
     );
 
+    const toCategorizeBatch =
+      aiTransactions.length > 0 ? aiTransactions : transactionsForAnalysis;
+
     try {
-      const batchCount = Math.ceil(transactions.length / 30);
+      const batchCount = Math.ceil(toCategorizeBatch.length / 30);
       setBatchProgress({
         current: 0,
         total: batchCount,
@@ -67,7 +75,7 @@ export function useCategorizeRetry({
       });
 
       const results = await processBatchesWithConcurrency(
-        transactions,
+        toCategorizeBatch,
         30,
         (batch) => categorizeMutation.mutateAsync({ transactions: batch }),
         {
@@ -85,33 +93,45 @@ export function useCategorizeRetry({
         const rateLimitError = failed.find((f) => isRateLimitError(f.error));
         if (rateLimitError && isRateLimitError(rateLimitError.error)) {
           setError(
-            "analysis",
-            `⚠️ API Rate Limit Exceeded: ${rateLimitError.error.message}\n\n` +
-              `Please wait ${rateLimitError.error.retryAfter || 60} seconds before retrying.`,
+            "categorize",
+            `⚠️ API Rate Limit Exceeded: ${rateLimitError.error.message}\n\nPlease wait ${rateLimitError.error.retryAfter || 60} seconds before retrying.`,
           );
           return;
         }
 
         setError(
-          "analysis",
+          "categorize",
           `${failed.length} categorization batch(es) failed. Cannot proceed with incomplete data.`,
         );
         return;
       }
 
-      const allCategorizations = successful.flatMap((r) => {
+      const aiCategorizations = successful.flatMap((r) => {
         if (!("data" in r.data)) return [];
         return r.data.data.results;
       });
 
-      const enriched = enrichCategorizations(allCategorizations, transactions);
+      // Merge with autoResolved
+      const autoResolved = analyzedRows.autoResolved;
+      const allRaw = [
+        ...autoResolved.map((r) => ({
+          csvRowIndex: r.csvRowIndex,
+          categoryId: r.categoryId,
+          transactionTypeId: r.transactionTypeId,
+          confidence: r.confidence,
+          normalizedPayee: r.normalizedPayee,
+        })),
+        ...aiCategorizations,
+      ];
+
+      const enriched = enrichCategorizations(allRaw, transactionsForAnalysis);
       onCategorizationsReady(enriched);
     } catch (error: any) {
       if (error.message === "Cancelled") {
-        setError("analysis", "Categorization cancelled");
+        setError("categorize", "Categorization cancelled");
       } else {
         setError(
-          "analysis",
+          "categorize",
           error?.message || "Failed to categorize transactions",
         );
       }
@@ -125,6 +145,7 @@ export function useCategorizeRetry({
     columnMapping,
     detectionResult,
     categorizeMutation,
+    analyzedRows,
     onCategorizationsReady,
     setLoading,
     setError,
@@ -133,7 +154,7 @@ export function useCategorizeRetry({
 
   const cancel = useCallback(() => {
     abortControllerRef.current?.abort();
-    setError("analysis", "Categorization cancelled");
+    setError("categorize", "Categorization cancelled");
     setBatchProgress(null);
     setLoading("categorizing", false);
   }, [setError, setBatchProgress, setLoading]);

@@ -35,7 +35,7 @@ Aureo is a full-stack personal finance platform designed for individuals who wan
 - 📊 **Interactive Dashboard** - Real-time financial overview with customizable charts
 - 💳 **Multi-Account Management** - Track multiple bank accounts and credit cards
 - 🏷️ **Hierarchical Categories** - Parent/child category support with circular reference prevention
-- 💸 **Transaction Management** - Full CRUD with type classification (Income/Expense/Refund)
+- 💸 **Transaction Management** - Full CRUD with type classification (Income/Expense/Transfer)
 - 📁 **CSV Import** - Bulk transaction import from bank statements
 - 🗓️ **Advanced Filters** - Date range, account, and category filtering
 - 📈 **Summary Reports** - Overview, over-time, and by-category analytics

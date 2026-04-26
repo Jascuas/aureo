@@ -36,7 +36,7 @@ export function ImportStep({
     }
   }, [importResult, accountId, importTransactions]);
 
-  if (loading.categorizing || loading.detectingDuplicates) {
+  if (loading.categorizing || loading.analyzing) {
     return null;
   }
 

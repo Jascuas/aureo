@@ -17,6 +17,13 @@ export type TransactionInput = {
   payee: string;
   description?: string;
   notes?: string;
+  historicalHint?: {
+    categoryId: string;
+    transactionTypeId: string;
+    confidence: number;
+    matchCount: number;
+    matchType: "exact" | "fuzzy";
+  };
 };
 
 export type CategorizationSuggestion = {
@@ -98,6 +105,8 @@ export async function categorizeTransactions(
     );
   }
 
+  const { MIN_MATCH_COUNT } = CSV_IMPORT_CONFIG.PAYEE_MATCHING;
+
   const userCategories = await db
     .select({
       id: categories.id,
@@ -136,6 +145,28 @@ export async function categorizeTransactions(
     fewShotMap.set(input.csvRowIndex, examples);
   }
 
+  // Build historical hints for the AI prompt from per-transaction historicalHint
+  const historicalHints: Array<{
+    csvRowIndex: number;
+    topCategoryId: string;
+    confidence: number;
+    matchCount: number;
+    matchType: "exact" | "fuzzy";
+  }> = [];
+
+  for (const input of inputs) {
+    const hint = input.historicalHint;
+    if (hint && hint.matchCount >= MIN_MATCH_COUNT) {
+      historicalHints.push({
+        csvRowIndex: input.csvRowIndex,
+        topCategoryId: hint.categoryId,
+        confidence: hint.confidence,
+        matchCount: hint.matchCount,
+        matchType: hint.matchType,
+      });
+    }
+  }
+
   const aiProvider = getDefaultAIProvider();
   const aiResults = await aiProvider.categorizeTransactions({
     transactions: inputs.map((tx) => ({
@@ -148,20 +179,30 @@ export async function categorizeTransactions(
     fewShotExamples: Array.from(fewShotMap.values())
       .flat()
       .slice(0, CSV_IMPORT_CONFIG.AI.MAX_FEW_SHOT_EXAMPLES),
+    historicalHints,
   });
+
+  const aiResultsMap = new Map(aiResults.map((r) => [r.csvRowIndex, r]));
 
   const results: CategorizationResult[] = [];
 
   for (const input of inputs) {
-    const aiResult = aiResults.find((r) => r.csvRowIndex === input.csvRowIndex);
+    const aiResult = aiResultsMap.get(input.csvRowIndex);
     const transactionType = await detectTransactionType(input.amount);
+
+    // Use historicalHint transactionTypeId if available, else sign-based fallback
+    const hint = input.historicalHint;
+    const resolvedTypeId =
+      hint && hint.matchCount >= MIN_MATCH_COUNT
+        ? hint.transactionTypeId
+        : transactionType.id;
 
     if (!aiResult || !aiResult.topSuggestion) {
       results.push({
         csvRowIndex: input.csvRowIndex,
         suggestion: {
           categoryId: null,
-          transactionTypeId: transactionType.id,
+          transactionTypeId: resolvedTypeId,
           confidence: 0.0,
           normalizedPayee: normalizePayeeName(input.payee),
         },
@@ -186,7 +227,7 @@ export async function categorizeTransactions(
         csvRowIndex: input.csvRowIndex,
         suggestion: {
           categoryId: null,
-          transactionTypeId: transactionType.id,
+          transactionTypeId: resolvedTypeId,
           confidence: 0.0,
           normalizedPayee: normalizePayeeName(input.payee),
         },
@@ -202,12 +243,12 @@ export async function categorizeTransactions(
           CSV_IMPORT_CONFIG.AI.MIN_CONFIDENCE_THRESHOLD
             ? topSuggestion.categoryId
             : null,
-        transactionTypeId: transactionType.id,
+        transactionTypeId: resolvedTypeId,
         confidence: topSuggestion.confidence,
         normalizedPayee: normalizePayeeName(input.payee),
       },
     });
   }
 
-  return results;
+  return results.sort((a, b) => a.csvRowIndex - b.csvRowIndex);
 }

@@ -132,7 +132,7 @@ export type ImportStep = (typeof IMPORT_STEPS)[keyof typeof IMPORT_STEPS];
 export type BatchProgress = {
   current: number;
   total: number;
-  stage: "duplicates" | "categorization";
+  stage: "analyzing" | "categorization";
 };
 
 export type TransactionForAnalysis = {

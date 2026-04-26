@@ -87,6 +87,13 @@ export type AIProvider = {
       categoryId: string;
       categoryName: string;
     }>;
+    historicalHints?: Array<{
+      csvRowIndex: number;
+      topCategoryId: string;
+      confidence: number;
+      matchCount: number;
+      matchType: "exact" | "fuzzy";
+    }>;
   }): Promise<CategorizationResult[]>;
 };
 
