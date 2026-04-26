@@ -65,7 +65,10 @@ export const AnalysisSection = ({
 
       {/* Progress Bar */}
       <div className="space-y-1">
-        <Progress value={progressValue} className="h-2" />
+        <Progress
+          value={progressValue}
+          className="[&>div]:bg-brand-green h-2"
+        />
         {progressLabel != null ? (
           <p className="text-muted-foreground text-xs">{progressLabel}</p>
         ) : null}

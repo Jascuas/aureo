@@ -5,11 +5,20 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useGetCategories } from "@/features/categories/api/use-get-categories";
+import { useCategoryTree } from "@/features/categories/hooks/use-category-tree";
 import { cn } from "@/lib/utils";
 
 type CategorySuggestion = {
@@ -34,32 +43,26 @@ export const EditableCategoryCell = ({
   onCategoryChange,
 }: EditableCategoryCellProps) => {
   const [open, setOpen] = useState(false);
-  const { data: categories, isLoading } = useGetCategories();
+  const { topSuggestion, groups, isLoading } = useCategoryTree(suggestions);
 
-  const categoryName =
-    categories?.find((c) => c.id === categoryId)?.name ?? null;
-  const displayName = categoryName || "Uncategorized";
+  // Resolve current category display name
+  const categoryName = (() => {
+    if (!categoryId) return null;
+    if (topSuggestion?.id === categoryId) return topSuggestion.name;
+    for (const group of groups) {
+      const found = group.items.find((item) => item.id === categoryId);
+      if (found) return found.name;
+    }
+    return null;
+  })();
+
+  const displayName = categoryName ?? "Uncategorized";
   const isLowConfidence = confidence < 0.7;
 
-  const topSuggestions = (suggestions ?? [])
-    .map((s) => ({
-      ...s,
-      categoryName:
-        categories?.find((c) => c.id === s.categoryId)?.name ?? null,
-    }))
-    .filter(
-      (
-        s,
-      ): s is {
-        categoryId: string;
-        confidence: number;
-        categoryName: string;
-      } => s.categoryName !== null,
-    );
-
-  const suggestedIds = new Set(topSuggestions.map((s) => s.categoryId));
-  const remainingCategories =
-    categories?.filter((c) => !suggestedIds.has(c.id)) ?? [];
+  const handleSelect = (id: string, name: string) => {
+    onCategoryChange(id, name);
+    setOpen(false);
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -79,102 +82,86 @@ export const EditableCategoryCell = ({
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-55 p-0" align="start">
-        <div className="max-h-80 overflow-y-auto">
-          {isLoading ? (
-            <div className="text-muted-foreground p-2 text-sm">Loading...</div>
-          ) : (
-            <div className="p-1">
-              {topSuggestions.length > 0 && (
+
+      <PopoverContent
+        className="w-72 p-0"
+        align="start"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
+        {isLoading ? (
+          <div className="text-muted-foreground p-3 text-sm">Loading…</div>
+        ) : (
+          <Command>
+            <CommandInput placeholder="Search categories…" />
+            <CommandList>
+              <CommandEmpty>No categories found.</CommandEmpty>
+
+              {topSuggestion && (
                 <>
-                  <div className="text-muted-foreground flex items-center gap-1 px-2 py-1 text-xs font-medium">
-                    <Sparkles className="size-3" />
-                    Top Suggestions
-                  </div>
-                  {topSuggestions.map((suggestion) => (
-                    <button
-                      key={suggestion.categoryId}
-                      onClick={() => {
-                        onCategoryChange(
-                          suggestion.categoryId,
-                          suggestion.categoryName,
-                        );
-                        setOpen(false);
-                      }}
-                      className={cn(
-                        "hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm",
-                        categoryId === suggestion.categoryId && "bg-accent",
-                      )}
+                  <CommandGroup heading="Top Suggestion">
+                    <CommandItem
+                      value={`${topSuggestion.path}::${topSuggestion.id}`}
+                      onSelect={() =>
+                        handleSelect(topSuggestion.id, topSuggestion.name)
+                      }
+                      onPointerDown={(e) => e.preventDefault()}
+                      className="gap-2"
                     >
                       <Check
                         className={cn(
                           "size-4 shrink-0",
-                          categoryId === suggestion.categoryId
+                          categoryId === topSuggestion.id
                             ? "opacity-100"
                             : "opacity-0",
                         )}
                       />
+                      <Sparkles className="text-muted-foreground size-3 shrink-0" />
                       <span className="flex-1 truncate">
-                        {suggestion.categoryName}
+                        {topSuggestion.name}
                       </span>
                       <span className="text-muted-foreground text-xs">
-                        {Math.round(suggestion.confidence * 100)}%
+                        {Math.round(topSuggestion.confidence * 100)}%
                       </span>
-                    </button>
-                  ))}
-                  <div className="bg-border my-1 h-px" />
-                  <div className="text-muted-foreground px-2 py-1 text-xs font-medium">
-                    All Categories
-                  </div>
+                    </CommandItem>
+                  </CommandGroup>
+                  <CommandSeparator />
                 </>
               )}
 
-              <button
-                onClick={() => {
-                  onCategoryChange(null, null);
-                  setOpen(false);
-                }}
-                className={cn(
-                  "hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm",
-                  !categoryId && "bg-accent",
-                )}
-              >
-                <Check
-                  className={cn(
-                    "size-4",
-                    !categoryId ? "opacity-100" : "opacity-0",
-                  )}
-                />
-                <span className="text-muted-foreground">Uncategorized</span>
-              </button>
-
-              {(topSuggestions.length > 0
-                ? remainingCategories
-                : categories
-              )?.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => {
-                    onCategoryChange(category.id, category.name);
-                    setOpen(false);
-                  }}
-                  className={cn(
-                    "hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm",
-                    categoryId === category.id && "bg-accent",
-                  )}
-                >
-                  <Check
-                    className={cn(
-                      "size-4",
-                      categoryId === category.id ? "opacity-100" : "opacity-0",
-                    )}
-                  />
-                  <span>{category.name}</span>
-                </button>
+              {groups.map((group, i) => (
+                <div key={group.rootName}>
+                  {i > 0 && <CommandSeparator />}
+                  <CommandGroup heading={group.rootName}>
+                    {group.items.map((item) => (
+                      <CommandItem
+                        key={item.id}
+                        value={`${item.path}::${item.id}`}
+                        onSelect={() => handleSelect(item.id, item.name)}
+                        onPointerDown={(e) => e.preventDefault()}
+                        style={
+                          item.depth > 0
+                            ? { paddingLeft: `${8 + item.depth * 14}px` }
+                            : undefined
+                        }
+                        className="gap-2"
+                      >
+                        <Check
+                          className={cn(
+                            "size-4 shrink-0",
+                            categoryId === item.id
+                              ? "opacity-100"
+                              : "opacity-0",
+                          )}
+                        />
+                        <span className="truncate">{item.name}</span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </div>
               ))}
-            </div>
-          )}
-        </div>
+            </CommandList>
+          </Command>
+        )}
       </PopoverContent>
     </Popover>
   );
