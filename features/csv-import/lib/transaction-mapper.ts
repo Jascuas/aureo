@@ -1,5 +1,6 @@
 import { convertAmountToMilliunits, parseAmount } from "@/lib/utils";
 import { parseDate } from "@/features/csv-import/lib/date-parser";
+import { ColumnType } from "@/features/csv-import/const/import-const";
 import type {
   ParsedCSVRow,
   TransactionForAnalysis,
@@ -15,12 +16,12 @@ export function prepareTransactionsForAnalysis(
 ): TransactionForAnalysis[] {
   return rows.map((row) => {
     const amountValue = parseAmount(
-      row.data[mapping.amount!],
+      row.data[mapping[ColumnType.Amount]!],
       amountFormat.decimalSeparator,
       amountFormat.thousandsSeparator,
     );
 
-    const dateValue = row.data[mapping.date!];
+    const dateValue = row.data[mapping[ColumnType.Date]!];
     let parsedDate = parseDate(dateValue, dateFormat);
 
     if (!parsedDate && dateFormat.includes("YYYY")) {
@@ -34,12 +35,15 @@ export function prepareTransactionsForAnalysis(
       csvRowIndex: row.index,
       date: dateISO,
       amount: convertAmountToMilliunits(amountValue),
-      payee: row.data[mapping.payee!],
+      payee: row.data[mapping[ColumnType.Payee]!],
       description:
-        mapping.description !== undefined
-          ? row.data[mapping.description]
+        mapping[ColumnType.Description] !== undefined
+          ? row.data[mapping[ColumnType.Description]]
           : undefined,
-      notes: mapping.notes !== undefined ? row.data[mapping.notes] : undefined,
+      notes:
+        mapping[ColumnType.Notes] !== undefined
+          ? row.data[mapping[ColumnType.Notes]]
+          : undefined,
     };
   });
 }

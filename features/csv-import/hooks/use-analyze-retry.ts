@@ -5,6 +5,7 @@ import {
   transformDuplicates,
 } from "@/features/csv-import/lib/transaction-mapper";
 import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
+import { BatchProgressStage } from "@/features/csv-import/const/import-const";
 import type {
   ParsedCSVRow,
   DateFormat,
@@ -59,11 +60,11 @@ export function useAnalyzeRetry({
     );
 
     try {
-      setBatchProgress({ current: 0, total: 1, stage: "analyzing" });
+      setBatchProgress({ current: 0, total: 1, stage: BatchProgressStage.ANALYZING });
 
       const result = await analyzeMutation.mutateAsync({ transactions });
 
-      setBatchProgress({ current: 1, total: 1, stage: "analyzing" });
+      setBatchProgress({ current: 1, total: 1, stage: BatchProgressStage.ANALYZING });
 
       if (!("data" in result)) {
         throw new Error("Invalid analyze response");

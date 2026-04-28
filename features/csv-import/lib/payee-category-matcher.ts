@@ -1,12 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
-import {
-  accounts,
-  categories,
-  transactions,
-  transactionTypes,
-} from "@/db/schema";
+import { accounts, transactions, transactionTypes } from "@/db/schema";
 import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
 
 export type PayeeMatchType = "exact" | "fuzzy";

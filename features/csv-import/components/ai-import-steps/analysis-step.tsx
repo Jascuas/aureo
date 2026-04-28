@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
 import { AnalysisSection } from "@/features/csv-import/components/analysis-section";
-import { useCategorizeRetry } from "@/features/csv-import/hooks/use-categorize-retry";
 import { useAnalyzeRetry } from "@/features/csv-import/hooks/use-analyze-retry";
+import { useCategorizeRetry } from "@/features/csv-import/hooks/use-categorize-retry";
 import { useTransactionAnalyzer } from "@/features/csv-import/hooks/use-transaction-analyzer";
+import type { AITransaction } from "@/features/csv-import/lib/analyzer";
 import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
 import type {
   AmountFormat,
@@ -11,7 +12,6 @@ import type {
   DateFormat,
   ParsedCSVRow,
 } from "@/features/csv-import/types/import-types";
-import type { AITransaction } from "@/features/csv-import/lib/analyzer";
 
 interface AnalysisStepProps {
   csvData: { fileName: string; headers: string[]; rows: ParsedCSVRow[] } | null;

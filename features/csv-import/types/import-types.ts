@@ -1,12 +1,16 @@
-export type ColumnType =
-  | "date"
-  | "amount"
-  | "payee"
-  | "description"
-  | "notes"
-  | "balance"
-  | "category"
-  | "unknown";
+export {
+  ImportStep,
+  BatchProgressStage,
+  MatchType,
+  Resolution,
+  ColumnType,
+} from "../const/import-const";
+import {
+  BatchProgressStage,
+  MatchType,
+  Resolution,
+  ColumnType,
+} from "../const/import-const";
 
 export type DetectedColumn = {
   index: number;
@@ -113,26 +117,10 @@ export type HeuristicConfig = {
   enableAIFallback: boolean;
 };
 
-export const DEFAULT_HEURISTIC_CONFIG: HeuristicConfig = {
-  minConfidence: 0.7,
-  sampleSize: 10,
-  enableAIFallback: true,
-};
-
-export const IMPORT_STEPS = {
-  UPLOAD: "UPLOAD",
-  MAPPING: "MAPPING",
-  ANALYSIS: "ANALYSIS",
-  REVIEW: "REVIEW",
-  IMPORT: "IMPORT",
-} as const;
-
-export type ImportStep = (typeof IMPORT_STEPS)[keyof typeof IMPORT_STEPS];
-
 export type BatchProgress = {
   current: number;
   total: number;
-  stage: "analyzing" | "categorization";
+  stage: BatchProgressStage;
 };
 
 export type TransactionForAnalysis = {
@@ -154,4 +142,34 @@ export type EnrichedCategorization = {
   transactionTypeId: string;
   confidence: number;
   normalizedPayee: string;
+  userEdited: boolean;
+};
+
+export type ExistingTransaction = {
+  date: Date;
+  amount: number;
+  payee: string;
+};
+
+export type DuplicateIndicatorProps = {
+  existingTransaction: ExistingTransaction;
+  matchType: MatchType;
+  score: number;
+  onResolve?: () => void;
+  isResolved?: boolean;
+  resolution?: Resolution;
+};
+
+export type CsvRow = {
+  csvRowIndex: number;
+  date: Date;
+  payee: string;
+  amount: number;
+  category?: string;
+};
+
+export type DuplicateResolutionProps = {
+  csvRows: CsvRow[];
+  pendingCount: number;
+  onSkipAll?: () => void;
 };

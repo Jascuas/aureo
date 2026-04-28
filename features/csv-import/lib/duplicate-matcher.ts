@@ -2,14 +2,13 @@ import { db } from "@/db/drizzle";
 import { accounts, transactions } from "@/db/schema";
 import { and, between, eq, sql } from "drizzle-orm";
 import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
+import { MatchType } from "@/features/csv-import/const/import-const";
 
 export type TransactionInput = {
   date: Date;
   amount: number;
   payee: string;
 };
-
-export type MatchType = "exact" | "fuzzy";
 
 export type DuplicateMatch = {
   csvIndex: number;
@@ -64,7 +63,7 @@ async function findExactMatches(
       matches.set(i, {
         csvIndex: i,
         existingTransaction: results[0],
-        matchType: "exact",
+        matchType: MatchType.Exact,
         score: 1.0,
       });
     }
@@ -140,7 +139,7 @@ async function findFuzzyMatches(
           payee: result.payee,
           accountId: result.accountId,
         },
-        matchType: "fuzzy",
+        matchType: MatchType.Fuzzy,
         score: result.similarity,
       });
     }

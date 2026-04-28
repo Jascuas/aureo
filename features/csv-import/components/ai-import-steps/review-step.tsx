@@ -14,6 +14,7 @@ interface ReviewStepProps {
     csvRowIndex: number,
     categoryId: string | null,
     categoryName: string | null,
+    isAiSuggestion?: boolean,
   ) => void;
 }
 
@@ -52,6 +53,7 @@ export function ReviewStep({
             categoryId: cat.categoryId,
             confidence: cat.confidence,
             duplicate: duplicate || null,
+            userEdited: cat.userEdited,
           };
         })}
         payeeMatches={payeeMatches}

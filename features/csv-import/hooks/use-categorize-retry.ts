@@ -9,6 +9,7 @@ import { prepareTransactionsForAnalysis } from "@/features/csv-import/lib/transa
 import { isRateLimitError } from "@/lib/errors";
 import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
 import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
+import { BatchProgressStage } from "@/features/csv-import/const/import-const";
 import type {
   ParsedCSVRow,
   DateFormat,
@@ -71,7 +72,7 @@ export function useCategorizeRetry({
       setBatchProgress({
         current: 0,
         total: batchCount,
-        stage: "categorization",
+        stage: BatchProgressStage.CATEGORIZATION,
       });
 
       const results = await processBatchesWithConcurrency(
@@ -82,7 +83,7 @@ export function useCategorizeRetry({
           maxConcurrent: 3,
           retries: 2,
           onProgress: (current, total) =>
-            setBatchProgress({ current, total, stage: "categorization" }),
+            setBatchProgress({ current, total, stage: BatchProgressStage.CATEGORIZATION }),
           signal: abortController.signal,
         },
       );

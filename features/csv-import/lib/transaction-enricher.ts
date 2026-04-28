@@ -1,6 +1,6 @@
 import type {
-  TransactionForAnalysis,
   EnrichedCategorization,
+  TransactionForAnalysis,
 } from "@/features/csv-import/types/import-types";
 
 type CategorizationAPIResult = {
@@ -29,6 +29,7 @@ export function enrichCategorizations(
       transactionTypeId: cat.transactionTypeId,
       confidence: cat.confidence,
       normalizedPayee: cat.normalizedPayee,
+      userEdited: false,
     };
   });
 }

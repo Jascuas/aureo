@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  IMPORT_STEPS,
-  type ImportStep,
-} from "@/features/csv-import/types/import-types";
+import { ImportStep } from "@/features/csv-import/const/import-const";
 import { cn } from "@/lib/utils";
 
 type ImportStepperProps = {
@@ -12,11 +9,11 @@ type ImportStepperProps = {
 };
 
 const STEPS: { key: ImportStep; label: string; order: number }[] = [
-  { key: IMPORT_STEPS.UPLOAD, label: "Upload", order: 1 },
-  { key: IMPORT_STEPS.MAPPING, label: "Map Columns", order: 2 },
-  { key: IMPORT_STEPS.ANALYSIS, label: "Analyze", order: 3 },
-  { key: IMPORT_STEPS.REVIEW, label: "Review", order: 4 },
-  { key: IMPORT_STEPS.IMPORT, label: "Import", order: 5 },
+  { key: ImportStep.UPLOAD, label: "Upload", order: 1 },
+  { key: ImportStep.MAPPING, label: "Map Columns", order: 2 },
+  { key: ImportStep.ANALYSIS, label: "Analyze", order: 3 },
+  { key: ImportStep.REVIEW, label: "Review", order: 4 },
+  { key: ImportStep.IMPORT, label: "Import", order: 5 },
 ];
 
 export const ImportStepper = ({

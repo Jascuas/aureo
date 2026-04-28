@@ -36,6 +36,7 @@ type PreviewRow = {
   categoryId: string | null;
   confidence: number;
   duplicate: DuplicateMatch | null;
+  userEdited: boolean;
 };
 
 type AiPreviewTableProps = {
@@ -45,6 +46,7 @@ type AiPreviewTableProps = {
     rowIndex: number,
     categoryId: string | null,
     categoryName: string | null,
+    isAiSuggestion?: boolean,
   ) => void;
 };
 
@@ -109,8 +111,14 @@ export const AiPreviewTable = ({
           categoryId={row.original.categoryId}
           confidence={row.original.confidence}
           suggestions={suggestionsByRowIndex.get(row.original.csvRowIndex)}
-          onCategoryChange={(categoryId, categoryName) =>
-            onCategoryChange(row.original.csvRowIndex, categoryId, categoryName)
+          userEdited={row.original.userEdited}
+          onCategoryChange={(categoryId, categoryName, isAiSuggestion) =>
+            onCategoryChange(
+              row.original.csvRowIndex,
+              categoryId,
+              categoryName,
+              isAiSuggestion,
+            )
           }
         />
       ),

@@ -1,9 +1,9 @@
-import { useCallback } from "react";
 import Papa from "papaparse";
+import { useCallback } from "react";
 
 import { FileUploadSection } from "@/features/csv-import/components/file-upload-section";
-import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
 import { useColumnDetection } from "@/features/csv-import/hooks/use-column-detection";
+import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
 import type { ParsedCSVRow } from "@/features/csv-import/types/import-types";
 
 interface UploadStepProps {

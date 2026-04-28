@@ -5,8 +5,8 @@ import { AlertCircle, CheckCircle2, Clock, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
 import type { BatchProgress } from "@/features/csv-import/types/import-types";
+import { cn } from "@/lib/utils";
 
 type AnalysisSectionProps = {
   isAnalyzing: boolean;

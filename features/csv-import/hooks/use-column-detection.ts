@@ -4,6 +4,7 @@ import type {
   ColumnDetectionResult,
   DateFormat,
 } from "@/features/csv-import/types/import-types";
+import { ColumnType } from "@/features/csv-import/const/import-const";
 import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
 
 interface UseColumnDetectionOptions {
@@ -32,43 +33,35 @@ export function useColumnDetection({
       try {
         const detectionResult: ColumnDetectionResult = {
           columns: headers.map((header, index) => {
-            let type:
-              | "date"
-              | "amount"
-              | "payee"
-              | "description"
-              | "notes"
-              | "category"
-              | "balance"
-              | "unknown" = "unknown";
+            let type: ColumnType = ColumnType.Unknown;
             let confidence = 0;
 
             const lowerHeader = header.toLowerCase();
 
             if (/(date|fecha)/i.test(lowerHeader)) {
-              type = "date";
+              type = ColumnType.Date;
               confidence = 0.9;
             } else if (/(amount|importe|monto|valor)/i.test(lowerHeader)) {
-              type = "amount";
+              type = ColumnType.Amount;
               confidence = 0.9;
             } else if (
               /(payee|merchant|tienda|comercio|beneficiario)/i.test(lowerHeader)
             ) {
-              type = "payee";
+              type = ColumnType.Payee;
               confidence = 0.85;
             } else if (
               /(description|desc|concepto|detalle)/i.test(lowerHeader)
             ) {
-              type = "description";
+              type = ColumnType.Description;
               confidence = 0.8;
             } else if (/(note|nota)/i.test(lowerHeader)) {
-              type = "notes";
+              type = ColumnType.Notes;
               confidence = 0.75;
             } else if (/(category|categor)/i.test(lowerHeader)) {
-              type = "category";
+              type = ColumnType.Category;
               confidence = 0.8;
             } else if (/(balance|saldo)/i.test(lowerHeader)) {
-              type = "balance";
+              type = ColumnType.Balance;
               confidence = 0.8;
             }
 
@@ -94,7 +87,7 @@ export function useColumnDetection({
 
         const autoMapping: Record<string, number> = {};
         detectionResult.columns.forEach((col) => {
-          if (col.type !== "unknown") {
+          if (col.type !== ColumnType.Unknown) {
             autoMapping[col.type] = col.index;
           }
         });

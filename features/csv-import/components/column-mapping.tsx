@@ -17,10 +17,8 @@ import { useGetTemplates } from "@/features/csv-import/api/use-get-templates";
 import { useSaveTemplate } from "@/features/csv-import/api/use-save-template";
 import { AlertCircle, Check, Save } from "lucide-react";
 
-import type {
-  ColumnDetectionResult,
-  ColumnType,
-} from "@/features/csv-import/types/import-types";
+import type { ColumnDetectionResult } from "@/features/csv-import/types/import-types";
+import { ColumnType } from "@/features/csv-import/const/import-const";
 import { ColumnPreview } from "@/features/csv-import/components/column-preview";
 import { ConfidenceBadge } from "@/features/csv-import/components/confidence-badge";
 import { FormatDetector } from "@/features/csv-import/components/format-detector";
@@ -45,14 +43,14 @@ type ColumnMappingProps = {
 
 const COLUMN_TYPES: { value: ColumnType; label: string; required: boolean }[] =
   [
-    { value: "date", label: "Date", required: true },
-    { value: "amount", label: "Amount", required: true },
-    { value: "payee", label: "Payee", required: true },
-    { value: "description", label: "Description", required: false },
-    { value: "notes", label: "Notes", required: false },
-    { value: "category", label: "Category", required: false },
-    { value: "balance", label: "Balance", required: false },
-    { value: "unknown", label: "Ignore", required: false },
+    { value: ColumnType.Date, label: "Date", required: true },
+    { value: ColumnType.Amount, label: "Amount", required: true },
+    { value: ColumnType.Payee, label: "Payee", required: true },
+    { value: ColumnType.Description, label: "Description", required: false },
+    { value: ColumnType.Notes, label: "Notes", required: false },
+    { value: ColumnType.Category, label: "Category", required: false },
+    { value: ColumnType.Balance, label: "Balance", required: false },
+    { value: ColumnType.Unknown, label: "Ignore", required: false },
   ];
 
 export const ColumnMapping = ({
@@ -91,7 +89,7 @@ export const ColumnMapping = ({
 
     const reverseMapping: Record<string, number> = {};
     Object.entries(newMapping).forEach(([idx, colType]) => {
-      if (colType !== "unknown") {
+      if (colType !== ColumnType.Unknown) {
         reverseMapping[colType] = parseInt(idx);
       }
     });
@@ -105,11 +103,15 @@ export const ColumnMapping = ({
       (t) => t.value,
     );
     const mappedTypes = Object.values(mapping).filter(
-      (t): t is Exclude<ColumnType, "unknown"> => t !== "unknown",
+      (t): t is Exclude<ColumnType, ColumnType.Unknown> =>
+        t !== ColumnType.Unknown,
     );
 
     requiredTypes.forEach((requiredType) => {
-      if (requiredType !== "unknown" && !mappedTypes.includes(requiredType)) {
+      if (
+        requiredType !== ColumnType.Unknown &&
+        !mappedTypes.includes(requiredType)
+      ) {
         const label = COLUMN_TYPES.find((t) => t.value === requiredType)?.label;
         errors.push(`${label} column is required`);
       }
@@ -123,7 +125,7 @@ export const ColumnMapping = ({
 
     const reverseMapping: Record<string, number> = {};
     Object.entries(mapping).forEach(([idx, colType]) => {
-      if (colType !== "unknown") {
+      if (colType !== ColumnType.Unknown) {
         reverseMapping[colType] = parseInt(idx);
       }
     });
@@ -159,7 +161,7 @@ export const ColumnMapping = ({
             const detected = detectionResult?.columns.find(
               (c) => c.index === idx,
             );
-            const currentType = mapping[idx] || "unknown";
+            const currentType = mapping[idx] || ColumnType.Unknown;
 
             return (
               <div key={idx} className="flex items-center gap-4">
@@ -173,7 +175,7 @@ export const ColumnMapping = ({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {detected && detected.type !== "unknown" && (
+                  {detected && detected.type !== ColumnType.Unknown && (
                     <ConfidenceBadge confidence={detected.confidence} />
                   )}
 

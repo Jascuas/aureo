@@ -5,9 +5,8 @@ import type {
   EnrichedCategorization,
   ParsedCSVRow,
   ImportTemplate,
-  ImportStep,
 } from "@/features/csv-import/types/import-types";
-import { IMPORT_STEPS } from "@/features/csv-import/types/import-types";
+import { ImportStep } from "@/features/csv-import/const/import-const";
 import type { DuplicateMatch } from "@/features/csv-import/lib/duplicate-matcher";
 import type { PayeeMatchResult } from "@/features/csv-import/lib/payee-category-matcher";
 import type { AITransaction } from "@/features/csv-import/lib/analyzer";
@@ -77,15 +76,15 @@ type ImportSessionState = {
 };
 
 const STEP_ORDER: ImportStep[] = [
-  IMPORT_STEPS.UPLOAD,
-  IMPORT_STEPS.MAPPING,
-  IMPORT_STEPS.ANALYSIS,
-  IMPORT_STEPS.REVIEW,
-  IMPORT_STEPS.IMPORT,
+  ImportStep.UPLOAD,
+  ImportStep.MAPPING,
+  ImportStep.ANALYSIS,
+  ImportStep.REVIEW,
+  ImportStep.IMPORT,
 ];
 
 const initialState = {
-  currentStep: IMPORT_STEPS.UPLOAD,
+  currentStep: ImportStep.UPLOAD,
   csvData: null,
   columnMapping: {
     detectionResult: null,
@@ -110,7 +109,7 @@ export const useImportSession = create<ImportSessionState>()(
       setCSVData: (fileName, headers, rows) => {
         set({
           csvData: { fileName, headers, rows },
-          currentStep: IMPORT_STEPS.MAPPING,
+          currentStep: ImportStep.MAPPING,
         });
       },
 
@@ -189,7 +188,7 @@ export const useImportSession = create<ImportSessionState>()(
       setImportResult: (result) => {
         set({
           importResult: result,
-          currentStep: IMPORT_STEPS.IMPORT,
+          currentStep: ImportStep.IMPORT,
         });
       },
 

@@ -21,16 +21,16 @@ import { MappingStep } from "@/features/csv-import/components/ai-import-steps/ma
 import { ReviewStep } from "@/features/csv-import/components/ai-import-steps/review-step";
 import { UploadStep } from "@/features/csv-import/components/ai-import-steps/upload-step";
 import { ImportStepper } from "@/features/csv-import/components/import-stepper";
+import {
+  ImportStep,
+  Resolution,
+} from "@/features/csv-import/const/import-const";
 import { useDuplicateResolution } from "@/features/csv-import/hooks/use-duplicate-resolution";
 import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
 import { useTemplateAutoApply } from "@/features/csv-import/hooks/use-template-auto-apply";
 import { useUnloadWarning } from "@/features/csv-import/hooks/use-unload-warning";
 import { validateColumnMapping } from "@/features/csv-import/lib/validators";
 import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
-import {
-  IMPORT_STEPS,
-  type ImportStep,
-} from "@/features/csv-import/types/import-types";
 import { useConfirm } from "@/hooks/use-confirm";
 
 type AiImportCardProps = {
@@ -118,8 +118,8 @@ export const AiImportCard = ({
 
   const handleCancel = useCallback(async () => {
     if (
-      currentStep !== IMPORT_STEPS.UPLOAD &&
-      currentStep !== IMPORT_STEPS.IMPORT
+      currentStep !== ImportStep.UPLOAD &&
+      currentStep !== ImportStep.IMPORT
     ) {
       const confirmed = await confirm();
       if (!confirmed) return;
@@ -147,9 +147,12 @@ export const AiImportCard = ({
       csvRowIndex: number,
       categoryId: string | null,
       _categoryName: string | null,
+      isAiSuggestion?: boolean,
     ) => {
       const updated = analyzedRows.categorizations.map((cat) =>
-        cat.csvRowIndex === csvRowIndex ? { ...cat, categoryId } : cat,
+        cat.csvRowIndex === csvRowIndex
+          ? { ...cat, categoryId, userEdited: !isAiSuggestion }
+          : cat,
       );
       setCategorizations(updated);
     },
@@ -158,7 +161,7 @@ export const AiImportCard = ({
 
   const renderStepContent = () => {
     switch (currentStep) {
-      case IMPORT_STEPS.UPLOAD:
+      case ImportStep.UPLOAD:
         return (
           <UploadStep
             setCSVData={(fileName, headers, rows) => {
@@ -171,7 +174,7 @@ export const AiImportCard = ({
           />
         );
 
-      case IMPORT_STEPS.MAPPING:
+      case ImportStep.MAPPING:
         return (
           <MappingStep
             accountId={accountId}
@@ -182,7 +185,7 @@ export const AiImportCard = ({
           />
         );
 
-      case IMPORT_STEPS.ANALYSIS:
+      case ImportStep.ANALYSIS:
         return (
           <AnalysisStep
             csvData={csvData}
@@ -203,7 +206,7 @@ export const AiImportCard = ({
           />
         );
 
-      case IMPORT_STEPS.REVIEW:
+      case ImportStep.REVIEW:
         return (
           <ReviewStep
             duplicates={analyzedRows.duplicates}
@@ -215,7 +218,7 @@ export const AiImportCard = ({
           />
         );
 
-      case IMPORT_STEPS.IMPORT:
+      case ImportStep.IMPORT:
         return (
           <ImportStepComponent
             accountId={accountId}
@@ -231,10 +234,10 @@ export const AiImportCard = ({
 
   const renderStepActions = () => {
     switch (currentStep) {
-      case IMPORT_STEPS.UPLOAD:
+      case ImportStep.UPLOAD:
         return <UploadActions onCancel={handleCancel} />;
 
-      case IMPORT_STEPS.MAPPING:
+      case ImportStep.MAPPING:
         return (
           <MappingActions
             onCancel={handleCancel}
@@ -242,7 +245,7 @@ export const AiImportCard = ({
           />
         );
 
-      case IMPORT_STEPS.ANALYSIS:
+      case ImportStep.ANALYSIS:
         return (
           <AnalysisActions
             onCancel={handleCancel}
@@ -254,13 +257,13 @@ export const AiImportCard = ({
           />
         );
 
-      case IMPORT_STEPS.REVIEW: {
+      case ImportStep.REVIEW: {
         const transactionsToImport = analyzedRows.categorizations.filter(
           (cat) => {
             const resolution = resolutions.find(
               (r) => r.csvIndex === cat.csvRowIndex,
             );
-            return resolution?.action !== "skip";
+            return resolution?.action !== Resolution.Skip;
           },
         ).length;
 
@@ -274,7 +277,7 @@ export const AiImportCard = ({
         );
       }
 
-      case IMPORT_STEPS.IMPORT:
+      case ImportStep.IMPORT:
         return null;
 
       default:
@@ -283,30 +286,30 @@ export const AiImportCard = ({
   };
 
   const STEP_TITLES: Record<ImportStep, React.ReactNode> = {
-    [IMPORT_STEPS.UPLOAD]: (
+    [ImportStep.UPLOAD]: (
       <>
         Uploading data to{" "}
         <span className="text-brand-green">{accountName}</span>
       </>
     ),
-    [IMPORT_STEPS.MAPPING]: (
+    [ImportStep.MAPPING]: (
       <>
         Mapping columns for{" "}
         <span className="text-brand-green">{accountName}</span>
       </>
     ),
-    [IMPORT_STEPS.ANALYSIS]: (
+    [ImportStep.ANALYSIS]: (
       <>
         Analyzing <span className="text-brand-green">{accountName}</span>{" "}
         transactions
       </>
     ),
-    [IMPORT_STEPS.REVIEW]: (
+    [ImportStep.REVIEW]: (
       <>
         Reviewing <span className="text-brand-green">{accountName}</span> import
       </>
     ),
-    [IMPORT_STEPS.IMPORT]: (
+    [ImportStep.IMPORT]: (
       <>
         Importing data to{" "}
         <span className="text-brand-green">{accountName}</span>
@@ -321,7 +324,7 @@ export const AiImportCard = ({
         <ImportStepper
           currentStep={currentStep}
           onStepClick={(step) => {
-            if (step === IMPORT_STEPS.UPLOAD || step === IMPORT_STEPS.MAPPING) {
+            if (step === ImportStep.UPLOAD || step === ImportStep.MAPPING) {
               goToStep(step);
             }
           }}

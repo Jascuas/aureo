@@ -10,6 +10,7 @@ import { enrichCategorizations } from "@/features/csv-import/lib/transaction-enr
 import { isRateLimitError } from "@/lib/errors";
 import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
 import { transformDuplicates } from "@/features/csv-import/lib/transaction-mapper";
+import { BatchProgressStage } from "@/features/csv-import/const/import-const";
 import type { AITransaction } from "@/features/csv-import/lib/analyzer";
 import type { EnrichedCategorization } from "@/features/csv-import/types/import-types";
 
@@ -93,13 +94,13 @@ export function useTransactionAnalyzer({
 
     try {
       // ── Phase 1: /analyze ─────────────────────────────────────────────────
-      setBatchProgress({ current: 0, total: 1, stage: "analyzing" });
+      setBatchProgress({ current: 0, total: 1, stage: BatchProgressStage.ANALYZING });
 
       const analyzeResult = await analyzeMutateRef.current({
         transactions: transactionsForAnalysis,
       });
 
-      setBatchProgress({ current: 1, total: 1, stage: "analyzing" });
+      setBatchProgress({ current: 1, total: 1, stage: BatchProgressStage.ANALYZING });
       setLoading("analyzing", false);
 
       if (abortController.signal.aborted) {
@@ -144,7 +145,7 @@ export function useTransactionAnalyzer({
       setBatchProgress({
         current: 0,
         total: categorizeBatchCount,
-        stage: "categorization",
+        stage: BatchProgressStage.CATEGORIZATION,
       });
 
       const categorizeResults = await processBatchesWithConcurrency(
@@ -155,7 +156,7 @@ export function useTransactionAnalyzer({
           maxConcurrent: 3,
           retries: 2,
           onProgress: (current, total) =>
-            setBatchProgress({ current, total, stage: "categorization" }),
+            setBatchProgress({ current, total, stage: BatchProgressStage.CATEGORIZATION }),
           signal: abortController.signal,
         },
       );

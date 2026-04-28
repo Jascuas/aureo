@@ -1,9 +1,13 @@
 import { create } from "zustand";
 import type { DuplicateMatch } from "@/features/csv-import/lib/duplicate-matcher";
+import {
+  MatchType,
+  Resolution,
+} from "@/features/csv-import/const/import-const";
 
 type DuplicateResolution = {
   csvIndex: number;
-  action: "skip" | "import";
+  action: Resolution;
 };
 
 type DuplicateResolutionState = {
@@ -14,7 +18,7 @@ type DuplicateResolutionState = {
   openResolution: (duplicate: DuplicateMatch) => void;
   closeResolution: () => void;
 
-  resolveAs: (csvIndex: number, action: "skip" | "import") => void;
+  resolveAs: (csvIndex: number, action: Resolution) => void;
   skipAllExact: (duplicates: DuplicateMatch[]) => void;
 
   getResolution: (csvIndex: number) => DuplicateResolution | undefined;
@@ -62,7 +66,9 @@ export const useDuplicateResolution = create<DuplicateResolutionState>(
     },
 
     skipAllExact: (duplicates) => {
-      const exactDuplicates = duplicates.filter((d) => d.matchType === "exact");
+      const exactDuplicates = duplicates.filter(
+        (d) => d.matchType === MatchType.Exact,
+      );
 
       set((state) => {
         const newResolutions = [...state.resolutions];
@@ -75,10 +81,13 @@ export const useDuplicateResolution = create<DuplicateResolutionState>(
           if (existingIndex >= 0) {
             newResolutions[existingIndex] = {
               csvIndex: dup.csvIndex,
-              action: "skip",
+              action: Resolution.Skip,
             };
           } else {
-            newResolutions.push({ csvIndex: dup.csvIndex, action: "skip" });
+            newResolutions.push({
+              csvIndex: dup.csvIndex,
+              action: Resolution.Skip,
+            });
           }
         });
 

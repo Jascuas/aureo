@@ -1,8 +1,5 @@
 import { useEffect } from "react";
-import {
-  IMPORT_STEPS,
-  type ImportStep,
-} from "@/features/csv-import/types/import-types";
+import { ImportStep } from "@/features/csv-import/const/import-const";
 import { validateTemplateCompatibility } from "@/features/csv-import/lib/validators";
 
 interface UseTemplateAutoApplyOptions {
@@ -24,7 +21,7 @@ export function useTemplateAutoApply({
 }: UseTemplateAutoApplyOptions) {
   useEffect(() => {
     if (
-      currentStep !== IMPORT_STEPS.MAPPING ||
+      currentStep !== ImportStep.MAPPING ||
       !csvData ||
       !accountId ||
       !templatesResponse ||

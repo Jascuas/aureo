@@ -1,70 +1,114 @@
+import { getDefaultAIProvider } from "@/lib/ai";
+
+import { DEFAULT_HEURISTIC_CONFIG } from "../const/import-const";
+import { ColumnType } from "../const/import-const";
 import type {
-  ColumnType,
-  DetectedColumn,
-  ColumnDetectionResult,
   AmountFormat,
+  ColumnDetectionResult,
   DateFormat,
+  DetectedColumn,
   HeuristicConfig,
-} from '../types/import-types';
-import { DEFAULT_HEURISTIC_CONFIG } from '../types/import-types';
-import { detectDateFormat, looksLikeDate } from './date-parser';
-import { getDefaultAIProvider } from '@/lib/ai';
+} from "../types/import-types";
+import { detectDateFormat, looksLikeDate } from "./date-parser";
 
 const HEADER_PATTERNS: Record<ColumnType, string[]> = {
-  date: [
-    'date', 'fecha', 'data', 'datum',
-    'transaction date', 'fecha operacion', 'fecha valor',
-    'booking date', 'value date',
+  [ColumnType.Date]: [
+    "date",
+    "fecha",
+    "data",
+    "datum",
+    "transaction date",
+    "fecha operacion",
+    "fecha valor",
+    "booking date",
+    "value date",
   ],
-  amount: [
-    'amount', 'importe', 'valor', 'monto', 'quantia',
-    'transaction amount', 'importe operacion',
-    'debit', 'credit', 'débito', 'crédito',
+  [ColumnType.Amount]: [
+    "amount",
+    "importe",
+    "valor",
+    "monto",
+    "quantia",
+    "transaction amount",
+    "importe operacion",
+    "debit",
+    "credit",
+    "débito",
+    "crédito",
   ],
-  payee: [
-    'payee', 'merchant', 'comercio', 'beneficiario',
-    'description', 'concepto', 'descripcion', 'descripción',
-    'details', 'detalle', 'detalles',
+  [ColumnType.Payee]: [
+    "payee",
+    "merchant",
+    "comercio",
+    "beneficiario",
+    "description",
+    "concepto",
+    "descripcion",
+    "descripción",
+    "details",
+    "detalle",
+    "detalles",
   ],
-  description: [
-    'description', 'descripcion', 'descripción',
-    'concept', 'concepto', 'memo', 'note', 'nota',
-    'details', 'detalle', 'detalles',
+  [ColumnType.Description]: [
+    "description",
+    "descripcion",
+    "descripción",
+    "concept",
+    "concepto",
+    "memo",
+    "note",
+    "nota",
+    "details",
+    "detalle",
+    "detalles",
   ],
-  notes: [
-    'notes', 'notas', 'observations', 'observaciones',
-    'reference', 'referencia', 'comments', 'comentarios',
+  [ColumnType.Notes]: [
+    "notes",
+    "notas",
+    "observations",
+    "observaciones",
+    "reference",
+    "referencia",
+    "comments",
+    "comentarios",
   ],
-  balance: [
-    'balance', 'saldo', 'saldo disponible',
-    'available balance', 'current balance',
+  [ColumnType.Balance]: [
+    "balance",
+    "saldo",
+    "saldo disponible",
+    "available balance",
+    "current balance",
   ],
-  category: [
-    'category', 'categoria', 'categoría',
-    'type', 'tipo', 'classification',
+  [ColumnType.Category]: [
+    "category",
+    "categoria",
+    "categoría",
+    "type",
+    "tipo",
+    "classification",
   ],
-  unknown: [],
+  [ColumnType.Unknown]: [],
 };
 
 function looksLikeAmount(values: string[]): boolean {
-  const cleanValues = values.filter(v => v && v.trim());
+  const cleanValues = values.filter((v) => v && v.trim());
   if (cleanValues.length === 0) return false;
 
   const amountRegex = /^-?\(?[\d\s.,]+\)?$/;
-  const matches = cleanValues.filter(v => amountRegex.test(v.trim()));
+  const matches = cleanValues.filter((v) => amountRegex.test(v.trim()));
 
   return matches.length / cleanValues.length >= 0.7;
 }
 
 function detectAmountFormat(samples: string[]): AmountFormat {
   const cleanSamples = samples
-    .filter(s => s && s.trim())
-    .map(s => s.trim());
+    .filter((s) => s && s.trim())
+    .map((s) => s.trim());
 
   if (cleanSamples.length === 0) {
     return {
-      decimalSeparator: '.',
-      thousandsSeparator: ',',
+      decimalSeparator: ".",
+      thousandsSeparator: ",",
       isNegativeExpense: false,
     };
   }
@@ -74,26 +118,23 @@ function detectAmountFormat(samples: string[]): AmountFormat {
   let hasNegative = false;
 
   for (const sample of cleanSamples) {
-    if (sample.startsWith('-') || sample.startsWith('(')) {
+    if (sample.startsWith("-") || sample.startsWith("(")) {
       hasNegative = true;
     }
 
     if (/\d+\.\d{3},\d{2}/.test(sample)) {
       commaAsDecimal++;
-    }
-    else if (/\d+,\d{3}\.\d{2}/.test(sample)) {
+    } else if (/\d+,\d{3}\.\d{2}/.test(sample)) {
       dotAsDecimal++;
-    }
-    else if (/\d+,\d{1,2}$/.test(sample)) {
+    } else if (/\d+,\d{1,2}$/.test(sample)) {
       commaAsDecimal++;
-    }
-    else if (/\d+\.\d{1,2}$/.test(sample)) {
+    } else if (/\d+\.\d{1,2}$/.test(sample)) {
       dotAsDecimal++;
     }
   }
 
-  const decimalSeparator = commaAsDecimal > dotAsDecimal ? ',' : '.';
-  const thousandsSeparator = decimalSeparator === ',' ? '.' : ',';
+  const decimalSeparator = commaAsDecimal > dotAsDecimal ? "," : ".";
+  const thousandsSeparator = decimalSeparator === "," ? "." : ",";
 
   return {
     decimalSeparator,
@@ -103,20 +144,21 @@ function detectAmountFormat(samples: string[]): AmountFormat {
 }
 
 function looksLikePayee(values: string[]): boolean {
-  const cleanValues = values.filter(v => v && v.trim());
+  const cleanValues = values.filter((v) => v && v.trim());
   if (cleanValues.length === 0) return false;
 
-  const avgLength = cleanValues.reduce((sum, v) => sum + v.length, 0) / cleanValues.length;
-  
-  const allNumbers = cleanValues.every(v => /^[\d\s.,\-]+$/.test(v));
-  const allDates = cleanValues.every(v => looksLikeDate(v));
+  const avgLength =
+    cleanValues.reduce((sum, v) => sum + v.length, 0) / cleanValues.length;
+
+  const allNumbers = cleanValues.every((v) => /^[\d\s.,-]+$/.test(v));
+  const allDates = cleanValues.every((v) => looksLikeDate(v));
 
   return avgLength > 5 && !allNumbers && !allDates;
 }
 
 function detectColumnType(
   columnName: string,
-  values: string[]
+  values: string[],
 ): { type: ColumnType; confidence: number } {
   const lowerName = columnName.toLowerCase().trim();
 
@@ -128,39 +170,39 @@ function detectColumnType(
     }
   }
 
-  const cleanValues = values.filter(v => v && v.trim());
-  
+  const cleanValues = values.filter((v) => v && v.trim());
+
   if (cleanValues.length === 0) {
-    return { type: 'unknown', confidence: 0 };
+    return { type: ColumnType.Unknown, confidence: 0 };
   }
 
-  if (cleanValues.some(v => looksLikeDate(v))) {
-    const dateMatches = cleanValues.filter(v => looksLikeDate(v)).length;
+  if (cleanValues.some((v) => looksLikeDate(v))) {
+    const dateMatches = cleanValues.filter((v) => looksLikeDate(v)).length;
     const confidence = dateMatches / cleanValues.length;
     if (confidence >= 0.7) {
-      return { type: 'date', confidence };
+      return { type: ColumnType.Date, confidence };
     }
   }
 
   if (looksLikeAmount(cleanValues)) {
-    return { type: 'amount', confidence: 0.75 };
+    return { type: ColumnType.Amount, confidence: 0.75 };
   }
 
   if (looksLikePayee(cleanValues)) {
-    return { type: 'payee', confidence: 0.7 };
+    return { type: ColumnType.Payee, confidence: 0.7 };
   }
 
-  if (looksLikeAmount(cleanValues) && lowerName.includes('saldo')) {
-    return { type: 'balance', confidence: 0.8 };
+  if (looksLikeAmount(cleanValues) && lowerName.includes("saldo")) {
+    return { type: ColumnType.Balance, confidence: 0.8 };
   }
 
-  return { type: 'unknown', confidence: 0.3 };
+  return { type: ColumnType.Unknown, confidence: 0.3 };
 }
 
 export async function detectColumns(
   headers: string[],
   rows: string[][],
-  config: HeuristicConfig = DEFAULT_HEURISTIC_CONFIG
+  config: HeuristicConfig = DEFAULT_HEURISTIC_CONFIG,
 ): Promise<ColumnDetectionResult> {
   const sampleRows = rows.slice(0, Math.min(config.sampleSize, rows.length));
 
@@ -169,7 +211,7 @@ export async function detectColumns(
 
   for (let i = 0; i < headers.length; i++) {
     const columnName = headers[i];
-    const columnValues = sampleRows.map(row => row[i] || '');
+    const columnValues = sampleRows.map((row) => row[i] || "");
 
     const { type, confidence } = detectColumnType(columnName, columnValues);
 
@@ -186,23 +228,27 @@ export async function detectColumns(
 
   const overallConfidence = totalConfidence / headers.length;
 
-  const dateColumn = detectedColumns.find(col => col.type === 'date');
+  const dateColumn = detectedColumns.find(
+    (col) => col.type === ColumnType.Date,
+  );
   const dateFormatResult = dateColumn
     ? detectDateFormat(dateColumn.samples)
-    : { format: 'unknown' as const, confidence: 0 };
+    : { format: "unknown" as const, confidence: 0 };
 
-  const amountColumn = detectedColumns.find(col => col.type === 'amount');
+  const amountColumn = detectedColumns.find(
+    (col) => col.type === ColumnType.Amount,
+  );
   const amountFormat = amountColumn
     ? detectAmountFormat(amountColumn.samples)
     : {
-        decimalSeparator: '.' as const,
-        thousandsSeparator: ',' as const,
+        decimalSeparator: "." as const,
+        thousandsSeparator: "," as const,
         isNegativeExpense: false,
       };
 
   if (config.enableAIFallback && overallConfidence < config.minConfidence) {
     console.log(
-      `Heuristic confidence too low (${overallConfidence.toFixed(2)}), falling back to AI...`
+      `Heuristic confidence too low (${overallConfidence.toFixed(2)}), falling back to AI...`,
     );
 
     try {
@@ -213,20 +259,23 @@ export async function detectColumns(
       });
 
       return {
-        columns: aiResult.columns.map(col => ({
+        columns: aiResult.columns.map((col) => ({
           index: col.index,
           name: col.name,
           type: col.detectedType as ColumnType,
           confidence: col.confidence,
-          samples: sampleRows.map(row => row[col.index] || '').slice(0, 3),
+          samples: sampleRows.map((row) => row[col.index] || "").slice(0, 3),
         })),
-        dateFormat: (aiResult.dateFormat as DateFormat | undefined) || 'unknown',
+        dateFormat:
+          (aiResult.dateFormat as DateFormat | undefined) || "unknown",
         amountFormat: aiResult.amountFormat || amountFormat,
-        confidence: aiResult.columns.reduce((sum, col) => sum + col.confidence, 0) / aiResult.columns.length,
-        method: 'ai',
+        confidence:
+          aiResult.columns.reduce((sum, col) => sum + col.confidence, 0) /
+          aiResult.columns.length,
+        method: "ai",
       };
     } catch (error) {
-      console.error('AI fallback failed:', error);
+      console.error("AI fallback failed:", error);
     }
   }
 
@@ -235,17 +284,17 @@ export async function detectColumns(
     dateFormat: dateFormatResult.format,
     amountFormat,
     confidence: overallConfidence,
-    method: 'heuristic',
+    method: "heuristic",
   };
 }
 
 export function createColumnMapping(
-  detectionResult: ColumnDetectionResult
+  detectionResult: ColumnDetectionResult,
 ): Record<string, number> {
   const mapping: Record<string, number> = {};
 
   for (const column of detectionResult.columns) {
-    if (column.type !== 'unknown' && column.confidence >= 0.5) {
+    if (column.type !== ColumnType.Unknown && column.confidence >= 0.5) {
       if (!mapping[column.type]) {
         mapping[column.type] = column.index;
       }
