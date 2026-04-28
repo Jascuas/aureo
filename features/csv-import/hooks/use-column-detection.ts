@@ -2,9 +2,12 @@ import { useCallback } from "react";
 import type {
   ParsedCSVRow,
   ColumnDetectionResult,
-  DateFormat,
 } from "@/features/csv-import/types/import-types";
-import { ColumnType } from "@/features/csv-import/const/import-const";
+import {
+  ColumnType,
+  DEFAULT_AMOUNT_FORMAT,
+  DEFAULT_DATE_FORMAT,
+} from "@/features/csv-import/const/import-const";
 import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
 
 interface UseColumnDetectionOptions {
@@ -75,12 +78,8 @@ export function useColumnDetection({
               samples,
             };
           }),
-          dateFormat: "DD/MM/YYYY" as DateFormat,
-          amountFormat: {
-            decimalSeparator: "," as const,
-            thousandsSeparator: "." as const,
-            isNegativeExpense: true,
-          },
+          dateFormat: DEFAULT_DATE_FORMAT,
+          amountFormat: DEFAULT_AMOUNT_FORMAT,
           confidence: 0.85,
           method: "heuristic" as const,
         };

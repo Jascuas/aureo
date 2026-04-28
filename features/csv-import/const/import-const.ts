@@ -1,4 +1,8 @@
-import type { HeuristicConfig } from "../types/import-types";
+import type {
+  AmountFormat,
+  DateFormat,
+  HeuristicConfig,
+} from "../types/import-types";
 
 export enum ImportStep {
   UPLOAD = "UPLOAD",
@@ -38,4 +42,12 @@ export const DEFAULT_HEURISTIC_CONFIG: HeuristicConfig = {
   minConfidence: 0.7,
   sampleSize: 10,
   enableAIFallback: true,
+};
+
+export const DEFAULT_DATE_FORMAT: DateFormat = "DD/MM/YYYY";
+
+export const DEFAULT_AMOUNT_FORMAT: AmountFormat = {
+  decimalSeparator: ",",
+  thousandsSeparator: ".",
+  isNegativeExpense: true,
 };

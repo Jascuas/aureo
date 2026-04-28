@@ -9,7 +9,10 @@ import { prepareTransactionsForAnalysis } from "@/features/csv-import/lib/transa
 import { isRateLimitError } from "@/lib/errors";
 import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
 import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
-import { BatchProgressStage } from "@/features/csv-import/const/import-const";
+import {
+  BatchProgressStage,
+  DEFAULT_AMOUNT_FORMAT,
+} from "@/features/csv-import/const/import-const";
 import type {
   ParsedCSVRow,
   DateFormat,
@@ -49,11 +52,7 @@ export function useCategorizeRetry({
 
     const dateFormat =
       detectionResult?.dateFormat || ("DD/MM/YY" as DateFormat);
-    const amountFormat = detectionResult?.amountFormat || {
-      decimalSeparator: "," as const,
-      thousandsSeparator: "." as const,
-      isNegativeExpense: true,
-    };
+    const amountFormat = detectionResult?.amountFormat || DEFAULT_AMOUNT_FORMAT;
 
     // Use stored aiTransactions if available, otherwise fall back to all transactions
     const aiTransactions = analyzedRows.aiTransactions;
@@ -83,7 +82,11 @@ export function useCategorizeRetry({
           maxConcurrent: 3,
           retries: 2,
           onProgress: (current, total) =>
-            setBatchProgress({ current, total, stage: BatchProgressStage.CATEGORIZATION }),
+            setBatchProgress({
+              current,
+              total,
+              stage: BatchProgressStage.CATEGORIZATION,
+            }),
           signal: abortController.signal,
         },
       );

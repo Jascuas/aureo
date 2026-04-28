@@ -18,7 +18,11 @@ import { useSaveTemplate } from "@/features/csv-import/api/use-save-template";
 import { AlertCircle, Check, Save } from "lucide-react";
 
 import type { ColumnDetectionResult } from "@/features/csv-import/types/import-types";
-import { ColumnType } from "@/features/csv-import/const/import-const";
+import {
+  ColumnType,
+  DEFAULT_AMOUNT_FORMAT,
+  DEFAULT_DATE_FORMAT,
+} from "@/features/csv-import/const/import-const";
 import { ColumnPreview } from "@/features/csv-import/components/column-preview";
 import { ConfidenceBadge } from "@/features/csv-import/components/confidence-badge";
 import { FormatDetector } from "@/features/csv-import/components/format-detector";
@@ -134,12 +138,8 @@ export const ColumnMapping = ({
       accountId,
       name: templateName,
       columnMapping: reverseMapping,
-      dateFormat: detectionResult?.dateFormat || "DD/MM/YYYY",
-      amountFormat: detectionResult?.amountFormat || {
-        decimalSeparator: ",",
-        thousandsSeparator: ".",
-        isNegativeExpense: true,
-      },
+      dateFormat: detectionResult?.dateFormat || DEFAULT_DATE_FORMAT,
+      amountFormat: detectionResult?.amountFormat || DEFAULT_AMOUNT_FORMAT,
     });
 
     setTemplateName("");

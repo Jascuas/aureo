@@ -1,3 +1,16 @@
+/**
+ * Dev-only cap on rows imported per CSV upload.
+ * `null` = no cap (production behavior).
+ * Set via NEXT_PUBLIC_MAX_IMPORT_ROWS_DEV env var, only honored outside production.
+ */
+export const MAX_IMPORT_ROWS_DEV: number | null = (() => {
+  if (process.env.NODE_ENV === "production") return null;
+  const raw = process.env.NEXT_PUBLIC_MAX_IMPORT_ROWS_DEV;
+  if (!raw) return null;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+})();
+
 export const CSV_IMPORT_CONFIG = {
   DUPLICATE_DETECTION: {
     DATE_TOLERANCE_DAYS: 2,

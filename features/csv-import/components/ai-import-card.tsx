@@ -29,6 +29,7 @@ import { useDuplicateResolution } from "@/features/csv-import/hooks/use-duplicat
 import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
 import { useTemplateAutoApply } from "@/features/csv-import/hooks/use-template-auto-apply";
 import { useUnloadWarning } from "@/features/csv-import/hooks/use-unload-warning";
+import { MAX_IMPORT_ROWS_DEV } from "@/features/csv-import/lib/config";
 import { validateColumnMapping } from "@/features/csv-import/lib/validators";
 import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
 import { useConfirm } from "@/hooks/use-confirm";
@@ -165,8 +166,11 @@ export const AiImportCard = ({
         return (
           <UploadStep
             setCSVData={(fileName, headers, rows) => {
-              // QA/test: limitar a 10 transacciones importadas
-              setCSVData(fileName, headers, rows.slice(0, 10));
+              const cappedRows =
+                MAX_IMPORT_ROWS_DEV !== null
+                  ? rows.slice(0, MAX_IMPORT_ROWS_DEV)
+                  : rows;
+              setCSVData(fileName, headers, cappedRows);
               resetResolutions();
             }}
             setDetectionResult={setDetectionResult}
