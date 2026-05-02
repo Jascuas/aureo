@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import {
   MatchType,
   Resolution,
@@ -113,3 +114,28 @@ export const useDuplicateResolution = create<DuplicateResolutionState>(
     },
   }),
 );
+
+// Selectors — granular subscriptions to avoid unnecessary re-renders.
+export const useDuplicateDialog = () =>
+  useDuplicateResolution(
+    useShallow((s) => ({
+      isOpen: s.isOpen,
+      currentDuplicate: s.currentDuplicate,
+    })),
+  );
+
+export const useDuplicateResolutions = () =>
+  useDuplicateResolution((s) => s.resolutions);
+
+export const useDuplicateResolutionActions = () =>
+  useDuplicateResolution(
+    useShallow((s) => ({
+      openResolution: s.openResolution,
+      closeResolution: s.closeResolution,
+      resolveAs: s.resolveAs,
+      skipAllExact: s.skipAllExact,
+      getResolution: s.getResolution,
+      getPendingCount: s.getPendingCount,
+      reset: s.reset,
+    })),
+  );

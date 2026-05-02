@@ -8,7 +8,10 @@ import {
   ImportStep,
   Resolution,
 } from "@/features/csv-import/const/import-const";
-import { useDuplicateResolution } from "@/features/csv-import/store/duplicate-resolution";
+import {
+  useDuplicateResolutionActions,
+  useDuplicateResolutions,
+} from "@/features/csv-import/store/duplicate-resolution";
 import {
   useAnalyzedRows,
   useCurrentStep,
@@ -33,7 +36,8 @@ export const AiImportStepActions = memo(function AiImportStepActions({
   const currentStep = useCurrentStep();
   const analyzedRows = useAnalyzedRows();
   const { previousStep, nextStep } = useImportSessionActions();
-  const { resolutions, getPendingCount } = useDuplicateResolution();
+  const resolutions = useDuplicateResolutions();
+  const { getPendingCount } = useDuplicateResolutionActions();
   const loading = useUILoading();
   const errors = useUIErrors();
 

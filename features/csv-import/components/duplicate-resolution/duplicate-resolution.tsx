@@ -9,7 +9,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DuplicateComparison } from "@/features/csv-import/components/duplicate-comparison";
-import { useDuplicateResolution } from "@/features/csv-import/store/duplicate-resolution";
+import {
+  useDuplicateDialog,
+  useDuplicateResolutionActions,
+} from "@/features/csv-import/store/duplicate-resolution";
 import { useResolutionKeyboard } from "@/features/csv-import/hooks/use-resolution-keyboard";
 import { Resolution } from "@/features/csv-import/const/import-const";
 import type { DuplicateResolutionProps } from "@/features/csv-import/types/import-types";
@@ -21,8 +24,8 @@ export const DuplicateResolution = ({
   pendingCount,
   onSkipAll,
 }: DuplicateResolutionProps) => {
-  const { isOpen, currentDuplicate, closeResolution, resolveAs } =
-    useDuplicateResolution();
+  const { isOpen, currentDuplicate } = useDuplicateDialog();
+  const { closeResolution, resolveAs } = useDuplicateResolutionActions();
 
   useResolutionKeyboard({
     isOpen,

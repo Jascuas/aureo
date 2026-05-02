@@ -3,7 +3,10 @@ import { useCallback, useMemo } from "react";
 import { ImportStep } from "@/features/csv-import/const/import-const";
 import { useAnalyzeRetry } from "@/features/csv-import/hooks/use-analyze-retry";
 import { useCategorizeRetry } from "@/features/csv-import/hooks/use-categorize-retry";
-import { useDuplicateResolution } from "@/features/csv-import/store/duplicate-resolution";
+import {
+  useDuplicateResolutionActions,
+  useDuplicateResolutions,
+} from "@/features/csv-import/store/duplicate-resolution";
 import { useTransactionAnalyzer } from "@/features/csv-import/hooks/use-transaction-analyzer";
 import { useTransactionImport } from "@/features/csv-import/hooks/use-transaction-import";
 import { validateColumnMapping } from "@/features/csv-import/lib/validators";
@@ -57,7 +60,8 @@ export function useImportOrchestrator({
   } = useImportSessionActions();
   void _ignored;
 
-  const { resolutions, reset: resetResolutions } = useDuplicateResolution();
+  const resolutions = useDuplicateResolutions();
+  const { reset: resetResolutions } = useDuplicateResolutionActions();
   const { setError } = useImportUIActions();
 
   const [ConfirmDialog, confirm] = useConfirm(

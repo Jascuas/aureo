@@ -23,7 +23,7 @@ import {
 import { ConfidenceBadge } from "@/features/csv-import/components/confidence-badge";
 import { DuplicateIndicator } from "@/features/csv-import/components/duplicate-indicator";
 import { EditableCategoryCell } from "@/features/csv-import/components/editable-category-cell";
-import { useDuplicateResolution } from "@/features/csv-import/store/duplicate-resolution";
+import { useDuplicateResolutionActions } from "@/features/csv-import/store/duplicate-resolution";
 import type {
   DuplicateMatch,
   PayeeMatchResult,
@@ -48,7 +48,7 @@ export const AiPreviewTable = ({
   onCategoryChange,
 }: AiPreviewTableProps) => {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const { openResolution, getResolution } = useDuplicateResolution();
+  const { openResolution, getResolution } = useDuplicateResolutionActions();
 
   const suggestionsByRowIndex = new Map(
     (payeeMatches ?? []).map((pm) => [
