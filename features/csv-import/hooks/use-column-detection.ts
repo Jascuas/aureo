@@ -8,7 +8,11 @@ import {
   DEFAULT_AMOUNT_FORMAT,
   DEFAULT_DATE_FORMAT,
 } from "@/features/csv-import/const/import-const";
-import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
+import {
+  useImportUIActions,
+  useUIErrors,
+  useUILoading,
+} from "@/features/csv-import/store/import-ui-state";
 
 interface UseColumnDetectionOptions {
   onDetected: (
@@ -26,7 +30,9 @@ interface UseColumnDetectionReturn {
 export function useColumnDetection({
   onDetected,
 }: UseColumnDetectionOptions): UseColumnDetectionReturn {
-  const { loading, errors, setLoading, setError } = useImportUIState();
+  const loading = useUILoading();
+  const errors = useUIErrors();
+  const { setLoading, setError } = useImportUIActions();
 
   const detectColumns = useCallback(
     (headers: string[], rows: ParsedCSVRow[]) => {

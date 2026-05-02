@@ -5,9 +5,11 @@ import { RateLimitError } from "@/lib/errors";
 
 import { client } from "@/lib/hono";
 
-type ResponseType = InferResponseType<
-  (typeof client.api)["csv-import"]["categorize"]["$post"]
+type SuccessResponse = InferResponseType<
+  (typeof client.api)["csv-import"]["categorize"]["$post"],
+  200
 >;
+type ResponseType = SuccessResponse["data"];
 type RequestType = InferRequestType<
   (typeof client.api)["csv-import"]["categorize"]["$post"]
 >["json"];
@@ -35,7 +37,11 @@ export const useCategorizeTransactions = () => {
         throw new Error("Failed to categorize transactions");
       }
 
-      return await response.json();
+      const result = await response.json();
+      if (!("data" in result)) {
+        throw new Error("Unexpected response shape");
+      }
+      return result.data;
     },
     onError: (error) => {
       // Don't show toast for rate limit errors (handled in UI)

@@ -1,18 +1,11 @@
 import type {
+  AICategorization,
   EnrichedCategorization,
   TransactionForAnalysis,
 } from "@/features/csv-import/types/import-types";
 
-type CategorizationAPIResult = {
-  csvRowIndex: number;
-  categoryId: string | null;
-  transactionTypeId: string;
-  confidence: number;
-  normalizedPayee: string;
-};
-
 export function enrichCategorizations(
-  categorizations: CategorizationAPIResult[],
+  categorizations: AICategorization[],
   originalTransactions: TransactionForAnalysis[],
 ): EnrichedCategorization[] {
   return categorizations.map((cat) => {

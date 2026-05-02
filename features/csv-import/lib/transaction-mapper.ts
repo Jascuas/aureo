@@ -50,12 +50,26 @@ export function prepareTransactionsForAnalysis(
 
 export function transformDuplicates<
   T extends { existingTransaction: { date: string | Date } },
->(duplicates: T[]): T[] {
+>(
+  duplicates: T[],
+): Array<
+  Omit<T, "existingTransaction"> & {
+    existingTransaction: Omit<T["existingTransaction"], "date"> & {
+      date: Date;
+    };
+  }
+> {
   return duplicates.map((dup) => ({
     ...dup,
     existingTransaction: {
       ...dup.existingTransaction,
       date: new Date(dup.existingTransaction.date),
     },
-  }));
+  })) as Array<
+    Omit<T, "existingTransaction"> & {
+      existingTransaction: Omit<T["existingTransaction"], "date"> & {
+        date: Date;
+      };
+    }
+  >;
 }

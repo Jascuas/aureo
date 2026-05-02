@@ -3,36 +3,15 @@ import { accounts, transactions } from "@/db/schema";
 import { and, between, eq, sql } from "drizzle-orm";
 import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
 import { MatchType } from "@/features/csv-import/const/import-const";
-
-export type TransactionInput = {
-  date: Date;
-  amount: number;
-  payee: string;
-};
-
-export type DuplicateMatch = {
-  csvIndex: number;
-  existingTransaction: {
-    id: string;
-    date: Date;
-    amount: number;
-    payee: string;
-    accountId: string;
-  };
-  matchType: MatchType;
-  score: number;
-};
-
-export type DuplicateDetectionResult = {
-  duplicates: DuplicateMatch[];
-  totalChecked: number;
-  exactMatches: number;
-  fuzzyMatches: number;
-};
+import type {
+  DuplicateDetectionResult,
+  DuplicateMatch,
+  DuplicateTxInput,
+} from "@/features/csv-import/types/import-types";
 
 async function findExactMatches(
   userId: string,
-  inputs: TransactionInput[],
+  inputs: DuplicateTxInput[],
 ): Promise<Map<number, DuplicateMatch>> {
   const matches = new Map<number, DuplicateMatch>();
 
@@ -74,7 +53,7 @@ async function findExactMatches(
 
 async function findFuzzyMatches(
   userId: string,
-  inputs: TransactionInput[],
+  inputs: DuplicateTxInput[],
   exactMatches: Map<number, DuplicateMatch>,
 ): Promise<Map<number, DuplicateMatch>> {
   const matches = new Map<number, DuplicateMatch>();
@@ -150,7 +129,7 @@ async function findFuzzyMatches(
 
 export async function detectDuplicates(
   userId: string,
-  inputs: TransactionInput[],
+  inputs: DuplicateTxInput[],
 ): Promise<DuplicateDetectionResult> {
   // No batch limit - duplicate detection is deterministic SQL queries
   // TODO: Optimize to use bulk queries instead of N+1 pattern

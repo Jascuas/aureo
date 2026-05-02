@@ -1,7 +1,7 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { ColumnMapping } from "@/features/csv-import/components/column-mapping";
-import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
+import { useUIErrors } from "@/features/csv-import/store/import-ui-state";
 
 interface MappingStepProps {
   accountId?: string;
@@ -18,7 +18,7 @@ export function MappingStep({
   detectionResult,
   onMappingChange,
 }: MappingStepProps) {
-  const { errors } = useImportUIState();
+  const errors = useUIErrors();
 
   return (
     <>

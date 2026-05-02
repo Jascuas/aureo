@@ -4,17 +4,21 @@ import {
   prepareTransactionsForAnalysis,
   transformDuplicates,
 } from "@/features/csv-import/lib/transaction-mapper";
-import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
+import { useImportUIActions } from "@/features/csv-import/store/import-ui-state";
 import {
   BatchProgressStage,
   DEFAULT_AMOUNT_FORMAT,
+  DEFAULT_DATE_FORMAT,
 } from "@/features/csv-import/const/import-const";
 import type {
-  ParsedCSVRow,
-  DateFormat,
+  AITransaction,
   AmountFormat,
+  AutoResolvedTransaction,
+  DateFormat,
+  DuplicateMatch,
+  ParsedCSVRow,
+  PayeeMatchResult,
 } from "@/features/csv-import/types/import-types";
-import type { AITransaction } from "@/features/csv-import/lib/analyzer";
 
 interface UseAnalyzeRetryOptions {
   csvData: { rows: ParsedCSVRow[] } | null;
@@ -23,11 +27,11 @@ interface UseAnalyzeRetryOptions {
     dateFormat: DateFormat;
     amountFormat: AmountFormat;
   } | null;
-  onDuplicatesDetected: (duplicates: any[]) => void;
+  onDuplicatesDetected: (duplicates: DuplicateMatch[]) => void;
   onAnalyzeComplete: (opts: {
-    autoResolved: any[];
+    autoResolved: AutoResolvedTransaction[];
     aiTransactions: AITransaction[];
-    payeeMatches: any[];
+    payeeMatches: PayeeMatchResult[];
   }) => void;
 }
 
@@ -39,7 +43,7 @@ export function useAnalyzeRetry({
   onAnalyzeComplete,
 }: UseAnalyzeRetryOptions) {
   const analyzeMutation = useAnalyze();
-  const { setLoading, setError, setBatchProgress } = useImportUIState();
+  const { setLoading, setError, setBatchProgress } = useImportUIActions();
 
   const retry = useCallback(async () => {
     if (!csvData || !columnMapping) return;
@@ -47,8 +51,7 @@ export function useAnalyzeRetry({
     setError("analyze", null);
     setLoading("analyzing", true);
 
-    const dateFormat =
-      detectionResult?.dateFormat || ("DD/MM/YY" as DateFormat);
+    const dateFormat = detectionResult?.dateFormat || DEFAULT_DATE_FORMAT;
     const amountFormat = detectionResult?.amountFormat || DEFAULT_AMOUNT_FORMAT;
 
     const transactions = prepareTransactionsForAnalysis(
@@ -73,18 +76,17 @@ export function useAnalyzeRetry({
         stage: BatchProgressStage.ANALYZING,
       });
 
-      if (!("data" in result)) {
-        throw new Error("Invalid analyze response");
-      }
-
-      const { duplicates, autoResolved, aiTransactions, payeeMatches } =
-        result.data;
+      const { duplicates, autoResolved, aiTransactions, payeeMatches } = result;
 
       const transformedDuplicates = transformDuplicates(duplicates);
       onDuplicatesDetected(transformedDuplicates);
       onAnalyzeComplete({ autoResolved, aiTransactions, payeeMatches });
-    } catch (error: any) {
-      setError("analyze", error?.message || "Failed to analyze transactions");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to analyze transactions";
+      setError("analyze", message);
     } finally {
       setLoading("analyzing", false);
       setBatchProgress(null);

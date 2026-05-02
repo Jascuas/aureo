@@ -1,17 +1,17 @@
 import { useCallback, useRef } from "react";
 import { useCategorizeTransactions } from "@/features/csv-import/api/use-categorize-transactions";
 import {
-  processBatchesWithConcurrency,
-  partitionBatchResults,
-} from "@/features/csv-import/lib/batch-processor";
-import { enrichCategorizations } from "@/features/csv-import/lib/transaction-enricher";
+  CATEGORIZE_BATCH_SIZE,
+  mergeAutoResolvedAndAi,
+  runCategorizeBatches,
+} from "@/features/csv-import/lib/analysis-pipeline";
 import { prepareTransactionsForAnalysis } from "@/features/csv-import/lib/transaction-mapper";
-import { isRateLimitError } from "@/lib/errors";
-import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
-import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
+import { useImportUIActions } from "@/features/csv-import/store/import-ui-state";
+import { useAnalyzedRows } from "@/features/csv-import/store/import-session";
 import {
   BatchProgressStage,
   DEFAULT_AMOUNT_FORMAT,
+  DEFAULT_DATE_FORMAT,
 } from "@/features/csv-import/const/import-const";
 import type {
   ParsedCSVRow,
@@ -37,8 +37,8 @@ export function useCategorizeRetry({
   onCategorizationsReady,
 }: UseCategorizeRetryOptions) {
   const categorizeMutation = useCategorizeTransactions();
-  const { setLoading, setError, setBatchProgress } = useImportUIState();
-  const { analyzedRows } = useImportSession();
+  const { setLoading, setError, setBatchProgress } = useImportUIActions();
+  const analyzedRows = useAnalyzedRows();
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const retry = useCallback(async () => {
@@ -50,11 +50,9 @@ export function useCategorizeRetry({
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
-    const dateFormat =
-      detectionResult?.dateFormat || ("DD/MM/YY" as DateFormat);
+    const dateFormat = detectionResult?.dateFormat || DEFAULT_DATE_FORMAT;
     const amountFormat = detectionResult?.amountFormat || DEFAULT_AMOUNT_FORMAT;
 
-    // Use stored aiTransactions if available, otherwise fall back to all transactions
     const aiTransactions = analyzedRows.aiTransactions;
     const transactionsForAnalysis = prepareTransactionsForAnalysis(
       csvData.rows,
@@ -67,68 +65,37 @@ export function useCategorizeRetry({
       aiTransactions.length > 0 ? aiTransactions : transactionsForAnalysis;
 
     try {
-      const batchCount = Math.ceil(toCategorizeBatch.length / 30);
+      const batchCount = Math.ceil(
+        toCategorizeBatch.length / CATEGORIZE_BATCH_SIZE,
+      );
       setBatchProgress({
         current: 0,
         total: batchCount,
         stage: BatchProgressStage.CATEGORIZATION,
       });
 
-      const results = await processBatchesWithConcurrency(
-        toCategorizeBatch,
-        30,
-        (batch) => categorizeMutation.mutateAsync({ transactions: batch }),
-        {
-          maxConcurrent: 3,
-          retries: 2,
-          onProgress: (current, total) =>
-            setBatchProgress({
-              current,
-              total,
-              stage: BatchProgressStage.CATEGORIZATION,
-            }),
-          signal: abortController.signal,
-        },
-      );
+      const result = await runCategorizeBatches({
+        aiTransactions: toCategorizeBatch,
+        mutate: (args) => categorizeMutation.mutateAsync(args),
+        signal: abortController.signal,
+        onProgress: (current, total) =>
+          setBatchProgress({
+            current,
+            total,
+            stage: BatchProgressStage.CATEGORIZATION,
+          }),
+      });
 
-      const { successful, failed } = partitionBatchResults(results);
-
-      if (failed.length > 0) {
-        const rateLimitError = failed.find((f) => isRateLimitError(f.error));
-        if (rateLimitError && isRateLimitError(rateLimitError.error)) {
-          setError(
-            "categorize",
-            `⚠️ API Rate Limit Exceeded: ${rateLimitError.error.message}\n\nPlease wait ${rateLimitError.error.retryAfter || 60} seconds before retrying.`,
-          );
-          return;
-        }
-
-        setError(
-          "categorize",
-          `${failed.length} categorization batch(es) failed. Cannot proceed with incomplete data.`,
-        );
+      if (!result.ok) {
+        setError("categorize", result.error);
         return;
       }
 
-      const aiCategorizations = successful.flatMap((r) => {
-        if (!("data" in r.data)) return [];
-        return r.data.data.results;
-      });
-
-      // Merge with autoResolved
-      const autoResolved = analyzedRows.autoResolved;
-      const allRaw = [
-        ...autoResolved.map((r) => ({
-          csvRowIndex: r.csvRowIndex,
-          categoryId: r.categoryId,
-          transactionTypeId: r.transactionTypeId,
-          confidence: r.confidence,
-          normalizedPayee: r.normalizedPayee,
-        })),
-        ...aiCategorizations,
-      ];
-
-      const enriched = enrichCategorizations(allRaw, transactionsForAnalysis);
+      const enriched = mergeAutoResolvedAndAi(
+        analyzedRows.autoResolved,
+        result.aiCategorizations,
+        transactionsForAnalysis,
+      );
       onCategorizationsReady(enriched);
     } catch (error: any) {
       if (error.message === "Cancelled") {

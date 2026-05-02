@@ -1,25 +1,18 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { persist } from "zustand/middleware";
+import { useShallow } from "zustand/react/shallow";
 import type {
+  AITransaction,
+  AutoResolvedTransaction,
   ColumnDetectionResult,
+  DuplicateMatch,
   EnrichedCategorization,
   ParsedCSVRow,
   ImportTemplate,
+  PayeeMatchResult,
 } from "@/features/csv-import/types/import-types";
 import { ImportStep } from "@/features/csv-import/const/import-const";
-import type { DuplicateMatch } from "@/features/csv-import/lib/duplicate-matcher";
-import type { PayeeMatchResult } from "@/features/csv-import/lib/payee-category-matcher";
-import type { AITransaction } from "@/features/csv-import/lib/analyzer";
-
-export type { EnrichedCategorization };
-
-type AutoResolved = {
-  csvRowIndex: number;
-  categoryId: string;
-  transactionTypeId: string;
-  confidence: number;
-  normalizedPayee: string;
-};
+import { createSessionStorage } from "@/features/csv-import/lib/session-storage";
 
 type ImportSessionState = {
   currentStep: ImportStep;
@@ -42,7 +35,7 @@ type ImportSessionState = {
     // Legacy — kept for review step suggestions UI
     payeeMatches: PayeeMatchResult[];
     // New — from /analyze endpoint
-    autoResolved: AutoResolved[];
+    autoResolved: AutoResolvedTransaction[];
     aiTransactions: AITransaction[];
   };
 
@@ -65,7 +58,7 @@ type ImportSessionState = {
   setDuplicates: (duplicates: DuplicateMatch[]) => void;
   setCategorizations: (categorizations: EnrichedCategorization[]) => void;
   setPayeeMatches: (payeeMatches: PayeeMatchResult[]) => void;
-  setAutoResolved: (autoResolved: AutoResolved[]) => void;
+  setAutoResolved: (autoResolved: AutoResolvedTransaction[]) => void;
   setAITransactions: (aiTransactions: AITransaction[]) => void;
   setImportResult: (result: ImportSessionState["importResult"]) => void;
 
@@ -218,60 +211,38 @@ export const useImportSession = create<ImportSessionState>()(
     }),
     {
       name: "aureo-import-session",
-      storage: {
-        getItem: (name) => {
-          const str = sessionStorage.getItem(name);
-          if (!str) return null;
-
-          const stored = JSON.parse(str);
-
-          if (stored.state?.csvData?.rows) {
-            stored.state.csvData.rows = stored.state.csvData.rows.map(
-              (row: ParsedCSVRow) => ({
-                ...row,
-                mapped: row.mapped
-                  ? {
-                      ...row.mapped,
-                      date: row.mapped.date ? new Date(row.mapped.date) : null,
-                    }
-                  : undefined,
-              }),
-            );
-          }
-
-          if (stored.state?.columnMapping?.selectedTemplate?.createdAt) {
-            stored.state.columnMapping.selectedTemplate.createdAt = new Date(
-              stored.state.columnMapping.selectedTemplate.createdAt,
-            );
-          }
-          if (stored.state?.columnMapping?.selectedTemplate?.updatedAt) {
-            stored.state.columnMapping.selectedTemplate.updatedAt = new Date(
-              stored.state.columnMapping.selectedTemplate.updatedAt,
-            );
-          }
-
-          if (stored.state?.analyzedRows?.duplicates) {
-            stored.state.analyzedRows.duplicates =
-              stored.state.analyzedRows.duplicates.map(
-                (dup: DuplicateMatch) => ({
-                  ...dup,
-                  existingTransaction: {
-                    ...dup.existingTransaction,
-                    date: new Date(dup.existingTransaction.date),
-                  },
-                }),
-              );
-          }
-
-          return stored;
-        },
-        setItem: (name, value) => {
-          sessionStorage.setItem(name, JSON.stringify(value));
-        },
-        removeItem: (name) => {
-          sessionStorage.removeItem(name);
-        },
-      },
+      storage: createSessionStorage<ImportSessionState>(),
     },
   ),
 );
+
+// Selectors — granular subscriptions to avoid unnecessary re-renders.
+export const useCurrentStep = () => useImportSession((s) => s.currentStep);
+
+export const useCSVData = () => useImportSession((s) => s.csvData);
+
+export const useColumnMapping = () => useImportSession((s) => s.columnMapping);
+
+export const useAnalyzedRows = () => useImportSession((s) => s.analyzedRows);
+
+export const useImportResult = () => useImportSession((s) => s.importResult);
+
+export const useImportSessionActions = () =>
+  useImportSession(
+    useShallow((s) => ({
+      setCSVData: s.setCSVData,
+      setDetectionResult: s.setDetectionResult,
+      setSelectedTemplate: s.setSelectedTemplate,
+      setFinalMapping: s.setFinalMapping,
+      setDuplicates: s.setDuplicates,
+      setCategorizations: s.setCategorizations,
+      setPayeeMatches: s.setPayeeMatches,
+      setAutoResolved: s.setAutoResolved,
+      setAITransactions: s.setAITransactions,
+      setImportResult: s.setImportResult,
+      nextStep: s.nextStep,
+      previousStep: s.previousStep,
+      goToStep: s.goToStep,
+      reset: s.reset,
+    })),
+  );

@@ -24,20 +24,12 @@ import { ConfidenceBadge } from "@/features/csv-import/components/confidence-bad
 import { DuplicateIndicator } from "@/features/csv-import/components/duplicate-indicator";
 import { EditableCategoryCell } from "@/features/csv-import/components/editable-category-cell";
 import { useDuplicateResolution } from "@/features/csv-import/hooks/use-duplicate-resolution";
-import type { DuplicateMatch } from "@/features/csv-import/lib/duplicate-matcher";
-import type { PayeeMatchResult } from "@/features/csv-import/lib/payee-category-matcher";
+import type {
+  DuplicateMatch,
+  PayeeMatchResult,
+  PreviewRow,
+} from "@/features/csv-import/types/import-types";
 import { formatCurrency } from "@/lib/utils";
-
-type PreviewRow = {
-  csvRowIndex: number;
-  date: Date;
-  payee: string;
-  amount: number;
-  categoryId: string | null;
-  confidence: number;
-  duplicate: DuplicateMatch | null;
-  userEdited: boolean;
-};
 
 type AiPreviewTableProps = {
   rows: PreviewRow[];

@@ -1,28 +1,41 @@
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef } from "react";
 import { useAnalyze } from "@/features/csv-import/api/use-analyze";
 import { useCategorizeTransactions } from "@/features/csv-import/api/use-categorize-transactions";
 import {
-  processBatchesWithConcurrency,
-  partitionBatchResults,
-} from "@/features/csv-import/lib/batch-processor";
-import { prepareTransactionsForAnalysis } from "@/features/csv-import/lib/transaction-mapper";
-import { enrichCategorizations } from "@/features/csv-import/lib/transaction-enricher";
-import { isRateLimitError } from "@/lib/errors";
-import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
-import { transformDuplicates } from "@/features/csv-import/lib/transaction-mapper";
+  CATEGORIZE_BATCH_SIZE,
+  mergeAutoResolvedAndAi,
+  runCategorizeBatches,
+} from "@/features/csv-import/lib/analysis-pipeline";
+import {
+  prepareTransactionsForAnalysis,
+  transformDuplicates,
+} from "@/features/csv-import/lib/transaction-mapper";
+import {
+  useImportUIActions,
+  useUILoading,
+} from "@/features/csv-import/store/import-ui-state";
 import {
   BatchProgressStage,
   DEFAULT_AMOUNT_FORMAT,
+  DEFAULT_DATE_FORMAT,
 } from "@/features/csv-import/const/import-const";
-import type { AITransaction } from "@/features/csv-import/lib/analyzer";
-import type { EnrichedCategorization } from "@/features/csv-import/types/import-types";
+import type {
+  AITransaction,
+  AmountFormat,
+  AutoResolvedTransaction,
+  DateFormat,
+  DuplicateMatch,
+  EnrichedCategorization,
+  ParsedCSVRow,
+  PayeeMatchResult,
+} from "@/features/csv-import/types/import-types";
 
 interface AnalyzeCallbacks {
-  onDuplicatesDetected: (duplicates: any[]) => void;
+  onDuplicatesDetected: (duplicates: DuplicateMatch[]) => void;
   onAnalyzeComplete: (opts: {
-    autoResolved: any[];
+    autoResolved: AutoResolvedTransaction[];
     aiTransactions: AITransaction[];
-    payeeMatches: any[];
+    payeeMatches: PayeeMatchResult[];
   }) => void;
   onCategorizationsReady: (categorizations: EnrichedCategorization[]) => void;
   onError: (error: string) => void;
@@ -30,9 +43,12 @@ interface AnalyzeCallbacks {
 }
 
 interface UseTransactionAnalyzerOptions {
-  csvData: { fileName: string; headers: string[]; rows: any[] } | null;
+  csvData: { fileName: string; headers: string[]; rows: ParsedCSVRow[] } | null;
   columnMapping: Record<string, number> | null;
-  detectionResult: { dateFormat: string; amountFormat: any } | null;
+  detectionResult: {
+    dateFormat: DateFormat;
+    amountFormat: AmountFormat;
+  } | null;
   callbacks: AnalyzeCallbacks;
 }
 
@@ -53,17 +69,9 @@ export function useTransactionAnalyzer({
   const analyzeMutation = useAnalyze();
   const categorizeMutation = useCategorizeTransactions();
 
-  const analyzeMutateRef = useRef(analyzeMutation.mutateAsync);
-  const categorizeMutateRef = useRef(categorizeMutation.mutateAsync);
-  useEffect(() => {
-    analyzeMutateRef.current = analyzeMutation.mutateAsync;
-  });
-  useEffect(() => {
-    categorizeMutateRef.current = categorizeMutation.mutateAsync;
-  });
-
-  const { loading, setLoading, setError, setBatchProgress } =
-    useImportUIState();
+  const loading = useUILoading();
+  const { setLoading, setError, setBatchProgress, setAnalyzeComplete } =
+    useImportUIActions();
 
   const analyze = useCallback(async () => {
     if (isAnalyzingRef.current) return;
@@ -76,13 +84,14 @@ export function useTransactionAnalyzer({
     setError("categorize", null);
     setLoading("analyzing", true);
     setLoading("categorizing", true);
+    setAnalyzeComplete(false);
     isAnalyzingRef.current = true;
 
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
     const amountFormat = detectionResult?.amountFormat || DEFAULT_AMOUNT_FORMAT;
-    const dateFormat = (detectionResult?.dateFormat as any) || "DD/MM/YY";
+    const dateFormat = detectionResult?.dateFormat || DEFAULT_DATE_FORMAT;
 
     const transactionsForAnalysis = prepareTransactionsForAnalysis(
       csvData.rows,
@@ -99,7 +108,7 @@ export function useTransactionAnalyzer({
         stage: BatchProgressStage.ANALYZING,
       });
 
-      const analyzeResult = await analyzeMutateRef.current({
+      const analyzeResult = await analyzeMutation.mutateAsync({
         transactions: transactionsForAnalysis,
       });
 
@@ -115,32 +124,22 @@ export function useTransactionAnalyzer({
         return;
       }
 
-      if (!("data" in analyzeResult)) {
-        throw new Error("Invalid analyze response");
-      }
-
       const { duplicates, autoResolved, aiTransactions, payeeMatches } =
-        analyzeResult.data;
+        analyzeResult;
 
-      const transformedDuplicates = transformDuplicates(duplicates);
-      callbacks.onDuplicatesDetected(transformedDuplicates);
+      callbacks.onDuplicatesDetected(transformDuplicates(duplicates));
       callbacks.onAnalyzeComplete({
         autoResolved,
         aiTransactions,
         payeeMatches,
       });
+      setAnalyzeComplete(true);
 
-      // ── Phase 2: /categorize (only AI transactions) ───────────────────────
+      // ── Phase 2: /categorize ──────────────────────────────────────────────
       if (aiTransactions.length === 0) {
-        // All auto-resolved — build enriched from autoResolved + original data
-        const enriched = enrichCategorizations(
-          autoResolved.map((r: any) => ({
-            csvRowIndex: r.csvRowIndex,
-            categoryId: r.categoryId,
-            transactionTypeId: r.transactionTypeId,
-            confidence: r.confidence,
-            normalizedPayee: r.normalizedPayee,
-          })),
+        const enriched = mergeAutoResolvedAndAi(
+          autoResolved,
+          [],
           transactionsForAnalysis,
         );
         callbacks.onCategorizationsReady(enriched);
@@ -148,73 +147,37 @@ export function useTransactionAnalyzer({
         return;
       }
 
-      const categorizeBatchCount = Math.ceil(aiTransactions.length / 30);
+      const categorizeBatchCount = Math.ceil(
+        aiTransactions.length / CATEGORIZE_BATCH_SIZE,
+      );
       setBatchProgress({
         current: 0,
         total: categorizeBatchCount,
         stage: BatchProgressStage.CATEGORIZATION,
       });
 
-      const categorizeResults = await processBatchesWithConcurrency(
+      const categorizeResult = await runCategorizeBatches({
         aiTransactions,
-        30,
-        (batch) => categorizeMutateRef.current({ transactions: batch }),
-        {
-          maxConcurrent: 3,
-          retries: 2,
-          onProgress: (current, total) =>
-            setBatchProgress({
-              current,
-              total,
-              stage: BatchProgressStage.CATEGORIZATION,
-            }),
-          signal: abortController.signal,
-        },
-      );
+        mutate: (args) => categorizeMutation.mutateAsync(args),
+        signal: abortController.signal,
+        onProgress: (current, total) =>
+          setBatchProgress({
+            current,
+            total,
+            stage: BatchProgressStage.CATEGORIZATION,
+          }),
+      });
 
-      const {
-        successful: successfulCategorizations,
-        failed: failedCategorizations,
-      } = partitionBatchResults(categorizeResults);
-
-      if (failedCategorizations.length > 0) {
-        const rateLimitError = failedCategorizations.find((f) =>
-          isRateLimitError(f.error),
-        );
-
-        if (rateLimitError && isRateLimitError(rateLimitError.error)) {
-          setError(
-            "categorize",
-            `⚠️ API Rate Limit Exceeded: ${rateLimitError.error.message}\n\n` +
-              `Processing stopped. Please wait ${rateLimitError.error.retryAfter || 60} seconds before retrying.`,
-          );
-        } else {
-          setError(
-            "categorize",
-            `${failedCategorizations.length} categorization batch(es) failed. Cannot proceed with incomplete data.`,
-          );
-        }
+      if (!categorizeResult.ok) {
+        setError("categorize", categorizeResult.error);
         return;
       }
 
-      const aiCategorizations = successfulCategorizations.flatMap((r) => {
-        if (!("data" in r.data)) return [];
-        return r.data.data.results;
-      });
-
-      // Merge autoResolved + AI results, enrich, sort
-      const allRaw = [
-        ...autoResolved.map((r: any) => ({
-          csvRowIndex: r.csvRowIndex,
-          categoryId: r.categoryId,
-          transactionTypeId: r.transactionTypeId,
-          confidence: r.confidence,
-          normalizedPayee: r.normalizedPayee,
-        })),
-        ...aiCategorizations,
-      ];
-
-      const enriched = enrichCategorizations(allRaw, transactionsForAnalysis);
+      const enriched = mergeAutoResolvedAndAi(
+        autoResolved,
+        categorizeResult.aiCategorizations,
+        transactionsForAnalysis,
+      );
       callbacks.onCategorizationsReady(enriched);
       callbacks.onComplete();
     } catch (error: any) {
@@ -235,9 +198,12 @@ export function useTransactionAnalyzer({
     columnMapping,
     detectionResult,
     callbacks,
+    analyzeMutation,
+    categorizeMutation,
     setLoading,
     setError,
     setBatchProgress,
+    setAnalyzeComplete,
   ]);
 
   const cancel = useCallback(() => {

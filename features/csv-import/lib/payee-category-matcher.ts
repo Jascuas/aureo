@@ -3,39 +3,13 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "@/db/drizzle";
 import { accounts, transactions, transactionTypes } from "@/db/schema";
 import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
-
-export type PayeeMatchType = "exact" | "fuzzy";
-
-export type PayeeCategoryMatch = {
-  categoryId: string;
-  transactionTypeId: string;
-  matchCount: number;
-  totalMatches: number;
-  confidence: number;
-  matchType: PayeeMatchType;
-};
-
-export type PayeeMatchResult = {
-  csvRowIndex: number;
-  matches: PayeeCategoryMatch[];
-};
-
-export type PayeeMatchInput = {
-  csvRowIndex: number;
-  payee: string;
-};
-
-export type PayeeMatchSummary = {
-  totalChecked: number;
-  autoResolved: number;
-  partialMatches: number;
-  unmatched: number;
-};
-
-export type PayeeMatchDetectionResult = {
-  results: PayeeMatchResult[];
-  summary: PayeeMatchSummary;
-};
+import { MatchType } from "@/features/csv-import/const/import-const";
+import type {
+  PayeeCategoryMatch,
+  PayeeMatchDetectionResult,
+  PayeeMatchInput,
+  PayeeMatchResult,
+} from "@/features/csv-import/types/import-types";
 
 async function findExactPayeeMatches(
   userId: string,
@@ -69,7 +43,7 @@ async function findExactPayeeMatches(
       matchCount: r.matchCount,
       totalMatches,
       confidence: r.matchCount / totalMatches,
-      matchType: "exact" as PayeeMatchType,
+      matchType: MatchType.Exact,
     }));
 }
 
@@ -107,7 +81,7 @@ async function findFuzzyPayeeMatches(
       matchCount: r.matchCount,
       totalMatches,
       confidence: r.matchCount / totalMatches,
-      matchType: "fuzzy" as PayeeMatchType,
+      matchType: MatchType.Fuzzy,
     }));
 }
 

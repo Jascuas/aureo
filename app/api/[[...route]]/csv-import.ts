@@ -242,7 +242,10 @@ const app = new Hono<AppEnv>()
       });
 
       try {
-        const results = await categorizeTransactions(userId, transactions);
+        const results = await categorizeTransactions(
+          userId,
+          transactions as Parameters<typeof categorizeTransactions>[1],
+        );
 
         return c.json({
           data: {

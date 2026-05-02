@@ -1,42 +1,14 @@
 import { normalizePayeeName } from "@/lib/utils";
 import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
 import { detectDuplicates } from "@/features/csv-import/lib/duplicate-matcher";
-import {
-  matchPayeesToCategories,
-  type PayeeMatchResult,
-} from "@/features/csv-import/lib/payee-category-matcher";
-import type { TransactionForAnalysis } from "@/features/csv-import/types/import-types";
-
-export type AITransaction = TransactionForAnalysis & {
-  historicalHint?: {
-    categoryId: string;
-    transactionTypeId: string;
-    confidence: number;
-    matchCount: number;
-    matchType: "exact" | "fuzzy";
-  };
-};
-
-export type AutoResolvedTransaction = {
-  csvRowIndex: number;
-  categoryId: string;
-  transactionTypeId: string;
-  confidence: number;
-  normalizedPayee: string;
-};
-
-export type AnalyzeResult = {
-  duplicates: Awaited<ReturnType<typeof detectDuplicates>>["duplicates"];
-  duplicateSummary: {
-    totalChecked: number;
-    exactMatches: number;
-    fuzzyMatches: number;
-    totalDuplicates: number;
-  };
-  payeeMatches: PayeeMatchResult[];
-  autoResolved: AutoResolvedTransaction[];
-  aiTransactions: AITransaction[];
-};
+import { matchPayeesToCategories } from "@/features/csv-import/lib/payee-category-matcher";
+import type {
+  AITransaction,
+  AnalyzeResult,
+  AutoResolvedTransaction,
+  PayeeMatchResult,
+  TransactionForAnalysis,
+} from "@/features/csv-import/types/import-types";
 
 export async function analyze(
   userId: string,

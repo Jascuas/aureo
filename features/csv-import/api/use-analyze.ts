@@ -3,9 +3,11 @@ import { InferRequestType, InferResponseType } from "hono";
 
 import { client } from "@/lib/hono";
 
-type ResponseType = InferResponseType<
-  (typeof client.api)["csv-import"]["analyze"]["$post"]
+type SuccessResponse = InferResponseType<
+  (typeof client.api)["csv-import"]["analyze"]["$post"],
+  200
 >;
+type ResponseType = SuccessResponse["data"];
 type RequestType = InferRequestType<
   (typeof client.api)["csv-import"]["analyze"]["$post"]
 >["json"];
@@ -21,7 +23,11 @@ export const useAnalyze = () => {
         throw new Error("Failed to analyze transactions");
       }
 
-      return await response.json();
+      const result = await response.json();
+      if (!("data" in result)) {
+        throw new Error("Unexpected response shape");
+      }
+      return result.data;
     },
   });
 

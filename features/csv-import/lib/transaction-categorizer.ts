@@ -9,34 +9,10 @@ import { getDefaultAIProvider } from "@/lib/ai";
 import { normalizePayeeName } from "@/lib/utils";
 import { eq, sql } from "drizzle-orm";
 import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
-
-export type TransactionInput = {
-  csvRowIndex: number;
-  date: string;
-  amount: number;
-  payee: string;
-  description?: string;
-  notes?: string;
-  historicalHint?: {
-    categoryId: string;
-    transactionTypeId: string;
-    confidence: number;
-    matchCount: number;
-    matchType: "exact" | "fuzzy";
-  };
-};
-
-export type CategorizationSuggestion = {
-  categoryId: string | null;
-  transactionTypeId: string;
-  confidence: number;
-  normalizedPayee: string;
-};
-
-export type CategorizationResult = {
-  csvRowIndex: number;
-  suggestion: CategorizationSuggestion;
-};
+import type {
+  CategorizationResult,
+  CategorizationTxInput,
+} from "@/features/csv-import/types/import-types";
 
 async function detectTransactionType(amount: number): Promise<{
   id: string;
@@ -97,7 +73,7 @@ async function findSimilarTransactions(
 
 export async function categorizeTransactions(
   userId: string,
-  inputs: TransactionInput[],
+  inputs: CategorizationTxInput[],
 ): Promise<CategorizationResult[]> {
   if (inputs.length > CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION) {
     throw new Error(
@@ -162,7 +138,7 @@ export async function categorizeTransactions(
         topCategoryId: hint.categoryId,
         confidence: hint.confidence,
         matchCount: hint.matchCount,
-        matchType: hint.matchType,
+        matchType: hint.matchType as "exact" | "fuzzy",
       });
     }
   }

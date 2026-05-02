@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 import { useBulkImportTransactions } from "@/features/csv-import/api/use-bulk-import-transactions";
-import type { EnrichedCategorization } from "@/features/csv-import/hooks/use-import-session";
-
-type DuplicateResolution = {
-  csvIndex: number;
-  action: "skip" | "import";
-};
+import { Resolution } from "@/features/csv-import/const/import-const";
+import type {
+  DuplicateResolution,
+  EnrichedCategorization,
+} from "@/features/csv-import/types/import-types";
 
 interface UseTransactionImportOptions {
   accountId: string | undefined;
@@ -28,18 +27,6 @@ export function useTransactionImport({
   onComplete,
 }: UseTransactionImportOptions): UseTransactionImportReturn {
   const bulkImportMutation = useBulkImportTransactions();
-
-  // Keep a stable ref to mutateAsync so it never appears in useCallback deps.
-  // React Query recreates the mutation object on every render; without this,
-  // importTransactions would get a new reference each render and the useEffect
-  // in ImportStep would re-fire on every render, causing an infinite loop.
-  const bulkImportMutateRef = useRef(bulkImportMutation.mutateAsync);
-  useEffect(() => {
-    bulkImportMutateRef.current = bulkImportMutation.mutateAsync;
-  });
-
-  // Guard against concurrent calls (e.g. StrictMode double-invoke or any
-  // residual effect re-fire before importResult is set).
   const isImportingRef = useRef(false);
 
   const importTransactions = useCallback(async () => {
@@ -61,7 +48,7 @@ export function useTransactionImport({
       const resolution = resolutions.find(
         (r) => r.csvIndex === cat.csvRowIndex,
       );
-      if (resolution?.action === "skip") return false;
+      if (resolution?.action === Resolution.Skip) return false;
       return true;
     });
 
@@ -78,7 +65,7 @@ export function useTransactionImport({
     }
 
     try {
-      const result = await bulkImportMutateRef.current({
+      const result = await bulkImportMutation.mutateAsync({
         accountId,
         transactions: rowsToImport.map((cat) => ({
           date: cat.date,
@@ -90,18 +77,16 @@ export function useTransactionImport({
         })),
       });
 
-      if ("data" in result) {
-        setImportResult({
-          importedCount: result.data.imported,
-          skippedCount: 0,
-          errorCount: result.data.errors.length,
-          errors: result.data.errors.map((err: any) => ({
-            row: 0,
-            message: err,
-          })),
-        });
-        onComplete();
-      }
+      setImportResult({
+        importedCount: result.imported,
+        skippedCount: 0,
+        errorCount: result.errors.length,
+        errors: result.errors.map((err) => ({
+          row: 0,
+          message: err,
+        })),
+      });
+      onComplete();
     } catch (error: any) {
       setImportResult({
         importedCount: 0,
@@ -113,7 +98,14 @@ export function useTransactionImport({
     } finally {
       isImportingRef.current = false;
     }
-  }, [accountId, categorizations, resolutions, setImportResult, onComplete]);
+  }, [
+    accountId,
+    categorizations,
+    resolutions,
+    setImportResult,
+    onComplete,
+    bulkImportMutation,
+  ]);
 
   return {
     importTransactions,

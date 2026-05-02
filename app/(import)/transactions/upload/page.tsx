@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { AiImportCard } from "@/features/csv-import/components/ai-import-card";
 import { useSelectAccount } from "@/features/accounts/hooks/use-select-account";
-import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
+import { useImportSession } from "@/features/csv-import/store/import-session";
 import { toast } from "sonner";
 
 const UploadPage = () => {

@@ -1,128 +1,37 @@
-import { useEffect, useRef, useState } from "react";
-
 import { AnalysisSection } from "@/features/csv-import/components/analysis-section";
-import { useAnalyzeRetry } from "@/features/csv-import/hooks/use-analyze-retry";
-import { useCategorizeRetry } from "@/features/csv-import/hooks/use-categorize-retry";
-import { useTransactionAnalyzer } from "@/features/csv-import/hooks/use-transaction-analyzer";
-import type { AITransaction } from "@/features/csv-import/lib/analyzer";
-import { useImportUIState } from "@/features/csv-import/store/import-ui-state";
-import type {
-  AmountFormat,
-  ColumnDetectionResult,
-  DateFormat,
-  ParsedCSVRow,
-} from "@/features/csv-import/types/import-types";
+import {
+  useAnalyzeComplete,
+  useBatchProgress,
+  useUIErrors,
+  useUILoading,
+} from "@/features/csv-import/store/import-ui-state";
+import { useAnalyzedRows } from "@/features/csv-import/store/import-session";
 
 interface AnalysisStepProps {
-  csvData: { fileName: string; headers: string[]; rows: ParsedCSVRow[] } | null;
-  columnMapping: {
-    detectionResult: ColumnDetectionResult | null;
-    finalMapping: Record<string, number> | null;
-  };
-  analyzedRows: {
-    categorizations: any[];
-    duplicates: any[];
-  };
-  onDuplicatesDetected: (duplicates: any[]) => void;
-  onCategorizationsReady: (categorizations: any[]) => void;
-  onAnalyzeComplete: (opts: {
-    autoResolved: any[];
-    aiTransactions: AITransaction[];
-    payeeMatches: any[];
-  }) => void;
-  onComplete: () => void;
+  totalTransactions: number;
+  onCancelAnalysis: () => void;
+  onRetryAnalyze: () => void;
+  onRetryCategorize: () => void;
 }
 
 export function AnalysisStep({
-  csvData,
-  columnMapping,
-  analyzedRows,
-  onDuplicatesDetected,
-  onCategorizationsReady,
-  onAnalyzeComplete,
-  onComplete,
+  totalTransactions,
+  onCancelAnalysis,
+  onRetryAnalyze,
+  onRetryCategorize,
 }: AnalysisStepProps) {
-  const { loading, errors, batchProgress } = useImportUIState();
-  const hasStartedRef = useRef(false);
-  const [analyzeComplete, setAnalyzeComplete] = useState(false);
-  const [isCategorizationStarted, setIsCategorizationStarted] = useState(false);
-
-  const totalTransactions = csvData?.rows.length ?? 0;
-
-  const detectionResultForAnalyzer = columnMapping.detectionResult
-    ? {
-        dateFormat: columnMapping.detectionResult.dateFormat as DateFormat,
-        amountFormat: columnMapping.detectionResult
-          .amountFormat as AmountFormat,
-      }
-    : null;
-
-  const { analyze, cancel } = useTransactionAnalyzer({
-    csvData,
-    columnMapping: columnMapping.finalMapping,
-    detectionResult: detectionResultForAnalyzer,
-    callbacks: {
-      onDuplicatesDetected,
-      onAnalyzeComplete: (opts) => {
-        setAnalyzeComplete(true);
-        onAnalyzeComplete(opts);
-      },
-      onCategorizationsReady,
-      onError: () => {},
-      onComplete: () => {},
-    },
-  });
-
-  const { retry: retryAnalyze } = useAnalyzeRetry({
-    csvData,
-    columnMapping: columnMapping.finalMapping,
-    detectionResult: detectionResultForAnalyzer,
-    onDuplicatesDetected,
-    onAnalyzeComplete: (opts) => {
-      setAnalyzeComplete(true);
-      onAnalyzeComplete(opts);
-    },
-  });
-
-  const { retry: retryCategorize } = useCategorizeRetry({
-    csvData,
-    columnMapping: columnMapping.finalMapping,
-    detectionResult: detectionResultForAnalyzer,
-    onCategorizationsReady,
-  });
-
-  useEffect(() => {
-    if (hasStartedRef.current) return;
-    if (analyzedRows.categorizations.length > 0) return;
-    hasStartedRef.current = true;
-    analyze();
-  }, []);
+  const loading = useUILoading();
+  const errors = useUIErrors();
+  const batchProgress = useBatchProgress();
+  const analyzeComplete = useAnalyzeComplete();
+  const analyzedRows = useAnalyzedRows();
 
   const isAnalyzing = loading.analyzing;
   const isCategorizing = loading.categorizing;
 
-  useEffect(() => {
-    if (isCategorizing) setIsCategorizationStarted(true);
-  }, [isCategorizing]);
-
-  useEffect(() => {
-    if (
-      !isAnalyzing &&
-      !isCategorizing &&
-      !errors.analyze &&
-      !errors.categorize &&
-      analyzedRows.categorizations.length > 0
-    ) {
-      onComplete();
-    }
-  }, [
-    isAnalyzing,
-    isCategorizing,
-    errors.analyze,
-    errors.categorize,
-    analyzedRows,
-    onComplete,
-  ]);
+  // Categorization is "started" once it has begun OR has produced rows.
+  const isCategorizationStarted =
+    isCategorizing || analyzedRows.aiTransactions.length > 0;
 
   return (
     <AnalysisSection
@@ -132,10 +41,10 @@ export function AnalysisStep({
       isCategorizationStarted={isCategorizationStarted}
       analyzeError={errors.analyze}
       categorizeError={errors.categorize}
-      onRetryAnalyze={retryAnalyze}
-      onRetryCategorize={retryCategorize}
+      onRetryAnalyze={onRetryAnalyze}
+      onRetryCategorize={onRetryCategorize}
       batchProgress={batchProgress}
-      onCancelAnalysis={cancel}
+      onCancelAnalysis={onCancelAnalysis}
       totalTransactions={totalTransactions}
     />
   );

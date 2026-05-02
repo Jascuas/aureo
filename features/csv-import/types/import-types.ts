@@ -65,6 +65,11 @@ export type MappedTransaction = {
   warnings: string[];
 };
 
+export type ParsedCSV = {
+  headers: string[];
+  rows: ParsedCSVRow[];
+};
+
 export type ImportTemplate = {
   id: string;
   userId: string;
@@ -172,4 +177,185 @@ export type DuplicateResolutionProps = {
   csvRows: CsvRow[];
   pendingCount: number;
   onSkipAll?: () => void;
+};
+
+// ============================================================================
+// Domain types — duplicate detection
+// ============================================================================
+
+export type DuplicateTxInput = {
+  date: Date;
+  amount: number;
+  payee: string;
+};
+
+export type DuplicateMatch = {
+  csvIndex: number;
+  existingTransaction: {
+    id: string;
+    date: Date;
+    amount: number;
+    payee: string;
+    accountId: string;
+  };
+  matchType: MatchType;
+  score: number;
+};
+
+export type DuplicateDetectionResult = {
+  duplicates: DuplicateMatch[];
+  totalChecked: number;
+  exactMatches: number;
+  fuzzyMatches: number;
+};
+
+export type DuplicateResolution = {
+  csvIndex: number;
+  action: Resolution;
+};
+
+// ============================================================================
+// Domain types — payee/category matching
+// ============================================================================
+
+export type PayeeCategoryMatch = {
+  categoryId: string;
+  transactionTypeId: string;
+  matchCount: number;
+  totalMatches: number;
+  confidence: number;
+  matchType: MatchType;
+};
+
+export type PayeeMatchResult = {
+  csvRowIndex: number;
+  matches: PayeeCategoryMatch[];
+};
+
+export type PayeeMatchInput = {
+  csvRowIndex: number;
+  payee: string;
+};
+
+export type PayeeMatchSummary = {
+  totalChecked: number;
+  autoResolved: number;
+  partialMatches: number;
+  unmatched: number;
+};
+
+export type PayeeMatchDetectionResult = {
+  results: PayeeMatchResult[];
+  summary: PayeeMatchSummary;
+};
+
+// ============================================================================
+// Domain types — categorization
+// ============================================================================
+
+export type HistoricalHint = {
+  categoryId: string;
+  transactionTypeId: string;
+  confidence: number;
+  matchCount: number;
+  matchType: MatchType;
+};
+
+export type CategorizationTxInput = {
+  csvRowIndex: number;
+  date: string;
+  amount: number;
+  payee: string;
+  description?: string;
+  notes?: string;
+  historicalHint?: HistoricalHint;
+};
+
+export type CategorizationSuggestion = {
+  categoryId: string | null;
+  transactionTypeId: string;
+  confidence: number;
+  normalizedPayee: string;
+};
+
+export type CategorizationResult = {
+  csvRowIndex: number;
+  suggestion: CategorizationSuggestion;
+};
+
+// AI-categorized transaction (from /categorize endpoint output)
+export type AICategorization = {
+  csvRowIndex: number;
+  categoryId: string | null;
+  transactionTypeId: string;
+  confidence: number;
+  normalizedPayee: string;
+};
+
+// Auto-resolved transaction (from /analyze endpoint, high-confidence payee match)
+// Same shape as AICategorization but categoryId is guaranteed non-null.
+export type AutoResolvedTransaction = {
+  csvRowIndex: number;
+  categoryId: string;
+  transactionTypeId: string;
+  confidence: number;
+  normalizedPayee: string;
+};
+
+// ============================================================================
+// Domain types — /analyze endpoint
+// ============================================================================
+
+export type AITransaction = TransactionForAnalysis & {
+  historicalHint?: HistoricalHint;
+};
+
+export type DuplicateSummary = {
+  totalChecked: number;
+  exactMatches: number;
+  fuzzyMatches: number;
+  totalDuplicates: number;
+};
+
+export type AnalyzeResult = {
+  duplicates: DuplicateMatch[];
+  duplicateSummary: DuplicateSummary;
+  payeeMatches: PayeeMatchResult[];
+  autoResolved: AutoResolvedTransaction[];
+  aiTransactions: AITransaction[];
+};
+
+// ============================================================================
+// View models
+// ============================================================================
+
+export type PreviewRow = {
+  csvRowIndex: number;
+  date: Date;
+  payee: string;
+  amount: number;
+  categoryId: string | null;
+  confidence: number;
+  duplicate: DuplicateMatch | null;
+  userEdited: boolean;
+};
+
+// ============================================================================
+// Orchestrator
+// ============================================================================
+
+export type ImportOrchestrator = {
+  ConfirmDialog: () => React.JSX.Element;
+  handleCancel: () => Promise<void>;
+  handleMappingConfirm: () => void;
+  handleStartImport: () => void;
+  handleCategoryChange: (
+    csvRowIndex: number,
+    categoryId: string | null,
+    _categoryName: string | null,
+    isAiSuggestion?: boolean,
+  ) => void;
+  cancelAnalysis: () => void;
+  retryAnalyze: () => Promise<void>;
+  retryCategorize: () => Promise<void>;
 };

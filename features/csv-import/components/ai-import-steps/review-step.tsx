@@ -1,8 +1,10 @@
 import { AiPreviewTable } from "@/features/csv-import/components/ai-preview-table";
 import { DuplicateResolution } from "@/features/csv-import/components/duplicate-resolution";
-import type { EnrichedCategorization } from "@/features/csv-import/hooks/use-import-session";
-import type { DuplicateMatch } from "@/features/csv-import/lib/duplicate-matcher";
-import type { PayeeMatchResult } from "@/features/csv-import/lib/payee-category-matcher";
+import type {
+  DuplicateMatch,
+  EnrichedCategorization,
+  PayeeMatchResult,
+} from "@/features/csv-import/types/import-types";
 
 interface ReviewStepProps {
   duplicates: DuplicateMatch[];

@@ -1,14 +1,12 @@
 import { create } from "zustand";
-import type { DuplicateMatch } from "@/features/csv-import/lib/duplicate-matcher";
 import {
   MatchType,
   Resolution,
 } from "@/features/csv-import/const/import-const";
-
-type DuplicateResolution = {
-  csvIndex: number;
-  action: Resolution;
-};
+import type {
+  DuplicateMatch,
+  DuplicateResolution,
+} from "@/features/csv-import/types/import-types";
 
 type DuplicateResolutionState = {
   isOpen: boolean;

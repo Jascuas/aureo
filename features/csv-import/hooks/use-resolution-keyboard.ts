@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import type { DuplicateMatch } from "@/features/csv-import/lib/duplicate-matcher";
 import { Resolution } from "@/features/csv-import/const/import-const";
+import type { DuplicateMatch } from "@/features/csv-import/types/import-types";
 
 type UseResolutionKeyboardParams = {
   isOpen: boolean;

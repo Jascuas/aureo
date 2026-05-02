@@ -4,8 +4,14 @@ import { toast } from "sonner";
 
 import { client } from "@/lib/hono";
 
-type ResponseType = InferResponseType<typeof client.api["csv-import"]["import"]["$post"]>;
-type RequestType = InferRequestType<typeof client.api["csv-import"]["import"]["$post"]>["json"];
+type SuccessResponse = InferResponseType<
+  (typeof client.api)["csv-import"]["import"]["$post"],
+  200
+>;
+type ResponseType = SuccessResponse["data"];
+type RequestType = InferRequestType<
+  (typeof client.api)["csv-import"]["import"]["$post"]
+>["json"];
 
 export const useBulkImportTransactions = () => {
   const queryClient = useQueryClient();
@@ -16,7 +22,11 @@ export const useBulkImportTransactions = () => {
       if (!response.ok) {
         throw new Error("Failed to import transactions");
       }
-      return await response.json();
+      const result = await response.json();
+      if (!("data" in result)) {
+        throw new Error("Unexpected response shape");
+      }
+      return result.data;
     },
     onSuccess: () => {
       toast.success("Transactions imported successfully");
