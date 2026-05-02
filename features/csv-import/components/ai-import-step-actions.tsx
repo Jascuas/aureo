@@ -8,7 +8,7 @@ import {
   ImportStep,
   Resolution,
 } from "@/features/csv-import/const/import-const";
-import { useDuplicateResolution } from "@/features/csv-import/hooks/use-duplicate-resolution";
+import { useDuplicateResolution } from "@/features/csv-import/store/duplicate-resolution";
 import {
   useAnalyzedRows,
   useCurrentStep,

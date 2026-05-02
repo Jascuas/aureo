@@ -6,7 +6,7 @@ import { MappingStep } from "@/features/csv-import/components/ai-import-steps/ma
 import { ReviewStep } from "@/features/csv-import/components/ai-import-steps/review-step";
 import { UploadStep } from "@/features/csv-import/components/ai-import-steps/upload-step";
 import { ImportStep } from "@/features/csv-import/const/import-const";
-import { useDuplicateResolution } from "@/features/csv-import/hooks/use-duplicate-resolution";
+import { useDuplicateResolution } from "@/features/csv-import/store/duplicate-resolution";
 import {
   useAnalyzedRows,
   useColumnMapping,

@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DuplicateComparison } from "@/features/csv-import/components/duplicate-comparison";
-import { useDuplicateResolution } from "@/features/csv-import/hooks/use-duplicate-resolution";
+import { useDuplicateResolution } from "@/features/csv-import/store/duplicate-resolution";
 import { useResolutionKeyboard } from "@/features/csv-import/hooks/use-resolution-keyboard";
 import { Resolution } from "@/features/csv-import/const/import-const";
 import type { DuplicateResolutionProps } from "@/features/csv-import/types/import-types";

@@ -23,7 +23,7 @@ import {
 import { ConfidenceBadge } from "@/features/csv-import/components/confidence-badge";
 import { DuplicateIndicator } from "@/features/csv-import/components/duplicate-indicator";
 import { EditableCategoryCell } from "@/features/csv-import/components/editable-category-cell";
-import { useDuplicateResolution } from "@/features/csv-import/hooks/use-duplicate-resolution";
+import { useDuplicateResolution } from "@/features/csv-import/store/duplicate-resolution";
 import type {
   DuplicateMatch,
   PayeeMatchResult,

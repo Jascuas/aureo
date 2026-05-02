@@ -10,7 +10,7 @@ import {
   findCompatibleTemplate,
   templateToDetectionResult,
 } from "@/features/csv-import/lib/template-applier";
-import { useDuplicateResolution } from "@/features/csv-import/hooks/use-duplicate-resolution";
+import { useDuplicateResolution } from "@/features/csv-import/store/duplicate-resolution";
 import { useColumnDetection } from "@/features/csv-import/hooks/use-column-detection";
 import { useImportSessionActions } from "@/features/csv-import/store/import-session";
 import {
