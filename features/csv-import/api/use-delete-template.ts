@@ -4,16 +4,21 @@ import { toast } from "sonner";
 
 import { client } from "@/lib/hono";
 
-type ResponseType = InferResponseType<
-  (typeof client.api)["csv-import"]["templates"][":id"]["$delete"]
+type SuccessResponse = InferResponseType<
+  (typeof client.api)["csv-import"]["templates"][":id"]["$delete"],
+  200
 >;
+type ResponseType = SuccessResponse["data"];
+type RequestType = { id: string };
 
-export const useDeleteTemplate = (id?: string) => {
+export const useDeleteTemplate = () => {
   const queryClient = useQueryClient();
 
-  const mutation = useMutation<ResponseType, Error>({
-    mutationFn: async () => {
-      const response = await client.api["csv-import"]["templates"][":id"]["$delete"]({
+  const mutation = useMutation<ResponseType, Error, RequestType>({
+    mutationFn: async ({ id }) => {
+      const response = await client.api["csv-import"]["templates"][":id"][
+        "$delete"
+      ]({
         param: { id },
       });
 
@@ -21,7 +26,11 @@ export const useDeleteTemplate = (id?: string) => {
         throw new Error("Failed to delete template");
       }
 
-      return await response.json();
+      const result = await response.json();
+      if (!("data" in result)) {
+        throw new Error("Unexpected response shape");
+      }
+      return result.data;
     },
     onSuccess: () => {
       toast.success("Template deleted");

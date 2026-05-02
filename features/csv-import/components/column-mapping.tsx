@@ -80,11 +80,7 @@ export const ColumnMapping = ({
   const [templateName, setTemplateName] = useState("");
   const [showSaveInput, setShowSaveInput] = useState(false);
 
-  const { data: templatesResponse } = useGetTemplates();
-  const templates =
-    templatesResponse && "data" in templatesResponse
-      ? templatesResponse.data
-      : [];
+  const { data: templates = [] } = useGetTemplates();
   const saveTemplateMutation = useSaveTemplate();
 
   const handleMappingChange = (columnIndex: number, type: ColumnType) => {

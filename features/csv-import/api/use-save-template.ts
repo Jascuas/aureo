@@ -4,9 +4,11 @@ import { toast } from "sonner";
 
 import { client } from "@/lib/hono";
 
-type ResponseType = InferResponseType<
-  (typeof client.api)["csv-import"]["templates"]["$post"]
+type SuccessResponse = InferResponseType<
+  (typeof client.api)["csv-import"]["templates"]["$post"],
+  200
 >;
+type ResponseType = SuccessResponse["data"];
 type RequestType = InferRequestType<
   (typeof client.api)["csv-import"]["templates"]["$post"]
 >["json"];
@@ -27,7 +29,11 @@ export const useSaveTemplate = () => {
         throw new Error(errorData.error?.message || "Failed to save template");
       }
 
-      return await response.json();
+      const result = await response.json();
+      if (!("data" in result)) {
+        throw new Error("Unexpected response shape");
+      }
+      return result.data;
     },
     onSuccess: () => {
       toast.success("Template saved successfully");

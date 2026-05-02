@@ -4,35 +4,33 @@ import type {
   AmountFormat,
   ColumnDetectionResult,
   DateFormat,
-  ImportTemplate,
 } from "@/features/csv-import/types/import-types";
 
-type TemplatesResponse =
-  | { data: ImportTemplate[] }
-  | ImportTemplate[]
-  | null
-  | undefined;
+export type CompatibleTemplate = {
+  id: string;
+  accountId: string;
+  name: string;
+  columnMapping: Record<string, number> | unknown;
+  dateFormat: string;
+  amountFormat: unknown;
+};
 
-function extractTemplates(response: TemplatesResponse): ImportTemplate[] {
-  if (!response) return [];
-  if (Array.isArray(response)) return response;
-  if ("data" in response && Array.isArray(response.data)) return response.data;
-  return [];
-}
-
-export function findCompatibleTemplate(
-  response: TemplatesResponse,
+export function findCompatibleTemplate<T extends CompatibleTemplate>(
+  templates: T[] | null | undefined,
   headers: string[],
-): ImportTemplate | null {
-  const templates = extractTemplates(response);
-  if (templates.length === 0) return null;
+): T | null {
+  if (!templates || templates.length === 0) return null;
   const candidate = templates[0];
-  if (!validateTemplateCompatibility(candidate, headers.length)) return null;
+  const mapping = candidate.columnMapping as Record<string, number>;
+  if (
+    !validateTemplateCompatibility({ columnMapping: mapping }, headers.length)
+  )
+    return null;
   return candidate;
 }
 
 export function templateToDetectionResult(
-  template: ImportTemplate,
+  template: CompatibleTemplate,
   headers: string[],
 ): ColumnDetectionResult {
   const mapping = template.columnMapping as Record<string, number>;

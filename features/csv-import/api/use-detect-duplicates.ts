@@ -4,9 +4,11 @@ import { toast } from "sonner";
 
 import { client } from "@/lib/hono";
 
-type ResponseType = InferResponseType<
-  (typeof client.api)["csv-import"]["detect-duplicates"]["$post"]
+type SuccessResponse = InferResponseType<
+  (typeof client.api)["csv-import"]["detect-duplicates"]["$post"],
+  200
 >;
+type ResponseType = SuccessResponse["data"];
 type RequestType = InferRequestType<
   (typeof client.api)["csv-import"]["detect-duplicates"]["$post"]
 >["json"];
@@ -14,7 +16,9 @@ type RequestType = InferRequestType<
 export const useDetectDuplicates = () => {
   const mutation = useMutation<ResponseType, Error, RequestType>({
     mutationFn: async (json) => {
-      const response = await client.api["csv-import"]["detect-duplicates"]["$post"]({
+      const response = await client.api["csv-import"]["detect-duplicates"][
+        "$post"
+      ]({
         json,
       });
 
@@ -22,7 +26,11 @@ export const useDetectDuplicates = () => {
         throw new Error("Failed to detect duplicates");
       }
 
-      return await response.json();
+      const result = await response.json();
+      if (!("data" in result)) {
+        throw new Error("Unexpected response shape");
+      }
+      return result.data;
     },
     onError: () => {
       toast.error("Failed to detect duplicates.");

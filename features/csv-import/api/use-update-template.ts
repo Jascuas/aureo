@@ -4,18 +4,22 @@ import { toast } from "sonner";
 
 import { client } from "@/lib/hono";
 
-type ResponseType = InferResponseType<
-  (typeof client.api)["csv-import"]["templates"][":id"]["$patch"]
+type SuccessResponse = InferResponseType<
+  (typeof client.api)["csv-import"]["templates"][":id"]["$patch"],
+  200
 >;
-type RequestType = InferRequestType<
+type ResponseType = SuccessResponse["data"];
+type JsonBody = InferRequestType<
   (typeof client.api)["csv-import"]["templates"][":id"]["$patch"]
 >["json"];
 
-export const useUpdateTemplate = (id?: string) => {
+type RequestType = { id: string; json: JsonBody };
+
+export const useUpdateTemplate = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
-    mutationFn: async (json) => {
+    mutationFn: async ({ id, json }) => {
       const response = await client.api["csv-import"]["templates"][":id"][
         "$patch"
       ]({
@@ -32,7 +36,11 @@ export const useUpdateTemplate = (id?: string) => {
         );
       }
 
-      return await response.json();
+      const result = await response.json();
+      if (!("data" in result)) {
+        throw new Error("Unexpected response shape");
+      }
+      return result.data;
     },
     onSuccess: () => {
       toast.success("Template updated");

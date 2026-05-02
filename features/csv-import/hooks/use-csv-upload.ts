@@ -51,7 +51,7 @@ export function useCSVUpload({
     useImportSessionActions();
   const { reset: resetResolutions } = useDuplicateResolutionActions();
 
-  const { data: templatesResponse } = useGetTemplates(accountId);
+  const { data: templates } = useGetTemplates(accountId);
 
   const { detectColumns } = useColumnDetection({
     onDetected: (result, autoMapping) => {
@@ -75,10 +75,7 @@ export function useCSVUpload({
         setCSVData(file.name, headers, cappedRows);
         resetResolutions();
 
-        const template = findCompatibleTemplate(
-          templatesResponse as never,
-          headers,
-        );
+        const template = findCompatibleTemplate(templates, headers);
 
         if (template) {
           setDetectionResult(templateToDetectionResult(template, headers));
@@ -103,7 +100,7 @@ export function useCSVUpload({
       setLoading,
       setCSVData,
       resetResolutions,
-      templatesResponse,
+      templates,
       setDetectionResult,
       setFinalMapping,
       nextStep,
