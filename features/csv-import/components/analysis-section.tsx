@@ -5,6 +5,7 @@ import { AlertCircle, CheckCircle2, Clock, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { BatchProgressStage } from "@/features/csv-import/const/import-const";
 import type { BatchProgress } from "@/features/csv-import/types/import-types";
 import { cn } from "@/lib/utils";
 
@@ -42,14 +43,14 @@ export const AnalysisSection = ({
 
   const progressValue = (() => {
     if (!batchProgress) return isAnalyzeComplete && !isCategorizing ? 100 : 0;
-    if (batchProgress.stage === "analyzing")
+    if (batchProgress.stage === BatchProgressStage.ANALYZING)
       return (batchProgress.current / batchProgress.total) * 50;
     return 50 + (batchProgress.current / batchProgress.total) * 50;
   })();
 
   const progressLabel = (() => {
     if (
-      batchProgress?.stage === "categorization" &&
+      batchProgress?.stage === BatchProgressStage.CATEGORIZATION &&
       totalTransactions != null
     ) {
       const done = Math.min(batchProgress.current * 30, totalTransactions);
