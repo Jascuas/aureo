@@ -4,13 +4,14 @@ import { Resolution } from "@/features/csv-import/const/import-const";
 import type {
   DuplicateResolution,
   EnrichedCategorization,
+  ImportResult,
 } from "@/features/csv-import/types/import-types";
 
 interface UseTransactionImportOptions {
   accountId: string | undefined;
   categorizations: EnrichedCategorization[];
   resolutions: DuplicateResolution[];
-  setImportResult: (result: any) => void;
+  setImportResult: (result: ImportResult) => void;
   onComplete: () => void;
 }
 
@@ -87,12 +88,13 @@ export function useTransactionImport({
         })),
       });
       onComplete();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Import failed";
       setImportResult({
         importedCount: 0,
         skippedCount: 0,
         errorCount: rowsToImport.length,
-        errors: [{ row: 0, message: error?.message || "Import failed" }],
+        errors: [{ row: 0, message }],
       });
       onComplete();
     } finally {

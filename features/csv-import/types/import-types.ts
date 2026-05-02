@@ -116,6 +116,13 @@ export type ImportSession = {
   error?: string;
 };
 
+export type ImportResult = {
+  importedCount: number;
+  skippedCount: number;
+  errorCount: number;
+  errors: Array<{ row: number; message: string }>;
+};
+
 export type HeuristicConfig = {
   minConfidence: number;
   sampleSize: number;

@@ -97,14 +97,15 @@ export function useCategorizeRetry({
         transactionsForAnalysis,
       );
       onCategorizationsReady(enriched);
-    } catch (error: any) {
-      if (error.message === "Cancelled") {
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to categorize transactions";
+      if (message === "Cancelled") {
         setError("categorize", "Categorization cancelled");
       } else {
-        setError(
-          "categorize",
-          error?.message || "Failed to categorize transactions",
-        );
+        setError("categorize", message);
       }
     } finally {
       setLoading("categorizing", false);

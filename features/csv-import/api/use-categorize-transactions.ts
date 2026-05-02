@@ -22,15 +22,17 @@ export const useCategorizeTransactions = () => {
       });
 
       if (!response.ok) {
-        // Extract error details from response
-        const errorData = await response.json();
+        const errorData = (await response.json()) as {
+          error?: string;
+          retryAfter?: number;
+          provider?: string;
+        };
 
-        // Check if it's a rate limit error (429)
         if (response.status === 429 && "error" in errorData) {
           throw new RateLimitError(
             errorData.error as string,
-            (errorData as any).retryAfter,
-            (errorData as any).provider,
+            errorData.retryAfter,
+            errorData.provider,
           );
         }
 

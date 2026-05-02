@@ -21,10 +21,10 @@ export const useSaveTemplate = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          (errorData as any).error?.message || "Failed to save template",
-        );
+        const errorData = (await response.json()) as {
+          error?: { message?: string };
+        };
+        throw new Error(errorData.error?.message || "Failed to save template");
       }
 
       return await response.json();

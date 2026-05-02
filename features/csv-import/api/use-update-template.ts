@@ -16,15 +16,19 @@ export const useUpdateTemplate = (id?: string) => {
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
     mutationFn: async (json) => {
-      const response = await client.api["csv-import"]["templates"][":id"]["$patch"]({
+      const response = await client.api["csv-import"]["templates"][":id"][
+        "$patch"
+      ]({
         json,
         param: { id },
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = (await response.json()) as {
+          error?: { message?: string };
+        };
         throw new Error(
-          (errorData as any).error?.message || "Failed to update template",
+          errorData.error?.message || "Failed to update template",
         );
       }
 

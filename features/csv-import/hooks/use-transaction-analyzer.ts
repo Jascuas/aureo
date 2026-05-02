@@ -180,11 +180,15 @@ export function useTransactionAnalyzer({
       );
       callbacks.onCategorizationsReady(enriched);
       callbacks.onComplete();
-    } catch (error: any) {
-      if (error.message === "Cancelled") {
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to analyze transactions";
+      if (message === "Cancelled") {
         callbacks.onError("Analysis cancelled by user");
       } else {
-        callbacks.onError(error?.message || "Failed to analyze transactions");
+        callbacks.onError(message);
       }
     } finally {
       isAnalyzingRef.current = false;

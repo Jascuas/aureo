@@ -7,6 +7,7 @@ import type {
   ColumnDetectionResult,
   DuplicateMatch,
   EnrichedCategorization,
+  ImportResult,
   ParsedCSVRow,
   ImportTemplate,
   PayeeMatchResult,
@@ -39,12 +40,7 @@ type ImportSessionState = {
     aiTransactions: AITransaction[];
   };
 
-  importResult: {
-    importedCount: number;
-    skippedCount: number;
-    errorCount: number;
-    errors: Array<{ row: number; message: string }>;
-  } | null;
+  importResult: ImportResult | null;
 
   setCSVData: (
     fileName: string,
@@ -60,7 +56,7 @@ type ImportSessionState = {
   setPayeeMatches: (payeeMatches: PayeeMatchResult[]) => void;
   setAutoResolved: (autoResolved: AutoResolvedTransaction[]) => void;
   setAITransactions: (aiTransactions: AITransaction[]) => void;
-  setImportResult: (result: ImportSessionState["importResult"]) => void;
+  setImportResult: (result: ImportResult | null) => void;
 
   nextStep: () => void;
   previousStep: () => void;
