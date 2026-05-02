@@ -20,12 +20,12 @@ type CategorizeMutate = (args: {
   transactions: AITransaction[];
 }) => Promise<{ results: AICategorization[] }>;
 
-interface RunCategorizeBatchesArgs {
+type RunCategorizeBatchesArgs = {
   aiTransactions: AITransaction[];
   mutate: CategorizeMutate;
   signal: AbortSignal;
   onProgress: (current: number, total: number) => void;
-}
+};
 
 type RunCategorizeBatchesResult =
   | { ok: true; aiCategorizations: AICategorization[] }
