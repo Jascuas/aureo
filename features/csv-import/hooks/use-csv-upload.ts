@@ -15,6 +15,7 @@ import { useColumnDetection } from "@/features/csv-import/hooks/use-column-detec
 import { useImportSessionActions } from "@/features/csv-import/store/import-session";
 import {
   useImportUIActions,
+  useImportUIState,
   useUIErrors,
   useUILoading,
 } from "@/features/csv-import/store/import-ui-state";
@@ -46,6 +47,7 @@ export function useCSVUpload({
   const loading = useUILoading();
   const errors = useUIErrors();
   const { setLoading, setError } = useImportUIActions();
+  const resetUIState = useImportUIState((s) => s.reset);
 
   const { setCSVData, setDetectionResult, setFinalMapping, nextStep } =
     useImportSessionActions();
@@ -62,6 +64,10 @@ export function useCSVUpload({
 
   const uploadFile = useCallback(
     async (file: File) => {
+      // A new file invalidates any prior analysis. Wipe ephemeral UI flags
+      // (analyzeComplete, errors, batchProgress, loading) so the Analysis step
+      // re-triggers cleanly. Persisted analyzedRows are cleared by setCSVData.
+      resetUIState();
       setError("upload", null);
       setLoading("parsingCSV", true);
 
@@ -96,6 +102,7 @@ export function useCSVUpload({
       }
     },
     [
+      resetUIState,
       setError,
       setLoading,
       setCSVData,

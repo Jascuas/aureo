@@ -3,17 +3,17 @@ import { useSearchParams } from "next/navigation";
 
 import { client } from "@/lib/hono";
 
-export type CategorySummaryType = "Income" | "Expense" | "Refund";
+import type { CategorySummaryType } from "./use-get-category-summary";
 
 type Options = {
   type?: CategorySummaryType;
   top?: number;
 };
 
-/** Fetches category breakdown for Income, Expense or Refund. */
-export function useGetCategorySummary({
+/** Fetches top payees ranked by amount over the active period. */
+export function useGetPayeeSummary({
   type = "Expense",
-  top = 5,
+  top = 10,
 }: Options = {}) {
   const params = useSearchParams();
   const from = params.get("from") ?? "";
@@ -22,13 +22,13 @@ export function useGetCategorySummary({
   const topStr = String(top);
 
   return useQuery({
-    queryKey: ["by-category", { type, from, to, accountId, top: topStr }],
+    queryKey: ["by-payee", { type, from, to, accountId, top: topStr }],
     queryFn: async () => {
-      const res = await client.api.summary["by-category"].$get({
+      const res = await client.api.summary["by-payee"].$get({
         query: { type, from, to, accountId, top: topStr },
       });
 
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) throw new Error("Failed to fetch payee summary.");
 
       return (await res.json()).data;
     },

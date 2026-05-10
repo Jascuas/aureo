@@ -38,7 +38,9 @@ export const AnalysisSection = ({
   const getDynamicTitle = () => {
     if (isAnalyzing) return "Analyzing transactions...";
     if (isCategorizing) return "Categorizing transactions with AI...";
-    return "Analysis complete";
+    if (isAnalyzeComplete) return "Analysis complete";
+    if (analyzeError) return "Analysis failed";
+    return "Preparing analysis...";
   };
 
   const progressValue = (() => {

@@ -99,6 +99,9 @@ export const useImportSession = create<ImportSessionState>()(
         set({
           csvData: { fileName, headers, rows },
           currentStep: ImportStep.MAPPING,
+          columnMapping: initialState.columnMapping,
+          analyzedRows: initialState.analyzedRows,
+          importResult: null,
         });
       },
 

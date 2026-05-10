@@ -1,15 +1,15 @@
 export {
-  ImportStep,
   BatchProgressStage,
+  ColumnType,
+  ImportStep,
   MatchType,
   Resolution,
-  ColumnType,
 } from "../const/import-const";
 import {
   BatchProgressStage,
+  ColumnType,
   MatchType,
   Resolution,
-  ColumnType,
 } from "../const/import-const";
 
 export type DetectedColumn = {
@@ -353,6 +353,7 @@ export type PreviewRow = {
 
 export type ImportOrchestrator = {
   ConfirmDialog: () => React.JSX.Element;
+  RerunConfirmDialog: () => React.JSX.Element;
   handleCancel: () => Promise<void>;
   handleMappingConfirm: () => void;
   handleStartImport: () => void;
@@ -362,6 +363,8 @@ export type ImportOrchestrator = {
     _categoryName: string | null,
     isAiSuggestion?: boolean,
   ) => void;
+  analyze: () => Promise<void>;
+  handleRerunAnalyze: () => Promise<void>;
   cancelAnalysis: () => void;
   retryAnalyze: () => Promise<void>;
   retryCategorize: () => Promise<void>;

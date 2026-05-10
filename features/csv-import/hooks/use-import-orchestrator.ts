@@ -3,13 +3,13 @@ import { useCallback, useMemo } from "react";
 import { ImportStep } from "@/features/csv-import/const/import-const";
 import { useAnalyzeRetry } from "@/features/csv-import/hooks/use-analyze-retry";
 import { useCategorizeRetry } from "@/features/csv-import/hooks/use-categorize-retry";
+import { useTransactionAnalyzer } from "@/features/csv-import/hooks/use-transaction-analyzer";
+import { useTransactionImport } from "@/features/csv-import/hooks/use-transaction-import";
+import { validateColumnMapping } from "@/features/csv-import/lib/validators";
 import {
   useDuplicateResolutionActions,
   useDuplicateResolutions,
 } from "@/features/csv-import/store/duplicate-resolution";
-import { useTransactionAnalyzer } from "@/features/csv-import/hooks/use-transaction-analyzer";
-import { useTransactionImport } from "@/features/csv-import/hooks/use-transaction-import";
-import { validateColumnMapping } from "@/features/csv-import/lib/validators";
 import {
   useAnalyzedRows,
   useColumnMapping,
@@ -17,7 +17,10 @@ import {
   useCurrentStep,
   useImportSessionActions,
 } from "@/features/csv-import/store/import-session";
-import { useImportUIActions } from "@/features/csv-import/store/import-ui-state";
+import {
+  useImportUIActions,
+  useImportUIState,
+} from "@/features/csv-import/store/import-ui-state";
 import type {
   AITransaction,
   AmountFormat,
@@ -63,10 +66,16 @@ export function useImportOrchestrator({
   const resolutions = useDuplicateResolutions();
   const { reset: resetResolutions } = useDuplicateResolutionActions();
   const { setError } = useImportUIActions();
+  const resetUIState = useImportUIState((s) => s.reset);
 
   const [ConfirmDialog, confirm] = useConfirm(
     "Are you sure?",
     "All progress will be lost.",
+  );
+
+  const [RerunConfirmDialog, confirmRerun] = useConfirm(
+    "Re-run analysis?",
+    "Current analysis results will be discarded and re-computed.",
   );
 
   const detectionForAnalyzer = useMemo(
@@ -151,8 +160,9 @@ export function useImportOrchestrator({
     }
     reset();
     resetResolutions();
+    resetUIState();
     onCancel?.();
-  }, [currentStep, confirm, reset, resetResolutions, onCancel]);
+  }, [currentStep, confirm, reset, resetResolutions, resetUIState, onCancel]);
 
   const handleMappingConfirm = useCallback(() => {
     const { isValid, error } = validateColumnMapping(
@@ -164,8 +174,13 @@ export function useImportOrchestrator({
     }
     setError("detection", null);
     nextStep();
+  }, [columnMapping.finalMapping, nextStep, setError]);
+
+  const handleRerunAnalyze = useCallback(async () => {
+    const ok = await confirmRerun();
+    if (!ok) return;
     void analyze();
-  }, [columnMapping.finalMapping, nextStep, setError, analyze]);
+  }, [confirmRerun, analyze]);
 
   const handleStartImport = useCallback(() => {
     nextStep();
@@ -191,10 +206,13 @@ export function useImportOrchestrator({
 
   return {
     ConfirmDialog,
+    RerunConfirmDialog,
     handleCancel,
     handleMappingConfirm,
     handleStartImport,
     handleCategoryChange,
+    analyze,
+    handleRerunAnalyze,
     cancelAnalysis,
     retryAnalyze,
     retryCategorize,

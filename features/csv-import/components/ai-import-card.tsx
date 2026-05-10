@@ -45,10 +45,13 @@ export const AiImportCard = ({
 
   const {
     ConfirmDialog,
+    RerunConfirmDialog,
     handleCancel,
     handleMappingConfirm,
     handleStartImport,
     handleCategoryChange,
+    analyze,
+    handleRerunAnalyze,
     cancelAnalysis,
     retryAnalyze,
     retryCategorize,
@@ -57,6 +60,7 @@ export const AiImportCard = ({
   return (
     <Card className="border-none drop-shadow-sm">
       <ConfirmDialog />
+      <RerunConfirmDialog />
       <CardHeader>
         <ImportStepper
           currentStep={currentStep}
@@ -74,6 +78,7 @@ export const AiImportCard = ({
           accountId={accountId}
           onComplete={onComplete}
           onImportAnother={onImportAnother}
+          analyze={analyze}
           cancelAnalysis={cancelAnalysis}
           retryAnalyze={retryAnalyze}
           retryCategorize={retryCategorize}
@@ -87,6 +92,7 @@ export const AiImportCard = ({
             handleCancel={handleCancel}
             handleMappingConfirm={handleMappingConfirm}
             handleStartImport={handleStartImport}
+            handleRerunAnalyze={handleRerunAnalyze}
           />
         </CardFooter>
       )}

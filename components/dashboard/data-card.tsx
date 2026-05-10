@@ -1,3 +1,7 @@
+import { Area, AreaChart, ResponsiveContainer } from "recharts";
+
+import { CountUp } from "@/components/count-up";
+import { ChangeTooltip } from "@/components/tooltips/change-tooltip";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import {
   Tooltip,
@@ -6,8 +10,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn, formatCurrency, formatPercentage } from "@/lib/utils";
 
-import { CountUp } from "@/components/count-up";
-import { ChangeTooltip } from "@/components/tooltips/change-tooltip";
+type SparklinePoint = { value: number };
 
 type DataCardProps = {
   title: string;
@@ -15,6 +18,9 @@ type DataCardProps = {
 
   percentageChange?: number;
   valueChange?: number;
+
+  sparkline?: SparklinePoint[];
+  sparklineColor?: string;
 };
 
 export const DataCard = ({
@@ -22,6 +28,8 @@ export const DataCard = ({
   value = 0,
   valueChange = 0,
   percentageChange = 0,
+  sparkline,
+  sparklineColor,
 }: DataCardProps) => {
   const changeColorClass =
     percentageChange > 0
@@ -29,6 +37,14 @@ export const DataCard = ({
       : percentageChange < 0
         ? "text-rose-500 bg-rose-500/10"
         : "text-muted-foreground bg-muted-foreground/10";
+
+  const sparkColor =
+    sparklineColor ??
+    (percentageChange >= 0
+      ? "#10b981" /* emerald-500 */
+      : "#f43f5e") /* rose-500 */;
+
+  const gradientId = `spark-${title.replace(/\s+/g, "-").toLowerCase()}`;
 
   return (
     <Card className="border-none drop-shadow-sm">
@@ -64,6 +80,40 @@ export const DataCard = ({
             </Tooltip>
           </TooltipProvider>
         </h1>
+
+        {sparkline && sparkline.length > 1 && (
+          <div className="mt-3 h-10 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={sparkline}
+                margin={{ top: 2, right: 0, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="0%"
+                      stopColor={sparkColor}
+                      stopOpacity={0.4}
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor={sparkColor}
+                      stopOpacity={0}
+                    />
+                  </linearGradient>
+                </defs>
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke={sparkColor}
+                  strokeWidth={1.75}
+                  fill={`url(#${gradientId})`}
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

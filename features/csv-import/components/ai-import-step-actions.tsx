@@ -18,6 +18,7 @@ import {
   useImportSessionActions,
 } from "@/features/csv-import/store/import-session";
 import {
+  useAnalyzeComplete,
   useUIErrors,
   useUILoading,
 } from "@/features/csv-import/store/import-ui-state";
@@ -26,12 +27,14 @@ interface AiImportStepActionsProps {
   handleCancel: () => Promise<void>;
   handleMappingConfirm: () => void;
   handleStartImport: () => void;
+  handleRerunAnalyze: () => Promise<void>;
 }
 
 export const AiImportStepActions = memo(function AiImportStepActions({
   handleCancel,
   handleMappingConfirm,
   handleStartImport,
+  handleRerunAnalyze,
 }: AiImportStepActionsProps) {
   const currentStep = useCurrentStep();
   const analyzedRows = useAnalyzedRows();
@@ -40,6 +43,7 @@ export const AiImportStepActions = memo(function AiImportStepActions({
   const { getPendingCount } = useDuplicateResolutionActions();
   const loading = useUILoading();
   const errors = useUIErrors();
+  const analyzeComplete = useAnalyzeComplete();
 
   switch (currentStep) {
     case ImportStep.UPLOAD:
@@ -59,7 +63,9 @@ export const AiImportStepActions = memo(function AiImportStepActions({
           onCancel={handleCancel}
           onBack={previousStep}
           onContinue={nextStep}
+          onRerun={handleRerunAnalyze}
           isAnalyzing={loading.analyzing || loading.categorizing}
+          isAnalyzeComplete={analyzeComplete}
           hasError={!!(errors.analyze || errors.categorize)}
           duplicatesCount={analyzedRows.duplicates.length}
         />

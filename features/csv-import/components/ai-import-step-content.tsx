@@ -19,6 +19,7 @@ interface AiImportStepContentProps {
   accountId?: string;
   onComplete?: () => void;
   onImportAnother?: () => void;
+  analyze: () => Promise<void>;
   cancelAnalysis: () => void;
   retryAnalyze: () => Promise<void>;
   retryCategorize: () => Promise<void>;
@@ -34,6 +35,7 @@ export const AiImportStepContent = memo(function AiImportStepContent({
   accountId,
   onComplete,
   onImportAnother,
+  analyze,
   cancelAnalysis,
   retryAnalyze,
   retryCategorize,
@@ -65,6 +67,7 @@ export const AiImportStepContent = memo(function AiImportStepContent({
       return (
         <AnalysisStep
           totalTransactions={csvData?.rows.length ?? 0}
+          analyze={analyze}
           onCancelAnalysis={cancelAnalysis}
           onRetryAnalyze={retryAnalyze}
           onRetryCategorize={retryCategorize}
