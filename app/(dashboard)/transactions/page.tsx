@@ -37,14 +37,14 @@ const TransactionsPage = () => {
 
   if (paginationInfo.isLoading) {
     return (
-      <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
+      <div className="mx-auto w-full max-w-screen-2xl pb-10">
         <Card className="border-none drop-shadow-sm">
           <CardHeader>
             <Skeleton className="h-8 w-48" />
           </CardHeader>
 
           <CardContent>
-            <div className="flex h-[500px] w-full items-center justify-center">
+            <div className="flex h-125 w-full items-center justify-center">
               <Loader2 className="size-6 animate-spin text-slate-300" />
             </div>
           </CardContent>
@@ -57,47 +57,47 @@ const TransactionsPage = () => {
     <>
       <AccountDialog />
 
-      <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
+      <div className="mx-auto w-full max-w-screen-2xl pb-10">
         <Card className="border-none drop-shadow-sm">
-        <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
-          <CardTitle className="line-clamp-1 text-xl">
-            Transaction History
-          </CardTitle>
+          <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
+            <CardTitle className="line-clamp-1 text-xl">
+              Transaction History
+            </CardTitle>
 
-          <div className="flex flex-col items-center gap-x-2 gap-y-2 lg:flex-row">
-            <Button
-              size="sm"
-              onClick={newTransaction.onOpen}
-              className="w-full lg:w-auto"
-            >
-              <Plus className="mr-2 size-4" /> Add new
-            </Button>
+            <div className="flex flex-col items-center gap-x-2 gap-y-2 lg:flex-row">
+              <Button
+                size="sm"
+                onClick={newTransaction.onOpen}
+                className="w-full lg:w-auto"
+              >
+                <Plus className="mr-2 size-4" /> Add new
+              </Button>
 
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => void onUpload()}
-              className="w-full lg:w-auto"
-            >
-              <Plus className="mr-2 size-4" /> Import CSV
-            </Button>
-          </div>
-        </CardHeader>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void onUpload()}
+                className="w-full lg:w-auto"
+              >
+                <Plus className="mr-2 size-4" /> Import CSV
+              </Button>
+            </div>
+          </CardHeader>
 
-        <CardContent>
-          <PaginatedDataTable
-            filterKey="payee"
-            columns={columns}
-            data={transactions}
-            onDelete={(row) => {
-              const ids = row.map((r) => r.original.id);
+          <CardContent>
+            <PaginatedDataTable
+              filterKey="payee"
+              columns={columns}
+              data={transactions}
+              onDelete={(row) => {
+                const ids = row.map((r) => r.original.id);
 
-              deleteTransactions.mutate({ ids });
-            }}
-            disabled={isDisabled}
-            paginationInfo={paginationInfo}
-            paginationCallbacks={paginationCallbacks}
-          />
+                deleteTransactions.mutate({ ids });
+              }}
+              disabled={isDisabled}
+              paginationInfo={paginationInfo}
+              paginationCallbacks={paginationCallbacks}
+            />
           </CardContent>
         </Card>
       </div>

@@ -1,31 +1,13 @@
-import Image from "next/image";
 import Link from "next/link";
 
-type HeaderLogoProps = {
-  size?: "small" | "large";
-};
-
-const sizeMap = {
-  small: { width: 128, height: Math.round(128 / 3.08), sizes: "128px" },
-  medium: { width: 192, height: Math.round(192 / 3.08), sizes: "192px" },
-  large: { width: 256, height: Math.round(256 / 3.08), sizes: "256px" },
-};
-
-export const HeaderLogo = ({ size = "small" }: HeaderLogoProps) => {
-  const { width, height, sizes } = sizeMap[size];
+export const HeaderLogo = () => {
   return (
-    <Link href="/">
-      <div className="hidden items-center lg:flex">
-        <Image
-          src="/logo.png"
-          alt="Logo"
-          width={width}
-          height={height}
-          sizes={sizes}
-          style={{ height: "auto" }}
-          priority
-        />
-      </div>
+    <Link href="/" className="hidden items-center lg:flex">
+      <span className="font-mono text-2xl leading-none font-bold tracking-tight uppercase select-none">
+        <span className="text-muted-foreground">&gt;&nbsp;</span>
+        <span className="glow-sm text-foreground">AUREO</span>
+        <span className="animate-blink glow-acc text-crt-accent">_</span>
+      </span>
     </Link>
   );
 };

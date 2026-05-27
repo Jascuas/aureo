@@ -21,7 +21,7 @@ const CategoriesPage = () => {
 
   if (categoriesQuery.isLoading) {
     return (
-      <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
+      <div className="mx-auto w-full max-w-screen-2xl pb-10">
         <Card className="border-none drop-shadow-sm">
           <CardHeader>
             <Skeleton className="h-8 w-48" />
@@ -38,7 +38,7 @@ const CategoriesPage = () => {
   }
 
   return (
-    <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
+    <div className="mx-auto w-full max-w-screen-2xl pb-10">
       <Card className="border-none drop-shadow-sm">
         <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
           <CardTitle className="line-clamp-1 text-xl">

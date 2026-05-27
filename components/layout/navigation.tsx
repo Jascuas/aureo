@@ -17,22 +17,10 @@ import {
 } from "@/components/ui/sheet";
 
 const routes = [
-  {
-    href: "/",
-    label: "Overview",
-  },
-  {
-    href: "/transactions",
-    label: "Transactions",
-  },
-  {
-    href: "/accounts",
-    label: "Accounts",
-  },
-  {
-    href: "/categories",
-    label: "Categories",
-  },
+  { href: "/", label: "Overview" },
+  { href: "/transactions", label: "Transactions" },
+  { href: "/accounts", label: "Accounts" },
+  { href: "/categories", label: "Categories" },
 ];
 
 export const Navigation = () => {
@@ -68,16 +56,15 @@ export const Navigation = () => {
             </SheetDescription>
           </VisuallyHidden.Root>
 
-          <nav className="flex flex-col gap-y-2 pt-6">
+          <nav className="flex flex-col pt-6">
             {routes.map((route) => (
-              <Button
+              <NavButton
                 key={route.href}
-                variant={route.href === pathname ? "secondary" : "ghost"}
+                label={route.label}
+                href={route.href}
+                isActive={route.href === pathname}
                 onClick={() => onClick(route.href)}
-                className="w-full justify-start"
-              >
-                {route.label}
-              </Button>
+              />
             ))}
           </nav>
         </SheetContent>
@@ -86,7 +73,7 @@ export const Navigation = () => {
   }
 
   return (
-    <nav className="hidden items-center gap-x-2 overflow-x-auto lg:flex">
+    <nav className="flex flex-col">
       {routes.map((route) => (
         <NavButton
           key={route.href}

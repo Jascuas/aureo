@@ -27,7 +27,7 @@ export default function Page() {
       </div>
 
       <div className="dark:to-background hidden h-full items-center justify-center bg-gradient-to-b from-teal-700 to-teal-500 lg:flex dark:from-[hsl(210_60%_10%)]">
-        <HeaderLogo size="large" />
+        <HeaderLogo />
       </div>
     </div>
   );

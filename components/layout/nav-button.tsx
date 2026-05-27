@@ -1,26 +1,41 @@
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type NavButtonProps = {
   href: string;
   label: string;
   isActive: boolean;
+  onClick?: () => void;
 };
 
-export const NavButton = ({ href, label, isActive }: NavButtonProps) => {
+export const NavButton = ({
+  href,
+  label,
+  isActive,
+  onClick,
+}: NavButtonProps) => {
   return (
-    <Button
-      size="sm"
-      variant="outline"
+    <Link
+      href={href}
+      onClick={onClick}
       className={cn(
-        "w-full justify-between border-none font-normal text-white outline-offset-0 transition hover:bg-white/20 hover:text-white focus:bg-white/30 focus-visible:ring-transparent focus-visible:ring-offset-0 lg:w-auto",
-        isActive ? "bg-white/10 text-white" : "bg-transparent",
+        "group flex items-center gap-2 border-l-4 px-4 py-2.5 text-xs tracking-wide uppercase transition-colors",
+        isActive
+          ? "bg-secondary text-foreground glow-sm border-crt-accent"
+          : "text-muted-foreground hover:border-border hover:bg-secondary border-transparent",
       )}
-      asChild
     >
-      <Link href={href}>{label}</Link>
-    </Button>
+      {/* Active glyph */}
+      <span
+        className={cn(
+          "shrink-0 text-sm leading-none",
+          isActive ? "glow-acc text-crt-accent" : "text-crt-dim opacity-60",
+        )}
+      >
+        {isActive ? "▶" : ">"}
+      </span>
+      <span>{label}</span>
+    </Link>
   );
 };
