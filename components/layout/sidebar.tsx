@@ -9,7 +9,7 @@ import { Navigation } from "@/components/layout/navigation";
 export const Sidebar = () => {
   return (
     <aside className="animate-flicker border-border bg-card hidden h-screen w-60 shrink-0 flex-col border-r lg:flex">
-      <div className="border-border flex h-[76px] shrink-0 items-center border-b px-4">
+      <div className="border-border flex h-14 shrink-0 items-center border-b px-4">
         <HeaderLogo />
       </div>
 

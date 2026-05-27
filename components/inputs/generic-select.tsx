@@ -31,7 +31,7 @@ export function GenericSelect<T extends string>({
 }: GenericSelectProps<T>) {
   return (
     <Select defaultValue={value} onValueChange={onChange}>
-      <SelectTrigger className="h-9 rounded-md px-3 lg:w-auto">
+      <SelectTrigger className="h-9 lg:w-auto">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
 

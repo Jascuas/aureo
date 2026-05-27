@@ -53,7 +53,7 @@ export const AccountFilter = () => {
       onValueChange={onChange}
       disabled={mounted && isLoading}
     >
-      <SelectTrigger className="h-9 w-full rounded-md border-none bg-white/10 px-3 font-normal text-white transition outline-none hover:bg-white/30 hover:text-white focus:bg-white/30 focus:ring-transparent focus:ring-offset-0 lg:w-auto">
+      <SelectTrigger className="hover:border-crt-accent hover:text-crt-accent focus:border-crt-accent h-9 w-full rounded-none border border-white/40 bg-transparent px-3 text-[10px] font-bold tracking-[0.14em] text-white uppercase transition outline-none focus:ring-transparent focus:ring-offset-0 lg:w-auto">
         <SelectValue placeholder="Select account" />
       </SelectTrigger>
 
