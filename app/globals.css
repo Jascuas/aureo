@@ -18,7 +18,8 @@
   --color-secondary-foreground: var(--crt-fg);
   --color-muted: var(--crt-surface-2);
   --color-muted-foreground: var(--crt-muted);
-  --color-accent: var(--crt-surface-2);
+  --color-success: var(--crt-pos);
+  --color-accent: var(--crt-accent);
   --color-accent-foreground: var(--crt-fg);
   --color-destructive: var(--crt-neg);
   --color-destructive-foreground: var(--crt-fg);
@@ -72,12 +73,36 @@
     --crt-pos: oklch(36% 0.21 145);
     --crt-neg: oklch(48% 0.24 25);
     --crt-amber: oklch(44% 0.18 75);
+
+    /* ── Pie chart palette — 15 steps, interleaved amber/red/green ── */
+    --crt-pie-1: oklch(44% 0.18 75);
+    --crt-pie-2: oklch(46% 0.27 25);
+    --crt-pie-3: oklch(36% 0.21 145);
+    --crt-pie-4: oklch(54% 0.15 75);
+    --crt-pie-5: oklch(55% 0.22 25);
+    --crt-pie-6: oklch(46% 0.17 145);
+    --crt-pie-7: oklch(62% 0.12 75);
+    --crt-pie-8: oklch(63% 0.16 25);
+    --crt-pie-9: oklch(55% 0.14 145);
+    --crt-pie-10: oklch(69% 0.09 75);
+    --crt-pie-11: oklch(69% 0.11 25);
+    --crt-pie-12: oklch(62% 0.1 145);
+    --crt-pie-13: oklch(74% 0.06 75);
+    --crt-pie-14: oklch(74% 0.07 25);
+    --crt-pie-15: oklch(68% 0.07 145);
+
+    /* ── Account chart gradient — accent → muted (5 stops) ── */
+    --chart-1: oklch(46% 0.27 25);
+    --chart-2: oklch(51% 0.22 25);
+    --chart-3: oklch(57% 0.16 25);
+    --chart-4: oklch(63% 0.11 25);
+    --chart-5: oklch(69% 0.06 25);
   }
 
   .dark {
     /* Dark mode — CRT terminal */
     --crt-bg: oklch(4% 0 0);
-    --crt-surface: oklch(10% 0 0);
+    --crt-surface: oklch(7.5% 0 0);
     --crt-surface-2: oklch(13% 0 0);
     --crt-fg: oklch(92% 0 0);
     --crt-muted: oklch(50% 0 0);
@@ -87,6 +112,30 @@
     --crt-pos: oklch(72% 0.21 145);
     --crt-neg: oklch(62% 0.24 25);
     --crt-amber: oklch(76% 0.16 75);
+
+    /* ── Pie chart palette — 15 steps, interleaved amber/red/green ── */
+    --crt-pie-1: oklch(76% 0.16 75);
+    --crt-pie-2: oklch(56% 0.27 25);
+    --crt-pie-3: oklch(72% 0.21 145);
+    --crt-pie-4: oklch(67% 0.18 75);
+    --crt-pie-5: oklch(65% 0.23 25);
+    --crt-pie-6: oklch(63% 0.19 145);
+    --crt-pie-7: oklch(58% 0.16 75);
+    --crt-pie-8: oklch(73% 0.17 25);
+    --crt-pie-9: oklch(55% 0.16 145);
+    --crt-pie-10: oklch(50% 0.13 75);
+    --crt-pie-11: oklch(79% 0.11 25);
+    --crt-pie-12: oklch(47% 0.13 145);
+    --crt-pie-13: oklch(43% 0.1 75);
+    --crt-pie-14: oklch(83% 0.07 25);
+    --crt-pie-15: oklch(41% 0.1 145);
+
+    /* ── Account chart gradient — accent → muted (5 stops) ── */
+    --chart-1: oklch(80% 0.16 25);
+    --chart-2: oklch(68% 0.23 25);
+    --chart-3: oklch(42% 0.25 25);
+    --chart-4: oklch(32% 0.2 25);
+    --chart-5: oklch(22% 0.15 25);
   }
 
   * {

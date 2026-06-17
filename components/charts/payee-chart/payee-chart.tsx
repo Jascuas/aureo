@@ -1,6 +1,6 @@
 "use client";
 
-import { FileSearch, Users } from "lucide-react";
+import { FileSearch } from "lucide-react";
 
 import { SpendingPieLoading } from "@/components/loading/spending-pie-loading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,16 +18,11 @@ export const PayeeChart = () => {
   const max = data.reduce((m, r) => Math.max(m, r.value), 0);
 
   return (
-    <Card className="border-none drop-shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-4 lg:p-6">
-        <CardTitle className="line-clamp-1 text-base">
-          Top payees{" "}
-          <span className="text-muted-foreground font-normal">
-            &middot; expenses
-          </span>
+    <Card className="border-border border drop-shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-0 lg:p-6 lg:pb-0">
+        <CardTitle className="line-clamp-1 text-xs">
+          <span className="text-crt-accent">▌</span> Top expenses
         </CardTitle>
-
-        <Users className="text-muted-foreground size-4" />
       </CardHeader>
 
       <CardContent className="p-4 pt-0 lg:p-6">
@@ -58,7 +53,7 @@ export const PayeeChart = () => {
 
                   <div className="bg-muted relative h-2 w-full overflow-hidden rounded-full">
                     <div
-                      className="absolute inset-y-0 left-0 rounded-full bg-rose-500/80"
+                      className={`absolute inset-y-0 left-0 rounded-full ${i === 0 ? "bg-crt-accent" : "bg-muted-foreground/30"}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>

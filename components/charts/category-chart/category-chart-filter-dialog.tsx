@@ -29,14 +29,15 @@ export type CategoryFilterValue = {
 };
 
 const TYPE_OPTIONS: { value: CategorySummaryType; label: string }[] = [
+  { value: "All", label: "All" },
   { value: "Expense", label: "Expense" },
   { value: "Income", label: "Income" },
   { value: "Refund", label: "Refund" },
 ];
 
-const TOP_OPTIONS = [3, 5, 10, 15, 20];
+const TOP_OPTIONS = [3, 5, 10, 15];
 
-const DEFAULTS: CategoryFilterValue = { type: "Expense", top: 5 };
+const DEFAULTS: CategoryFilterValue = { type: "All", top: 5 };
 
 type Props = {
   value: CategoryFilterValue;
@@ -72,7 +73,7 @@ export const CategoryChartFilterDialog = ({ value, onChange }: Props) => {
           <Filter className="size-4" />
           <span className="hidden sm:inline">Filters</span>
           {isDirty && (
-            <span className="absolute top-1 right-1 size-2 rounded-full bg-blue-500" />
+            <span className="bg-crt-accent absolute top-1 right-1 size-2 rounded-full" />
           )}
         </Button>
       </DialogTrigger>

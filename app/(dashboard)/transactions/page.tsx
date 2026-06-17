@@ -37,8 +37,8 @@ const TransactionsPage = () => {
 
   if (paginationInfo.isLoading) {
     return (
-      <div className="mx-auto w-full max-w-screen-2xl pb-10">
-        <Card className="border-none drop-shadow-sm">
+      <div className="w-full pb-10">
+        <Card className="border-border border drop-shadow-sm">
           <CardHeader>
             <Skeleton className="h-8 w-48" />
           </CardHeader>
@@ -57,11 +57,11 @@ const TransactionsPage = () => {
     <>
       <AccountDialog />
 
-      <div className="mx-auto w-full max-w-screen-2xl pb-10">
-        <Card className="border-none drop-shadow-sm">
+      <div className="w-full pb-10">
+        <Card className="border-border border drop-shadow-sm">
           <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
-            <CardTitle className="line-clamp-1 text-xl">
-              Transaction History
+            <CardTitle className="line-clamp-1 text-xs">
+              <span className="text-crt-accent">▌</span> Transaction History
             </CardTitle>
 
             <div className="flex flex-col items-center gap-x-2 gap-y-2 lg:flex-row">

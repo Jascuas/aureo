@@ -1,5 +1,4 @@
 export type GroupType = "day" | "week" | "month";
-export type ChartType = "area" | "bar";
 export type DataType = "tx" | "balance";
 export type CategoryChartType = "pie" | "radar" | "radial";
 

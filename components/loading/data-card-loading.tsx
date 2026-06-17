@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const DataCardLoading = () => {
   return (
-    <Card className="h-auto border-none drop-shadow-sm">
+    <Card className="border-border h-auto border drop-shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="space-y-2">
           <Skeleton className="h-6 w-24" />

@@ -1,168 +1,167 @@
 "use client";
 
-import { FileSearch, Wallet } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import qs from "query-string";
-import { useMemo } from "react";
-import {
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import { FileSearch } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Pie, PieChart, Sector } from "recharts";
 
-import { CategoryTooltip } from "@/components/charts/category-chart/category-tooltip";
 import { SpendingPieLoading } from "@/components/loading/spending-pie-loading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useGetAccountSummary } from "@/features/summary/api/use-get-account-summary";
 import { formatCurrency, formatPercentage } from "@/lib/utils";
 
-const COLORS = [
-  "#0062FF",
-  "#12C6FF",
-  "#FF647F",
-  "#FF9354",
-  "#7C3AED",
-  "#22C55E",
-  "#F59E0B",
-  "#EC4899",
+const ACCOUNT_COLORS = Array.from(
+  { length: 5 },
+  (_, i) => `var(--chart-${i + 1})`,
+);
+
+const TOP_OPTIONS = [
+  { value: "3", label: "Top 3" },
+  { value: "5", label: "Top 5" },
+  { value: "8", label: "Top 8" },
+  { value: "all", label: "All" },
 ];
 
+// Highest balance account is always index 0 (API sorts desc by balance)
+const ACTIVE_INDEX = 0;
+
 export const AccountChart = () => {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const activeAccountId = searchParams.get("accountId") ?? "";
+  const [top, setTop] = useState<string>("5");
   const { data = [], isLoading } = useGetAccountSummary();
 
-  // Donut: only positive balances make sense in a share view.
-  const chartData = useMemo(() => data.filter((r) => r.value > 0), [data]);
+  const positiveData = useMemo(() => data.filter((r) => r.value > 0), [data]);
+
+  const chartData = useMemo(() => {
+    if (top === "all") return positiveData;
+    return positiveData.slice(0, Number(top));
+  }, [positiveData, top]);
+
   const total = useMemo(
     () => chartData.reduce((s, r) => s + r.value, 0),
     [chartData],
   );
 
-  const handleSlice = (id: string) => {
-    const current = qs.parse(searchParams.toString());
-    const nextAccountId = activeAccountId === id ? undefined : id;
+  // Build chartConfig: account-0, account-1, ... → resolves var(--color-account-N)
+  const chartConfig = useMemo<ChartConfig>(() => {
+    const config: ChartConfig = { value: { label: "Balance" } };
+    chartData.forEach((item, index) => {
+      config[`account-${index}`] = {
+        label: item.name,
+        color: ACCOUNT_COLORS[index % ACCOUNT_COLORS.length],
+      };
+    });
+    return config;
+  }, [chartData]);
 
-    const url = qs.stringifyUrl(
-      {
-        url: window.location.pathname,
-        query: { ...current, accountId: nextAccountId },
-      },
-      { skipNull: true, skipEmptyString: true },
-    );
-
-    router.push(url);
-  };
+  // Attach fill so ChartContainer can resolve colours
+  const chartDataWithFill = useMemo(
+    () =>
+      chartData.map((item, index) => ({
+        ...item,
+        fill: `var(--color-account-${index})`,
+      })),
+    [chartData],
+  );
 
   if (isLoading) return <SpendingPieLoading />;
 
   return (
-    <Card className="border-none drop-shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-4 lg:p-6">
-        <CardTitle className="line-clamp-1 text-base">
-          Accounts{" "}
-          <span className="text-muted-foreground font-normal">
-            &middot; balance share
-          </span>
+    <Card className="border-border border drop-shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-0 lg:p-6 lg:pb-0">
+        <CardTitle className="line-clamp-1 text-xs">
+          <span className="text-crt-accent">▌</span> Accounts
         </CardTitle>
 
-        <Wallet className="text-muted-foreground size-4" />
+        <Select value={top} onValueChange={setTop}>
+          <SelectTrigger className="h-8 w-24 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {TOP_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value} className="text-xs">
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </CardHeader>
 
       <CardContent className="p-4 pt-0 lg:p-6">
-        {chartData.length === 0 ? (
+        {chartDataWithFill.length === 0 ? (
           <div className="flex h-[350px] w-full flex-col items-center justify-center gap-y-4">
             <FileSearch className="text-muted-foreground size-6" />
-
             <p className="text-muted-foreground text-sm">
               No accounts with a positive balance.
             </p>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={350}>
-            <PieChart>
-              <Legend
-                layout="horizontal"
-                verticalAlign="bottom"
-                align="center"
-                iconType="circle"
-                content={({ payload }) => (
-                  <ul className="mt-4 flex flex-col space-y-2">
-                    {payload?.map((entry, index) => {
-                      const item = chartData.find(
-                        (r) => r.name === entry.value,
-                      );
-                      const pct =
-                        item && total > 0 ? (item.value / total) * 100 : 0;
-                      const isActive = item && activeAccountId === item.id;
+          <div>
+            <ChartContainer
+              config={chartConfig}
+              className="mx-auto aspect-square max-h-[200px]"
+            >
+              <PieChart>
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel />}
+                />
+                <Pie
+                  data={chartDataWithFill}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={60}
+                  strokeWidth={5}
+                  activeIndex={ACTIVE_INDEX}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  activeShape={(props: any) => (
+                    <Sector
+                      {...props}
+                      outerRadius={(props.outerRadius ?? 0) + 10}
+                    />
+                  )}
+                />
+              </PieChart>
+            </ChartContainer>
 
-                      return (
-                        <li
-                          key={`item-${index}`}
-                          className={`hover:bg-muted flex cursor-pointer items-center space-x-2 rounded px-1 py-0.5 transition-colors ${
-                            isActive ? "bg-muted" : ""
-                          }`}
-                          onClick={() => item && handleSlice(item.id)}
-                        >
-                          <span
-                            className="size-2 rounded-full"
-                            style={{ backgroundColor: entry.color }}
-                            aria-hidden
-                          />
-
-                          <div className="flex w-full items-center justify-between gap-2">
-                            <span className="text-muted-foreground line-clamp-1 text-sm">
-                              {entry.value}
-                            </span>
-
-                            <span className="text-sm tabular-nums">
-                              {formatPercentage(pct)}
-                            </span>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              />
-
-              <Tooltip
-                content={({ active, payload }) => (
-                  <CategoryTooltip active={active} payload={payload} />
-                )}
-              />
-
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="40%"
-                outerRadius={90}
-                innerRadius={60}
-                paddingAngle={2}
-                dataKey="value"
-                labelLine={false}
-                onClick={(slice) => {
-                  const id = (slice as { id?: string }).id;
-                  if (id) handleSlice(id);
-                }}
-                className="cursor-pointer"
-              >
-                {chartData.map((row, index) => (
-                  <Cell
-                    key={`cell-${row.id}`}
-                    fill={COLORS[index % COLORS.length]}
-                    opacity={
-                      activeAccountId && activeAccountId !== row.id ? 0.35 : 1
-                    }
-                  />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
+            <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+              {chartData.map((item, index) => {
+                const pct = total > 0 ? (item.value / total) * 100 : 0;
+                return (
+                  <li
+                    key={`legend-${item.id}`}
+                    className="flex items-center space-x-2 px-1 py-0.5 whitespace-nowrap"
+                  >
+                    <span
+                      className="size-2 shrink-0 rounded-full"
+                      style={{
+                        backgroundColor:
+                          ACCOUNT_COLORS[index % ACCOUNT_COLORS.length],
+                      }}
+                      aria-hidden
+                    />
+                    <span className="text-muted-foreground text-sm">
+                      {item.name}
+                    </span>
+                    <span className="text-sm tabular-nums">
+                      {formatPercentage(pct)}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         )}
 
         {total > 0 && (

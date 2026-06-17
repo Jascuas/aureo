@@ -7,12 +7,19 @@ import type {
 import { TooltipBase } from "@/components/tooltips/tooltip-base";
 import { formatCurrency } from "@/lib/utils";
 
-type CategoryTooltipProps = {
+type PieTooltipProps = {
   active: boolean | undefined;
   payload: readonly Payload<ValueType, NameType>[] | undefined;
+  label?: string;
+  negate?: boolean;
 };
 
-export const CategoryTooltip = ({ active, payload }: CategoryTooltipProps) => {
+export const PieTooltip = ({
+  active,
+  payload,
+  label = "Expenses",
+  negate = false,
+}: PieTooltipProps) => {
   if (!active || !payload) return null;
 
   const name = payload[0].payload.name;
@@ -21,8 +28,8 @@ export const CategoryTooltip = ({ active, payload }: CategoryTooltipProps) => {
   return (
     <TooltipBase title={name}>
       <TooltipBase.Item
-        label="Expenses"
-        value={formatCurrency(value * -1)}
+        label={label}
+        value={formatCurrency(negate ? value * -1 : value)}
         color="bg-rose-500"
       />
     </TooltipBase>

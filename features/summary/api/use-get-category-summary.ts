@@ -3,7 +3,7 @@ import { useSearchParams } from "next/navigation";
 
 import { client } from "@/lib/hono";
 
-export type CategorySummaryType = "Income" | "Expense" | "Refund";
+export type CategorySummaryType = "Income" | "Expense" | "Refund" | "All";
 
 type Options = {
   type?: CategorySummaryType;

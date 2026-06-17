@@ -58,7 +58,7 @@ export const AiImportCard = ({
   } = useImportOrchestrator({ accountId, onCancel });
 
   return (
-    <Card className="border-none drop-shadow-sm">
+    <Card className="border-border border drop-shadow-sm">
       <ConfirmDialog />
       <RerunConfirmDialog />
       <CardHeader>

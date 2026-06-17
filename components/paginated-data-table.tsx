@@ -37,7 +37,7 @@ export function PaginatedDataTable<TData, TValue>({
       />
 
       {/* Server-side pagination controls */}
-      <div className="flex items-center justify-between px-2">
+      <div className="flex items-center justify-between px-4">
         <div className="flex items-center space-x-6 lg:space-x-8">
           {/* Page info */}
           <div className="text-muted-foreground text-sm">

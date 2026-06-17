@@ -1,17 +1,17 @@
+"use client";
+
 import { format } from "date-fns";
+import { useMemo } from "react";
+import { Bar, BarChart, XAxis, YAxis } from "recharts";
+
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 import { AreaSeries, OverTimeData } from "@/lib/types";
-
-import { DynamicTooltip } from "@/components/charts/tooltips/dynamic-tooltip";
+import { formatCurrency } from "@/lib/utils";
 
 type BarVariantProps = {
   data: OverTimeData;
@@ -19,44 +19,58 @@ type BarVariantProps = {
 };
 
 export const BarVariant = ({ data, series }: BarVariantProps) => {
-  return (
-    <ResponsiveContainer width="100%" height={350}>
-      <BarChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
+  const chartConfig = useMemo(
+    () =>
+      series.reduce<ChartConfig>((acc, { key, color }) => {
+        acc[key] = {
+          label: key.charAt(0).toUpperCase() + key.slice(1),
+          color,
+        };
+        return acc;
+      }, {}),
+    [series],
+  );
 
+  return (
+    <ChartContainer config={chartConfig} className="h-[350px] w-full">
+      <BarChart data={data} accessibilityLayer>
         <XAxis
           axisLine={false}
           tickLine={false}
           dataKey="date"
           tickFormatter={(value) => format(value, "dd MMM")}
-          style={{
-            fontSize: "12px",
-          }}
+          style={{ fontSize: "12px" }}
           tickMargin={16}
         />
 
         <YAxis
-          style={{
-            fontSize: "12px",
-          }}
+          style={{ fontSize: "12px" }}
           tickMargin={16}
         />
 
-        <Tooltip
+        <ChartTooltip
           cursor={{ fill: "rgba(255,255,255,0.1)" }}
-          content={({ active, payload }) => (
-            <DynamicTooltip active={active} payload={payload} series={series} />
-          )}
+          content={
+            <ChartTooltipContent
+              labelFormatter={(value) =>
+                format(new Date(value), "MMM dd, yyyy")
+              }
+              formatter={(value) => [
+                formatCurrency(Number(value)),
+              ]}
+            />
+          }
         />
-        {series.map(({ key, color }) => (
+
+        {series.map(({ key }) => (
           <Bar
             key={key}
             dataKey={key}
-            fill={color}
+            fill={`var(--color-${key})`}
             className="drop-shadow-sm"
           />
         ))}
       </BarChart>
-    </ResponsiveContainer>
+    </ChartContainer>
   );
 };

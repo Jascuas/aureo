@@ -1,11 +1,9 @@
-import { format } from "date-fns";
 import type {
   NameType,
   Payload,
   ValueType,
 } from "recharts/types/component/DefaultTooltipContent";
 
-import { Separator } from "@/components/ui/separator";
 import { TooltipBase } from "@/components/tooltips/tooltip-base";
 import { formatCurrency } from "@/lib/utils";
 
@@ -29,12 +27,12 @@ export const TimeSeriesToolTip = ({
       <TooltipBase.Item
         label="Income"
         value={formatCurrency(income)}
-        color="bg-blue-500"
+        color="bg-success"
       />
       <TooltipBase.Item
         label="Expenses"
         value={formatCurrency(expenses * -1)}
-        color="bg-rose-500"
+        color="bg-success"
       />
     </TooltipBase>
   );

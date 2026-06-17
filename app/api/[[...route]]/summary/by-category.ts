@@ -25,7 +25,7 @@ const app = new Hono<AppEnv>().get(
   zValidator(
     "query",
     z.object({
-      type: z.enum(["Income", "Expense", "Refund"]).default("Expense"),
+      type: z.enum(["Income", "Expense", "Refund", "All"]).default("All"),
       from: z.string().optional(),
       to: z.string().optional(),
       accountId: z.string().optional(),
@@ -38,7 +38,11 @@ const app = new Hono<AppEnv>().get(
     const { startDate, endDate } = parseDateRange(from, to);
 
     const wanted: readonly TxType[] =
-      type === "Expense" ? ["Expense", "Refund"] : [type];
+      type === "All"
+        ? ["Income", "Expense", "Refund"]
+        : type === "Expense"
+          ? ["Expense", "Refund"]
+          : [type];
 
     const rows = await db
       .select({

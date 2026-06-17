@@ -9,7 +9,6 @@ import { OverTimeData } from "@/lib/types";
 import { groupByPeriod, overtimeReducers } from "@/lib/utils";
 
 import { AreaVariant } from "./variants/area-variant";
-import { BarVariant } from "./variants/bar-variant";
 
 type ChartProps = {
   data?: OverTimeData;
@@ -20,14 +19,11 @@ export const TimeSeriesChart = ({ data = [] }: ChartProps) => {
   const {
     groupBy,
     dataType,
-    chartType,
     series,
     groupOptions,
     dataTypeOptions,
-    chartTypeOptions,
     onGroupChange,
     onDataTypeChange,
-    onChartTypeChange,
   } = useChartControls();
 
   // Filter data based on chart type:
@@ -49,14 +45,12 @@ export const TimeSeriesChart = ({ data = [] }: ChartProps) => {
     overtimeReducers,
   );
 
-  // Bar variant doesn't make sense for the single-series balance view,
-  // fall back to area in that case.
-  const effectiveChartType = dataType === "balance" ? "area" : chartType;
-
   return (
-    <Card className="border-none drop-shadow-sm">
-      <CardHeader className="flex justify-between space-y-2 p-4 pb-4 lg:flex-row lg:items-center lg:space-y-0 lg:p-6">
-        <CardTitle className="line-clamp-1 text-base">Transactions</CardTitle>
+    <Card className="border-border h-full border drop-shadow-sm">
+      <CardHeader className="flex justify-between space-y-2 p-4 pb-0 lg:flex-row lg:items-center lg:space-y-0 lg:p-6 lg:pb-0">
+        <CardTitle className="line-clamp-1 text-xs">
+          <span className="text-crt-accent">▌</span> Transactions
+        </CardTitle>
         <div className="flex flex-wrap items-center gap-2">
           <GenericSelect
             value={groupBy}
@@ -71,15 +65,6 @@ export const TimeSeriesChart = ({ data = [] }: ChartProps) => {
             placeholder="Data"
             onChange={onDataTypeChange}
           />
-
-          {dataType === "tx" && (
-            <GenericSelect
-              value={chartType}
-              options={chartTypeOptions}
-              placeholder="Chart type"
-              onChange={onChartTypeChange}
-            />
-          )}
         </div>
       </CardHeader>
 
@@ -91,8 +76,6 @@ export const TimeSeriesChart = ({ data = [] }: ChartProps) => {
               No data for this period.
             </p>
           </div>
-        ) : effectiveChartType === "bar" ? (
-          <BarVariant data={groupedData} series={series} />
         ) : (
           <AreaVariant data={groupedData} series={series} />
         )}

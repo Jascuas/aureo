@@ -20,7 +20,7 @@ export const NavButton = ({
       href={href}
       onClick={onClick}
       className={cn(
-        "group flex items-center gap-2 border-l-4 px-4 py-2.5 text-xs tracking-wide uppercase transition-colors",
+        "group flex items-center gap-2 border-l-4 px-4 py-3 text-xs tracking-wide uppercase transition-colors",
         isActive
           ? "bg-secondary text-foreground glow-sm border-crt-accent"
           : "text-muted-foreground hover:border-border hover:bg-secondary border-transparent",
