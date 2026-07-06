@@ -74,22 +74,22 @@
     --crt-neg: oklch(48% 0.24 25);
     --crt-amber: oklch(44% 0.18 75);
 
-    /* ── Pie chart palette — 15 steps, interleaved amber/red/green ── */
-    --crt-pie-1: oklch(44% 0.18 75);
-    --crt-pie-2: oklch(46% 0.27 25);
-    --crt-pie-3: oklch(36% 0.21 145);
-    --crt-pie-4: oklch(54% 0.15 75);
-    --crt-pie-5: oklch(55% 0.22 25);
-    --crt-pie-6: oklch(46% 0.17 145);
-    --crt-pie-7: oklch(62% 0.12 75);
-    --crt-pie-8: oklch(63% 0.16 25);
-    --crt-pie-9: oklch(55% 0.14 145);
-    --crt-pie-10: oklch(69% 0.09 75);
-    --crt-pie-11: oklch(69% 0.11 25);
-    --crt-pie-12: oklch(62% 0.1 145);
-    --crt-pie-13: oklch(74% 0.06 75);
-    --crt-pie-14: oklch(74% 0.07 25);
-    --crt-pie-15: oklch(68% 0.07 145);
+    /* ── Pie chart palette — 15 steps, amber/green/cyan/blue/violet ── */
+    --crt-pie-1:  oklch(42% 0.18 75);   /* amber deep   */
+    --crt-pie-2:  oklch(36% 0.21 145);  /* green deep   */
+    --crt-pie-3:  oklch(40% 0.14 200);  /* cyan deep    */
+    --crt-pie-4:  oklch(38% 0.16 250);  /* blue deep    */
+    --crt-pie-5:  oklch(36% 0.18 300);  /* violet deep  */
+    --crt-pie-6:  oklch(54% 0.16 75);   /* amber mid    */
+    --crt-pie-7:  oklch(50% 0.18 145);  /* green mid    */
+    --crt-pie-8:  oklch(52% 0.14 200);  /* cyan mid     */
+    --crt-pie-9:  oklch(50% 0.16 250);  /* blue mid     */
+    --crt-pie-10: oklch(48% 0.18 300);  /* violet mid   */
+    --crt-pie-11: oklch(64% 0.13 75);   /* amber light  */
+    --crt-pie-12: oklch(62% 0.16 145);  /* green light  */
+    --crt-pie-13: oklch(63% 0.12 200);  /* cyan light   */
+    --crt-pie-14: oklch(61% 0.14 250);  /* blue light   */
+    --crt-pie-15: oklch(59% 0.15 300);  /* violet light */
 
     /* ── Account chart gradient — accent → muted (5 stops) ── */
     --chart-1: oklch(46% 0.27 25);
@@ -113,22 +113,22 @@
     --crt-neg: oklch(62% 0.24 25);
     --crt-amber: oklch(76% 0.16 75);
 
-    /* ── Pie chart palette — 15 steps, interleaved amber/red/green ── */
-    --crt-pie-1: oklch(76% 0.16 75);
-    --crt-pie-2: oklch(56% 0.27 25);
-    --crt-pie-3: oklch(72% 0.21 145);
-    --crt-pie-4: oklch(67% 0.18 75);
-    --crt-pie-5: oklch(65% 0.23 25);
-    --crt-pie-6: oklch(63% 0.19 145);
-    --crt-pie-7: oklch(58% 0.16 75);
-    --crt-pie-8: oklch(73% 0.17 25);
-    --crt-pie-9: oklch(55% 0.16 145);
-    --crt-pie-10: oklch(50% 0.13 75);
-    --crt-pie-11: oklch(79% 0.11 25);
-    --crt-pie-12: oklch(47% 0.13 145);
-    --crt-pie-13: oklch(43% 0.1 75);
-    --crt-pie-14: oklch(83% 0.07 25);
-    --crt-pie-15: oklch(41% 0.1 145);
+    /* ── Pie chart palette — 15 steps, amber/green/cyan/blue/violet ── */
+    --crt-pie-1:  oklch(74% 0.17 75);   /* amber deep   */
+    --crt-pie-2:  oklch(72% 0.21 145);  /* green deep   */
+    --crt-pie-3:  oklch(74% 0.14 200);  /* cyan deep    */
+    --crt-pie-4:  oklch(70% 0.17 250);  /* blue deep    */
+    --crt-pie-5:  oklch(70% 0.18 300);  /* violet deep  */
+    --crt-pie-6:  oklch(65% 0.17 75);   /* amber mid    */
+    --crt-pie-7:  oklch(63% 0.19 145);  /* green mid    */
+    --crt-pie-8:  oklch(66% 0.15 200);  /* cyan mid     */
+    --crt-pie-9:  oklch(63% 0.17 250);  /* blue mid     */
+    --crt-pie-10: oklch(62% 0.18 300);  /* violet mid   */
+    --crt-pie-11: oklch(56% 0.14 75);   /* amber light  */
+    --crt-pie-12: oklch(55% 0.16 145);  /* green light  */
+    --crt-pie-13: oklch(57% 0.13 200);  /* cyan light   */
+    --crt-pie-14: oklch(55% 0.15 250);  /* blue light   */
+    --crt-pie-15: oklch(53% 0.15 300);  /* violet light */
 
     /* ── Account chart gradient — accent → muted (5 stops) ── */
     --chart-1: oklch(80% 0.16 25);
@@ -162,7 +162,8 @@
     overflow-x: hidden;
   }
 
-  ── CRT scanlines ── body::before {
+  /* ── CRT scanlines ── */
+  body::before {
     content: "";
     pointer-events: none;
     position: fixed;
@@ -276,6 +277,44 @@
     }
   }
 
+  @keyframes scan {
+    from {
+      transform: translateY(-100%);
+    }
+    to {
+      transform: translateY(100vh);
+    }
+  }
+
+  /* ── Animated scanline sweep ── */
+  .scanline::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 220px;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      oklch(56% 0.27 25 / 0.08) 50%,
+      transparent 100%
+    );
+    animation: scan 8s linear infinite;
+    mix-blend-mode: screen;
+    z-index: 1;
+  }
+
+  /* ── Background grid ── */
+  .bg-grid {
+    background-image:
+      linear-gradient(oklch(92% 0 0 / 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(92% 0 0 / 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    background-position: -1px -1px;
+  }
+
   /* ── Phosphor glow utilities ── */
   .glow-sm {
     text-shadow: 0 0 4px oklch(92% 0 0 / 0.4);
@@ -359,4 +398,93 @@
 ::selection {
   background: var(--crt-accent);
   color: var(--crt-bg);
+}
+
+/* ─────────────────────────────────────────
+   ACCOUNTS CARD — va-row-a system
+   ───────────────────────────────────────── */
+
+.acct-list-a {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.va-row-a {
+  position: relative;
+  height: 52px;
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+/* fill bar */
+.va-row-a::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: var(--w, 50%);
+  background: var(--fill, transparent);
+  border-right: 1px solid var(--c-edge, transparent);
+  z-index: 0;
+}
+
+/* label layer — sits above the fill */
+.va-label-a {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 12px;
+  gap: 8px;
+}
+
+.va-name {
+  font-size: 0.7rem;
+  color: var(--c, var(--crt-muted));
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.75;
+}
+
+.va-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.va-balance {
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.va-pct {
+  font-size: 0.6rem;
+  color: var(--crt-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+/* footer */
+.acct-foot-a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  margin-top: 8px;
+  border-top: 1px dotted var(--crt-border);
 }

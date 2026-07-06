@@ -12,11 +12,12 @@ const DashboardLayout = ({ children }: PropsWithChildren) => {
       <div className="bg-background flex h-screen w-full overflow-hidden">
         <Sidebar />
         <SidebarToggleButton />
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden will-change-transform">
+          <div className="scanline" />
           <Topbar />
           <FiltersBar />
           <ErrorBoundary>
-            <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+            <main className="bg-grid relative z-10 flex-1 overflow-y-auto p-4 lg:p-6">
               {children}
             </main>
           </ErrorBoundary>
