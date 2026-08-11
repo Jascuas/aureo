@@ -9,6 +9,17 @@
       "type": "remote",
       "url": "https://mcp.neon.tech/mcp",
       "enabled": true
+    },
+    "plane": {
+      "type": "remote",
+      "url": "http://{env:PLANE_API_HOST}:{env:PLANE_API_PORT}/http/api-key/mcp",
+      "enabled": true,
+      "oauth": {},
+      "headers": {
+        "Authorization": "Bearer {env:PLANE_API_KEY}",
+        "x-workspace-slug": "walle",
+        "Accept": "application/json, text/event-stream"
+      }
     }
   },
   "plugin": ["@tarquinen/opencode-dcp@latest"],

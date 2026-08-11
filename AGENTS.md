@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents working in this repository.
 
 ## Project
 
@@ -20,9 +20,19 @@ npm run db:studio     # Drizzle Studio UI on port 5000
 npm run db:up         # Drizzle-kit up
 ```
 
-There is no test suite and none should be added — this project deliberately ships with zero tests (see Critical Rules below). One-off verification scripts live in `scripts/*.mjs` / `scripts/*.ts` (e.g. `node scripts/diagnose-balance-corruption.mjs`) and are run directly with `node`/`tsx`, not through a test runner.
+## Plane Integration
 
-## Critical rules (do not violate)
+Work items (epics, tasks, ideas) are tracked in Plane (workspace: `walle`, project: `aureo`). Refer to `.opencode/docs/plane-workflow.md` for endpoint configuration, work item types, states, labels, MCP usage, and common workflows.
+
+### Local agent configuration
+
+- `.mcp.json` declares Plane for compatible MCP clients using Streamable HTTP.
+- `.opencode/opencode.json` resolves `PLANE_API_HOST`, `PLANE_API_PORT`, and `PLANE_API_KEY` from the local process environment.
+- `.codex/config.toml` uses the non-secret local Plane endpoint and reads `PLANE_API_KEY` through `bearer_token_env_var`.
+- Hermes profiles use the same endpoint and environment names; Bitwarden is the approved recovery path for the key.
+- Never store the Plane key in repository configuration, project `.env` files, skills, or documentation.
+
+## Critical Rules (do not violate)
 
 - **Amounts are stored in milliunits** (× 1000). Always convert at the boundary using `convertAmountToMilliunits` / `convertAmountFromMilliunits` from `lib/utils.ts`. Positive = income, negative = expense.
 - **Never compute or mutate account balances in application code.** A PostgreSQL trigger (`update_account_balance()`, see `drizzle/0002_fix_balance_trigger.sql`) maintains `accounts.balance` on every transaction insert/update/delete, comparing `LOWER(transaction_type.name)` against `income`/`expense`. A prior case-sensitivity bug in this trigger silently corrupted 83% of account balances — do not reintroduce manual balance math.
@@ -86,7 +96,7 @@ Data flow: `Component → React Query hook (features/*/api) → Hono client (lib
 - Imports are auto-sorted by `eslint-plugin-simple-import-sort` into: external packages (alphabetical) → `@/`-aliased internal imports (alphabetical) → relative imports.
 - For features with 5+ tunable constants (batch sizes, thresholds, AI hyperparameters), centralize them in a `lib/config.ts` with an `as const` object (see `features/csv-import/lib/config.ts`).
 
-## More detail
+## More Detail
 
 The `.opencode/docs/` directory has deeper documentation that predates this file and remains authoritative for its topics:
 
@@ -94,5 +104,5 @@ The `.opencode/docs/` directory has deeper documentation that predates this file
 - `.opencode/docs/database-schema.md` — full table/relation reference, transaction-type IDs
 - `.opencode/docs/api-patterns.md` — full CRUD endpoint template, validation patterns
 - `.opencode/docs/state-management.md` — query/mutation hook templates, invalidation matrix
-- `.opencode/docs/github-workflow.md` — task/issue workflow
+- `.opencode/docs/plane-workflow.md` — work-item lifecycle and agent coordination
 - `.opencode/docs/agent-delegation.md` — how the `.opencode` agents divide work

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "plane": {
+      "type": "http",
+      "url": "http://${PLANE_API_HOST}:${PLANE_API_PORT}/http/api-key/mcp",
+      "headers": {
+        "Authorization": "Bearer ${PLANE_API_KEY}",
+        "x-workspace-slug": "walle",
+        "Accept": "application/json, text/event-stream"
+      }
+    }
+  }
+}

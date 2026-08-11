@@ -1,0 +1,8 @@
+[shell_environment_policy]
+inherit = "core"
+
+[mcp_servers.plane]
+url = "http://192.168.0.44:8211/http/api-key/mcp"
+bearer_token_env_var = "PLANE_API_KEY"
+http_headers = { "x-workspace-slug" = "walle", "Accept" = "application/json, text/event-stream" }
+enabled = true

@@ -101,7 +101,7 @@ For specific information, consult:
 - **Database Schema**: `.opencode/docs/database-schema.md`
 - **API Patterns**: `.opencode/docs/api-patterns.md`
 - **State Management**: `.opencode/docs/state-management.md`
-- **GitHub Workflow**: `.opencode/docs/github-workflow.md` (task management)
+- **Plane Workflow**: `.opencode/docs/plane-workflow.md` (work-item lifecycle)
 - **Agent Delegation**: `.opencode/docs/agent-delegation.md` (how agents work together)
 
 ---
