@@ -3,10 +3,10 @@ import { useSearchParams } from "next/navigation";
 
 import { client } from "@/lib/hono";
 
-import type { CategorySummaryType } from "./use-get-category-summary";
+type PayeeSummaryType = "Income" | "Expense" | "Refund";
 
 type Options = {
-  type?: CategorySummaryType;
+  type?: PayeeSummaryType;
   top?: number;
 };
 
