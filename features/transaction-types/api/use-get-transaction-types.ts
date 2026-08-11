@@ -5,6 +5,7 @@ import { client } from "@/lib/hono";
 export const useGetTransactionTypes = () => {
   const query = useQuery({
     queryKey: ["transaction-types"],
+    staleTime: Infinity,
     queryFn: async () => {
       const response = await client.api["transaction-types"].$get();
 
