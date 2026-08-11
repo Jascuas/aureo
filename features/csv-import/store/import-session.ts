@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useShallow } from "zustand/react/shallow";
+
+import { ImportStep } from "@/features/csv-import/const/import-const";
+import { createSessionStorage } from "@/features/csv-import/lib/session-storage";
 import type {
   AITransaction,
   AutoResolvedTransaction,
@@ -8,12 +11,10 @@ import type {
   DuplicateMatch,
   EnrichedCategorization,
   ImportResult,
-  ParsedCSVRow,
   ImportTemplate,
+  ParsedCSVRow,
   PayeeMatchResult,
 } from "@/features/csv-import/types/import-types";
-import { ImportStep } from "@/features/csv-import/const/import-const";
-import { createSessionStorage } from "@/features/csv-import/lib/session-storage";
 
 type ImportSessionState = {
   currentStep: ImportStep;

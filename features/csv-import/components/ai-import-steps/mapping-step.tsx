@@ -1,5 +1,6 @@
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ColumnMapping } from "@/features/csv-import/components/column-mapping";
 import { useUIErrors } from "@/features/csv-import/store/import-ui-state";
 import type { ColumnDetectionResult } from "@/features/csv-import/types/import-types";

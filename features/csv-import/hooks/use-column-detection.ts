@@ -1,8 +1,5 @@
 import { useCallback } from "react";
-import type {
-  ParsedCSVRow,
-  ColumnDetectionResult,
-} from "@/features/csv-import/types/import-types";
+
 import {
   ColumnType,
   DEFAULT_AMOUNT_FORMAT,
@@ -13,6 +10,10 @@ import {
   useUIErrors,
   useUILoading,
 } from "@/features/csv-import/store/import-ui-state";
+import type {
+  ColumnDetectionResult,
+  ParsedCSVRow,
+} from "@/features/csv-import/types/import-types";
 
 interface UseColumnDetectionOptions {
   onDetected: (

@@ -8,8 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ColumnType } from "@/features/csv-import/const/import-const";
 import { ConfidenceBadge } from "@/features/csv-import/components/confidence-badge";
+import { ColumnType } from "@/features/csv-import/const/import-const";
 import type { ColumnDetectionResult } from "@/features/csv-import/types/import-types";
 
 export const COLUMN_TYPES: {

@@ -2,7 +2,6 @@ import { type ClassValue, clsx } from "clsx";
 import {
   eachDayOfInterval,
   format,
-  isSameDay,
   isValid,
   parseISO,
   startOfMonth,

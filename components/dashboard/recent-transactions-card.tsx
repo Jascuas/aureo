@@ -3,8 +3,6 @@
 import { format, isValid } from "date-fns";
 import Link from "next/link";
 
-import { useGetRecentTransactions } from "@/features/transactions/api/use-get-recent-transactions";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useGetRecentTransactions } from "@/features/transactions/api/use-get-recent-transactions";
 import { formatCurrency } from "@/lib/utils";
 
 const RecentTransactionsLoading = () => (

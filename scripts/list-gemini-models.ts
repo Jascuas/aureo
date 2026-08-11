@@ -1,5 +1,5 @@
-import { config } from 'dotenv';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { config } from 'dotenv';
 
 config({ path: '.env.local' });
 

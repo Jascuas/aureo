@@ -10,7 +10,7 @@ import type { ParsedCSVRow } from '../features/csv-import/types/import-types';
 
 console.log('🧪 Testing Import Session Store\n');
 
-const mockCSVData: ParsedCSVRow[] = [
+const _mockCSVData: ParsedCSVRow[] = [
   {
     index: 0,
     data: ['2024-01-15', 'Amazon', '-50.00'],
@@ -21,7 +21,7 @@ const mockCSVData: ParsedCSVRow[] = [
   },
 ];
 
-const mockDetectionResult = {
+const _mockDetectionResult = {
   columns: [
     { index: 0, name: 'Date', type: 'date' as const, confidence: 0.95, samples: ['2024-01-15'] },
     { index: 1, name: 'Payee', type: 'payee' as const, confidence: 0.90, samples: ['Amazon'] },
@@ -37,7 +37,7 @@ const mockDetectionResult = {
   method: 'heuristic' as const,
 };
 
-const mockMapping = {
+const _mockMapping = {
   date: 0,
   payee: 1,
   amount: 2,

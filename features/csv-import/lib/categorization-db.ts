@@ -1,3 +1,5 @@
+import { eq, sql } from "drizzle-orm";
+
 import { db } from "@/db/drizzle";
 import {
   accounts,
@@ -6,7 +8,6 @@ import {
   transactionTypes,
 } from "@/db/schema";
 import { normalizePayeeName } from "@/lib/utils";
-import { eq, sql } from "drizzle-orm";
 
 export async function detectTransactionType(amount: number): Promise<{
   id: string;

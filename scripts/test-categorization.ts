@@ -103,9 +103,10 @@ async function testCategorization() {
     } else {
       console.log('\n❌ FAIL: Some transactions missing\n');
     }
-  } catch (error: any) {
-    console.error('❌ Categorization failed:', error.message);
-    if (error.message.includes('No categories found')) {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ Categorization failed:', message);
+    if (message.includes('No categories found')) {
       console.log('\n💡 Tip: Create some categories first using the web app\n');
     }
   }

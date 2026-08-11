@@ -1,4 +1,3 @@
-import { normalizePayeeName } from "@/lib/utils";
 import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
 import { detectDuplicates } from "@/features/csv-import/lib/duplicate-matcher";
 import { matchPayeesToCategories } from "@/features/csv-import/lib/payee-category-matcher";
@@ -9,6 +8,7 @@ import type {
   PayeeMatchResult,
   TransactionForAnalysis,
 } from "@/features/csv-import/types/import-types";
+import { normalizePayeeName } from "@/lib/utils";
 
 export async function analyze(
   userId: string,

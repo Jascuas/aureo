@@ -1,17 +1,17 @@
 import { useCallback } from "react";
 
 import { useGetTemplates } from "@/features/csv-import/api/use-get-templates";
+import { useColumnDetection } from "@/features/csv-import/hooks/use-column-detection";
+import { MAX_IMPORT_ROWS_DEV } from "@/features/csv-import/lib/config";
 import {
   CSVParseError,
   parseCSVFile,
 } from "@/features/csv-import/lib/csv-parser";
-import { MAX_IMPORT_ROWS_DEV } from "@/features/csv-import/lib/config";
 import {
   findCompatibleTemplate,
   templateToDetectionResult,
 } from "@/features/csv-import/lib/template-applier";
 import { useDuplicateResolutionActions } from "@/features/csv-import/store/duplicate-resolution";
-import { useColumnDetection } from "@/features/csv-import/hooks/use-column-detection";
 import { useImportSessionActions } from "@/features/csv-import/store/import-session";
 import {
   useImportUIActions,

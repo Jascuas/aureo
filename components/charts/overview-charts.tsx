@@ -1,9 +1,9 @@
 "use client";
 
-import { AccountsCard } from "@/components/dashboard/accounts-card";
-import { RecentTransactionsCard } from "@/components/dashboard/recent-transactions-card";
 import { CategoryChart } from "@/components/charts/category-chart/category-chart";
 import { TimeSeriesChart } from "@/components/charts/time-series/time-series-chart";
+import { AccountsCard } from "@/components/dashboard/accounts-card";
+import { RecentTransactionsCard } from "@/components/dashboard/recent-transactions-card";
 import { ChartLoading } from "@/components/loading/chart-loading";
 import { useGetOverTime } from "@/features/summary/api/use-get-over-time";
 

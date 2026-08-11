@@ -14,8 +14,9 @@
  * Formula: Each expense creates +2× amount error
  */
 
-import { neon } from "@neondatabase/serverless";
 import "dotenv/config";
+
+import { neon } from "@neondatabase/serverless";
 
 const sql = neon(process.env.DATABASE_URL);
 

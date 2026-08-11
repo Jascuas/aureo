@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Save } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,6 @@ import type {
   AmountFormat,
   ColumnDetectionResult,
 } from "@/features/csv-import/types/import-types";
-import { Check, Save } from "lucide-react";
 
 type TemplateControlsProps = {
   accountId?: string;

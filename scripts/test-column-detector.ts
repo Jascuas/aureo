@@ -4,8 +4,8 @@
  * Tests column detection with various CSV formats from different banks.
  */
 
-import { detectColumns, createColumnMapping } from '../features/csv-import/lib/column-detector';
-import { detectDateFormat, parseDate } from '../features/csv-import/lib/date-parser';
+import { createColumnMapping, detectColumns } from '../features/csv-import/lib/column-detector';
+import { parseDate } from '../features/csv-import/lib/date-parser';
 
 // ============================================================================
 // Test Data: Different Bank CSV Formats
@@ -135,8 +135,6 @@ async function runTests() {
       // Validate key columns detected
       const hasDate = result.columns.some(c => c.type === 'date' && c.confidence >= 0.7);
       const hasAmount = result.columns.some(c => c.type === 'amount' && c.confidence >= 0.7);
-      const hasPayee = result.columns.some(c => c.type === 'payee' && c.confidence >= 0.5);
-
       if (hasDate && hasAmount) {
         console.log('\n✅ PASS: Key columns detected (date + amount)');
       } else {

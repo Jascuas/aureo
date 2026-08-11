@@ -6,8 +6,8 @@
  * Run: npx tsx scripts/test-duplicate-resolution.ts
  */
 
-import type { DuplicateMatch } from "../features/csv-import/types/import-types";
 import { MatchType } from "../features/csv-import/const/import-const";
+import type { DuplicateMatch } from "../features/csv-import/types/import-types";
 
 console.log("🧪 Testing Duplicate Resolution UI\n");
 

@@ -2,11 +2,10 @@
 
 import { useEffect, useRef } from "react";
 
-import { useGetAccountSummary } from "@/features/summary/api/use-get-account-summary";
-import { formatCurrency } from "@/lib/utils";
-
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useGetAccountSummary } from "@/features/summary/api/use-get-account-summary";
+import { formatCurrency } from "@/lib/utils";
 
 /* ─── palette ────────────────────────────────────────────────────────── */
 

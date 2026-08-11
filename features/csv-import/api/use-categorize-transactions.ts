@@ -1,8 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
 import { InferRequestType, InferResponseType } from "hono";
 import { toast } from "sonner";
-import { RateLimitError } from "@/lib/errors";
 
+import { RateLimitError } from "@/lib/errors";
 import { client } from "@/lib/hono";
 
 type SuccessResponse = InferResponseType<

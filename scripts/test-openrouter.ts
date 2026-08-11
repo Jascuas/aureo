@@ -5,6 +5,7 @@
  */
 
 import { config } from "dotenv";
+
 import { createAIProvider } from "../lib/ai";
 
 // Load environment variables
@@ -184,7 +185,7 @@ async function testOpenRouterProvider() {
     });
 
     console.log("✅ Duplicate detection successful!\n");
-    duplicateResults.forEach((result, idx) => {
+    duplicateResults.forEach((result) => {
       const tx = newTransactions[result.csvRowIndex];
       console.log(`New transaction: ${tx.payee} (${tx.amount})`);
 

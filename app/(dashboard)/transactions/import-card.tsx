@@ -20,7 +20,7 @@ type SelectedColumnsState = {
 type ImportCardProps = {
   data: string[][];
   onCancel: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: Array<Record<string, string | number | null>>) => void;
 };
 
 export const ImportCard = ({ data, onCancel, onSubmit }: ImportCardProps) => {
@@ -83,7 +83,7 @@ export const ImportCard = ({ data, onCancel, onSubmit }: ImportCardProps) => {
 
     // convert it to array of objects so that it can be inserted into database.
     const arrayOfData = mappedData.body.map((row) => {
-      return row.reduce((acc: any, cell, index) => {
+      return row.reduce<Record<string, string | null>>((acc, cell, index) => {
         const header = mappedData.headers[index];
 
         if (header !== null) acc[header] = cell;
@@ -93,11 +93,17 @@ export const ImportCard = ({ data, onCancel, onSubmit }: ImportCardProps) => {
     });
 
     // format currency and date to match it with database
-    const formattedData = arrayOfData.map((item) => ({
-      ...item,
-      amount: convertAmountToMilliunits(parseFloat(item.amount)),
-      date: format(parse(item.date, dateFormat, new Date()), outputFormat),
-    }));
+    const formattedData = arrayOfData.map((item) => {
+      if (typeof item.amount !== "string" || typeof item.date !== "string") {
+        throw new Error("Imported rows require amount and date columns.");
+      }
+
+      return {
+        ...item,
+        amount: convertAmountToMilliunits(parseFloat(item.amount)),
+        date: format(parse(item.date, dateFormat, new Date()), outputFormat),
+      };
+    });
 
     onSubmit(formattedData);
   };

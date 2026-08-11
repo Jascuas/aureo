@@ -214,14 +214,17 @@ export class GeminiProvider implements AIProvider {
           results: CategorizationResult[];
         };
         return parsed.results;
-      } catch (parseError: any) {
+      } catch (parseError) {
+        const message =
+          parseError instanceof Error ? parseError.message : String(parseError);
+
         console.error("JSON parse error for categorization:");
         console.error("Raw text length:", text.length);
         console.error("Cleaned text length:", cleanedText.length);
-        console.error("Error message:", parseError.message);
+        console.error("Error message:", message);
 
         // If error mentions a position, show context around it
-        const posMatch = parseError.message.match(/position (\d+)/);
+        const posMatch = message.match(/position (\d+)/);
         if (posMatch) {
           const errorPos = parseInt(posMatch[1], 10);
           const contextStart = Math.max(0, errorPos - 200);

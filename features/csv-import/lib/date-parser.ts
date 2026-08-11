@@ -10,9 +10,9 @@ type DatePattern = {
 const DATE_PATTERNS: DatePattern[] = [
   {
     format: 'DD/MM/YYYY',
-    regex: /^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/,
+    regex: /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/,
     parser: (value: string) => {
-      const match = value.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+      const match = value.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
       if (!match) return null;
       const [, day, month, year] = match;
       return new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
@@ -21,9 +21,9 @@ const DATE_PATTERNS: DatePattern[] = [
   },
   {
     format: 'YYYY-MM-DD',
-    regex: /^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/,
+    regex: /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/,
     parser: (value: string) => {
-      const match = value.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/);
+      const match = value.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
       if (!match) return null;
       const [, year, month, day] = match;
       return new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
@@ -32,9 +32,9 @@ const DATE_PATTERNS: DatePattern[] = [
   },
   {
     format: 'MM/DD/YYYY',
-    regex: /^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/,
+    regex: /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/,
     parser: (value: string) => {
-      const match = value.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+      const match = value.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
       if (!match) return null;
       const [, month, day, year] = match;
       return new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
@@ -43,9 +43,9 @@ const DATE_PATTERNS: DatePattern[] = [
   },
   {
     format: 'DD/MM/YY',
-    regex: /^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2})$/,
+    regex: /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2})$/,
     parser: (value: string) => {
-      const match = value.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2})$/);
+      const match = value.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2})$/);
       if (!match) return null;
       const [, day, month, year] = match;
       const fullYear = parseInt(year) + (parseInt(year) > 50 ? 1900 : 2000);
@@ -55,9 +55,9 @@ const DATE_PATTERNS: DatePattern[] = [
   },
   {
     format: 'DD-MMM-YYYY',
-    regex: /^(\d{1,2})[\/\-\.]([A-Za-z]{3})[\/\-\.](\d{4})$/,
+    regex: /^(\d{1,2})[-/.]([A-Za-z]{3})[-/.](\d{4})$/,
     parser: (value: string) => {
-      const match = value.match(/^(\d{1,2})[\/\-\.]([A-Za-z]{3})[\/\-\.](\d{4})$/);
+      const match = value.match(/^(\d{1,2})[-/.]([A-Za-z]{3})[-/.](\d{4})$/);
       if (!match) return null;
       const [, day, monthStr, year] = match;
       const monthMap: Record<string, number> = {

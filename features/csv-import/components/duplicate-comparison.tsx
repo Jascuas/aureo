@@ -1,11 +1,12 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { MatchType } from "@/features/csv-import/const/import-const";
 import { formatCurrency } from "@/lib/utils";
-import { ArrowRight } from "lucide-react";
 
 type DuplicateComparisonProps = {
   csvRow: {

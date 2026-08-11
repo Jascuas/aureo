@@ -4,11 +4,12 @@
  * Run with: npx tsx scripts/test-import-templates-schema.ts
  */
 
-import { config } from 'dotenv';
-import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
-import { importTemplates, insertImportTemplateSchema } from '../db/schema';
+import { config } from 'dotenv';
 import { eq } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/neon-http';
+
+import { importTemplates, insertImportTemplateSchema } from '../db/schema';
 
 config({ path: '.env.local' });
 
@@ -84,11 +85,19 @@ async function testImportTemplatesSchema() {
         },
       });
       console.log('  ❌ FAILED: Should have thrown unique constraint error');
-    } catch (error: any) {
+    } catch (error) {
+      const databaseError =
+        typeof error === 'object' && error !== null
+          ? (error as {
+              cause?: { code?: string };
+              code?: string;
+              message?: string;
+            })
+          : {};
       const isUniqueError = 
-        error.message?.includes('unique') || 
-        error.code === '23505' ||
-        error.cause?.code === '23505';
+        databaseError.message?.includes('unique') ||
+        databaseError.code === '23505' ||
+        databaseError.cause?.code === '23505';
       
       if (isUniqueError) {
         console.log('  ✅ Unique constraint working correctly');
@@ -144,7 +153,7 @@ async function testImportTemplatesSchema() {
       await db
         .delete(importTemplates)
         .where(eq(importTemplates.userId, testUserId));
-    } catch (cleanupError) {
+    } catch {
       // Ignore cleanup errors
     }
     

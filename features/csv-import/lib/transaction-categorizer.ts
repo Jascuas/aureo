@@ -1,15 +1,15 @@
-import { getDefaultAIProvider } from "@/lib/ai";
-import { normalizePayeeName } from "@/lib/utils";
-import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
 import {
   detectTransactionType,
   findSimilarTransactions,
   getUserCategories,
 } from "@/features/csv-import/lib/categorization-db";
+import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
 import type {
   CategorizationResult,
   CategorizationTxInput,
 } from "@/features/csv-import/types/import-types";
+import { getDefaultAIProvider } from "@/lib/ai";
+import { normalizePayeeName } from "@/lib/utils";
 
 export async function categorizeTransactions(
   userId: string,

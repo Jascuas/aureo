@@ -1,15 +1,16 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
+
 import { useAnalyze } from "@/features/csv-import/api/use-analyze";
-import {
-  prepareTransactionsForAnalysis,
-  transformDuplicates,
-} from "@/features/csv-import/lib/transaction-mapper";
-import { useImportUIActions } from "@/features/csv-import/store/import-ui-state";
 import {
   BatchProgressStage,
   DEFAULT_AMOUNT_FORMAT,
   DEFAULT_DATE_FORMAT,
 } from "@/features/csv-import/const/import-const";
+import {
+  prepareTransactionsForAnalysis,
+  transformDuplicates,
+} from "@/features/csv-import/lib/transaction-mapper";
+import { useImportUIActions } from "@/features/csv-import/store/import-ui-state";
 import type {
   AITransaction,
   AmountFormat,

@@ -1,9 +1,9 @@
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
-import { accounts, transactions, transactionTypes } from "@/db/schema";
-import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
+import { accounts, transactions } from "@/db/schema";
 import { MatchType } from "@/features/csv-import/const/import-const";
+import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
 import type {
   PayeeCategoryMatch,
   PayeeMatchDetectionResult,
@@ -83,16 +83,6 @@ async function findFuzzyPayeeMatches(
       confidence: r.matchCount / totalMatches,
       matchType: MatchType.Fuzzy,
     }));
-}
-
-async function resolveTransactionTypeByAmount(amount: number): Promise<string> {
-  const typeName = amount < 0 ? "expense" : "income";
-  const [type] = await db
-    .select({ id: transactionTypes.id })
-    .from(transactionTypes)
-    .where(sql`LOWER(${transactionTypes.name}) = ${typeName}`)
-    .limit(1);
-  return type?.id ?? typeName;
 }
 
 export async function matchPayeesToCategories(

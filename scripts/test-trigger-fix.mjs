@@ -7,9 +7,10 @@
  * transaction types to ensure balances are calculated correctly.
  */
 
+import "dotenv/config";
+
 import { neon } from "@neondatabase/serverless";
 import { createId } from "@paralleldrive/cuid2";
-import "dotenv/config";
 
 const sql = neon(process.env.DATABASE_URL);
 

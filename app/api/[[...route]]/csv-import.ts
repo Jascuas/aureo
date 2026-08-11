@@ -62,20 +62,6 @@ const detectDuplicatesSchema = z.object({
     ),
 });
 
-const payeeCategoryMatchSchema = z.object({
-  csvRowIndex: z.number().int().min(0),
-  matches: z.array(
-    z.object({
-      categoryId: z.string(),
-      transactionTypeId: z.string(),
-      matchCount: z.number().int(),
-      totalMatches: z.number().int(),
-      confidence: z.number(),
-      matchType: z.enum(["exact", "fuzzy"]),
-    }),
-  ),
-});
-
 const categorizeTransactionSchema = z.object({
   csvRowIndex: z.number().int().min(0),
   date: z.string(), // ISO date string
@@ -132,6 +118,20 @@ const updateTemplateSchema = insertImportTemplateSchema.partial().omit({
   createdAt: true,
   updatedAt: true,
 });
+
+type DatabaseError = {
+  cause?: unknown;
+  code?: string;
+  constraint?: string;
+  detail?: string;
+  message?: string;
+  stack?: string;
+};
+
+const asDatabaseError = (error: unknown): DatabaseError =>
+  typeof error === "object" && error !== null
+    ? (error as DatabaseError)
+    : {};
 
 // ============================================================================
 // Routes
@@ -367,11 +367,14 @@ const app = new Hono<AppEnv>()
           .returning();
 
         return c.json({ data: template });
-      } catch (error: any) {
+      } catch (error) {
         console.error("Save template error:", error);
+        const databaseError = asDatabaseError(error);
 
-        if (error.code === "23505") {
-          if (error.constraint === "import_templates_user_account_unique") {
+        if (databaseError.code === "23505") {
+          if (
+            databaseError.constraint === "import_templates_user_account_unique"
+          ) {
             return c.json(
               {
                 error:
@@ -416,10 +419,11 @@ const app = new Hono<AppEnv>()
         }
 
         return c.json({ data: template });
-      } catch (error: any) {
+      } catch (error) {
         console.error("Update template error:", error);
+        const databaseError = asDatabaseError(error);
 
-        if (error.code === "23505") {
+        if (databaseError.code === "23505") {
           return c.json(API_ERRORS.DUPLICATE_TEMPLATE_NAME, 409);
         }
 
@@ -551,22 +555,23 @@ const app = new Hono<AppEnv>()
             errors: [],
           },
         });
-      } catch (error: any) {
+      } catch (error) {
         console.error("Bulk import error:", error);
 
         // Drizzle/Neon wraps PostgreSQL errors - extract the real error
-        const pgError = error.cause || error;
-        const errorCode = pgError.code || error.code;
-        const errorMessage = error.message || "";
-        const errorDetail = pgError.detail || error.detail;
-        const errorConstraint = pgError.constraint || error.constraint;
+        const databaseError = asDatabaseError(error);
+        const pgError = asDatabaseError(databaseError.cause ?? error);
+        const errorCode = pgError.code ?? databaseError.code;
+        const errorMessage = databaseError.message ?? "";
+        const errorDetail = pgError.detail ?? databaseError.detail;
+        const errorConstraint = pgError.constraint ?? databaseError.constraint;
 
         console.error("Error details:", {
           code: errorCode,
           message: errorMessage,
           constraint: errorConstraint,
           detail: errorDetail,
-          stack: error.stack?.split("\n").slice(0, 3),
+          stack: databaseError.stack?.split("\n").slice(0, 3),
         });
 
         // Foreign key constraint violation (invalid category/transaction type)

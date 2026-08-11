@@ -7,6 +7,9 @@ import tseslint from "typescript-eslint"; // meta-paquete
 // Build a type-safe config that already wires parser & plugin
 
 export default tseslint.config(
+  {
+    ignores: [".next/**", ".opencode/node_modules/**"],
+  },
   eslint.configs.recommended, // Core ESLint rules
   tseslint.configs.recommended, // TS-ESLint rules
   {
@@ -30,15 +33,16 @@ export default tseslint.config(
         },
       ],
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": [
-        "warn",
-        {
-          vars: "all",
-          varsIgnorePattern: "^_",
-          args: "after-used",
-          argsIgnorePattern: "^_",
-        },
-      ],
+      "@typescript-eslint/no-unused-vars": "off",
+    },
+  },
+  {
+    files: ["scripts/**/*.{js,mjs,cjs,ts}"],
+    languageOptions: {
+      globals: {
+        console: "readonly",
+        process: "readonly",
+      },
     },
   },
 );

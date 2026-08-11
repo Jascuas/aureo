@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { integer, jsonb, pgTable, text, timestamp, index, unique } from "drizzle-orm/pg-core";
+import { index, integer, jsonb, pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
 import { AnyPgColumn } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";

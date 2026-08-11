@@ -7,10 +7,10 @@ import { Pie, PieChart, Sector } from "recharts";
 import { SpendingPieLoading } from "@/components/loading/spending-pie-loading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
 } from "@/components/ui/chart";
 import {
   Select,

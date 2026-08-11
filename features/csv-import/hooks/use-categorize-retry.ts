@@ -1,22 +1,23 @@
 import { useCallback, useRef } from "react";
+
 import { useCategorizeTransactions } from "@/features/csv-import/api/use-categorize-transactions";
+import {
+  BatchProgressStage,
+  DEFAULT_AMOUNT_FORMAT,
+  DEFAULT_DATE_FORMAT,
+} from "@/features/csv-import/const/import-const";
 import {
   CATEGORIZE_BATCH_SIZE,
   mergeAutoResolvedAndAi,
   runCategorizeBatches,
 } from "@/features/csv-import/lib/analysis-pipeline";
 import { prepareTransactionsForAnalysis } from "@/features/csv-import/lib/transaction-mapper";
-import { useImportUIActions } from "@/features/csv-import/store/import-ui-state";
 import { useAnalyzedRows } from "@/features/csv-import/store/import-session";
-import {
-  BatchProgressStage,
-  DEFAULT_AMOUNT_FORMAT,
-  DEFAULT_DATE_FORMAT,
-} from "@/features/csv-import/const/import-const";
+import { useImportUIActions } from "@/features/csv-import/store/import-ui-state";
 import type {
-  ParsedCSVRow,
-  DateFormat,
   AmountFormat,
+  DateFormat,
+  ParsedCSVRow,
 } from "@/features/csv-import/types/import-types";
 import type { EnrichedCategorization } from "@/features/csv-import/types/import-types";
 

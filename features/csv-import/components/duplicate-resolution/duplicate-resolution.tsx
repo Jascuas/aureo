@@ -9,12 +9,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DuplicateComparison } from "@/features/csv-import/components/duplicate-comparison";
+import { Resolution } from "@/features/csv-import/const/import-const";
+import { useResolutionKeyboard } from "@/features/csv-import/hooks/use-resolution-keyboard";
 import {
   useDuplicateDialog,
   useDuplicateResolutionActions,
 } from "@/features/csv-import/store/duplicate-resolution";
-import { useResolutionKeyboard } from "@/features/csv-import/hooks/use-resolution-keyboard";
-import { Resolution } from "@/features/csv-import/const/import-const";
 import type { DuplicateResolutionProps } from "@/features/csv-import/types/import-types";
 
 import { ResolutionFooter } from "./resolution-footer";

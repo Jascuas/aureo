@@ -36,11 +36,16 @@ async function testAPI() {
       console.log('\nTrying to list available models...');
       const listUrl = `https://generativelanguage.googleapis.com/v1/models?key=${apiKey}`;
       const listResponse = await fetch(listUrl);
-      const listData = await listResponse.json();
+      const listData = (await listResponse.json()) as {
+        models?: Array<{
+          name: string;
+          supportedGenerationMethods?: string[];
+        }>;
+      };
       
       if (listResponse.ok && listData.models) {
         console.log('\n✅ Available models:');
-        listData.models.forEach((model: any) => {
+        listData.models.forEach((model) => {
           if (model.supportedGenerationMethods?.includes('generateContent')) {
             console.log(`  - ${model.name}`);
           }

@@ -32,7 +32,6 @@ const _formSchema = z.object({
 
 const _apiSchema = insertTransactionSchema.omit({ id: true });
 
-type FormValues = z.input<typeof _formSchema>;
 type ApiFormValues = z.input<typeof _apiSchema>;
 
 export const NewTransactionSheet = () => {

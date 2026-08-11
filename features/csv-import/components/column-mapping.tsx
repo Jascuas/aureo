@@ -1,19 +1,19 @@
 "use client";
 
+import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  ColumnMappingList,
   COLUMN_TYPES,
+  ColumnMappingList,
 } from "@/features/csv-import/components/column-mapping-list";
 import { ColumnPreview } from "@/features/csv-import/components/column-preview";
 import { FormatDetector } from "@/features/csv-import/components/format-detector";
 import { TemplateControls } from "@/features/csv-import/components/template-controls";
 import { ColumnType } from "@/features/csv-import/const/import-const";
 import type { ColumnDetectionResult } from "@/features/csv-import/types/import-types";
-import { AlertCircle } from "lucide-react";
 
 type ColumnMappingProps = {
   accountId?: string;

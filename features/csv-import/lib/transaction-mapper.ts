@@ -1,12 +1,12 @@
-import { convertAmountToMilliunits, parseAmount } from "@/lib/utils";
-import { parseDate } from "@/features/csv-import/lib/date-parser";
 import { ColumnType } from "@/features/csv-import/const/import-const";
+import { parseDate } from "@/features/csv-import/lib/date-parser";
 import type {
-  ParsedCSVRow,
-  TransactionForAnalysis,
   AmountFormat,
   DateFormat,
+  ParsedCSVRow,
+  TransactionForAnalysis,
 } from "@/features/csv-import/types/import-types";
+import { convertAmountToMilliunits, parseAmount } from "@/lib/utils";
 
 export function prepareTransactionsForAnalysis(
   rows: ParsedCSVRow[],

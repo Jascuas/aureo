@@ -1,6 +1,12 @@
 import { useCallback, useRef } from "react";
+
 import { useAnalyze } from "@/features/csv-import/api/use-analyze";
 import { useCategorizeTransactions } from "@/features/csv-import/api/use-categorize-transactions";
+import {
+  BatchProgressStage,
+  DEFAULT_AMOUNT_FORMAT,
+  DEFAULT_DATE_FORMAT,
+} from "@/features/csv-import/const/import-const";
 import {
   CATEGORIZE_BATCH_SIZE,
   mergeAutoResolvedAndAi,
@@ -14,11 +20,6 @@ import {
   useImportUIActions,
   useUILoading,
 } from "@/features/csv-import/store/import-ui-state";
-import {
-  BatchProgressStage,
-  DEFAULT_AMOUNT_FORMAT,
-  DEFAULT_DATE_FORMAT,
-} from "@/features/csv-import/const/import-const";
 import type {
   AITransaction,
   AmountFormat,

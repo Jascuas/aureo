@@ -1,10 +1,9 @@
 "use client";
 
+import { AlertCircle, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { AlertCircle, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type FileUploadSectionProps = {
