@@ -1,5 +1,8 @@
 # State Management - Aureo
 
+> Historical reference only. `AGENTS.md` owns state and query contracts. Verify
+> examples against the current feature-owned query keys and hooks before use.
+
 Zustand (UI) + React Query (server).
 
 ## Zustand (UI State)

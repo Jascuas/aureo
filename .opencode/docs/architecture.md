@@ -1,5 +1,8 @@
 # Architecture - Aureo
 
+> Historical reference only. `AGENTS.md` defines the target architecture. This
+> document may describe legacy placement or behavior and never overrides it.
+
 Feature-based architecture.
 
 ## Structure

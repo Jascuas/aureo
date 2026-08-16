@@ -6,6 +6,12 @@ license: Complete terms in LICENSE.txt
 
 This skill guides creation of distinctive, production-grade frontend interfaces that avoid generic "AI slop" aesthetics. Implement real working code with exceptional attention to aesthetic details and creative choices.
 
+For Aureo, `docs/PRODUCT.md` and `docs/DESIGN.md` already define the approved
+product and visual direction. Do not choose a new aesthetic direction, palette,
+typography system, geometry, or motion language. Use this skill only to improve
+execution within those contracts, and follow `AGENTS.md` for ownership and
+verification.
+
 The user provides frontend requirements: a component, page, application, or interface to build. They may include context about the purpose, audience, or technical constraints.
 
 ## Design Thinking

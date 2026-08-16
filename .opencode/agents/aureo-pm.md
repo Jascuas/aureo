@@ -16,11 +16,12 @@ permission:
 ## Scope
 
 - Plane workspace `walle`, project `aureo`.
-- Project documentation under `.opencode/docs/`.
+- Canonical project documentation defined by `AGENTS.md`.
 - Never application code, migrations, build configuration, deployment, or
   secrets.
 
-Read `AGENTS.md` and `.opencode/docs/plane-workflow.md` before acting.
+Read `AGENTS.md` before acting. Use the installed `plane-ticket-routing` skill
+for executable Plane/Hermes operations and resolve mutable metadata live.
 
 ## Operating rules
 
@@ -54,10 +55,8 @@ For an implementation handoff:
 - Capture an authorized bug, task, idea, or epic.
 - Propose backlog order based on priority, risk, readiness, and dependencies.
 - Process implementation and verification handoffs.
-- Update `.opencode/docs/architecture.md`, `.opencode/docs/rules.md`,
-  `.opencode/docs/state-management.md`, or
-  `.opencode/docs/plane-workflow.md` when the implemented behavior changes
-  their subject.
+- Update only the canonical document that owns the changed fact. Do not update
+  legacy `.opencode/docs/` research as if it were current authority.
 
 ## Boundaries
 

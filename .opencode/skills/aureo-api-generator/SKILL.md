@@ -1,6 +1,8 @@
 # Aureo API Generator
 
-Generates CRUD API endpoints with Hono.js following Aureo patterns.
+Compatibility helper for planning CRUD work. `AGENTS.md` is the sole normative
+source; this skill must not generate code that bypasses its module, ownership,
+typing, URL, error, or verification contracts.
 
 ## When to Use This Skill
 
@@ -10,95 +12,31 @@ Generates CRUD API endpoints with Hono.js following Aureo patterns.
 - Adding bulk-delete to existing resource
 - Generating endpoint requiring Clerk authentication (user-owned resources)
 - Implementing Zod validation in endpoints
-- Creating API following pattern: Hono + clerkMiddleware + zValidator + Drizzle
+- Creating a coherent CRUD interface that needs matching Hono adapters, domain
+  operations, typed client hooks, and query keys
 
 ❌ **DON'T USE when**:
 
-- You only need one endpoint (not full CRUD) → write directly without skill
+- You only need one endpoint and the skill would add pass-through modules
 - Public API without authentication → this skill assumes Clerk auth
 - Complex business logic beyond CRUD → implement manually
 
-## Output
+## Required shape
 
-### 1. API Endpoint
-
-```typescript
-// app/api/[[...route]]/[resource].ts
-import { Hono } from "hono";
-import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
-import { zValidator } from "@hono/zod-validator";
-import { createId } from "@paralleldrive/cuid2";
-import { and, eq, inArray } from "drizzle-orm";
-import { z } from "zod";
-import { db } from "@/db/drizzle";
-import { [resource], insert[Resource]Schema } from "@/db/schema";
-
-const app = new Hono()
-  .get("/", /* list pattern */)
-  .get("/:id", /* single pattern */)
-  .post("/", /* create pattern */)
-  .patch("/:id", /* update pattern */)
-  .delete("/:id", /* delete pattern */)
-  .post("/bulk-delete", /* bulk pattern */);
-
-export default app;
-```
-
-See complete patterns in `.opencode/docs/api-patterns.md`
-
-### 2. React Query Hooks
-
-```typescript
-// features/[resource]/api/
-export const useGet[Resource]s = () => useQuery({ queryKey: ["[resource]s"], ... });
-export const useGet[Resource] = (id) => useQuery({ enabled: !!id, queryKey: ["[resource]", { id }], ... });
-export const useCreate[Resource] = () => useMutation({ onSuccess: invalidate["[resource]s"], ... });
-export const useEdit[Resource] = (id) => useMutation({ onSuccess: invalidate all related, ... });
-export const useDelete[Resource] = (id) => useMutation({ ... });
-export const useBulkDelete[Resource]s = () => useMutation({ ... });
-```
-
-See complete patterns in `.opencode/docs/state-management.md`
-
-## Customizations
-
-### Non-User-Owned (auth via JOIN)
-
-```typescript
-.innerJoin(accounts, eq([resource].accountId, accounts.id))
-.where(eq(accounts.userId, auth.userId))
-```
-
-### Custom Validation
-
-```typescript
-zValidator(
-  "query",
-  z.object({
-    type: z.enum(["Income", "Expense"]).default("Expense"),
-    from: z.string().optional(),
-  }),
-);
-```
-
-### With Joins
-
-```typescript
-.select({
-  id: [resource].id,
-  parentName: parent[Resource].name,
-})
-.leftJoin(parent[Resource], eq([resource].parentId, parent[Resource].id))
-```
+- Hono files are relative route adapters: authenticate, validate, call the
+  owning `features/<domain>/server/` operation, and translate its result.
+- Domain operations own persistence, ownership checks, transactions, and
+  expected outcomes behind a small interface.
+- Browser hooks use the typed client from `lib/hono.ts` and feature-owned query
+  key factories. Do not duplicate endpoint strings or raw key arrays.
+- Responses use the shared error owner and expose only intentional fields.
 
 ## Checklist
 
-- [ ] Endpoint in `app/api/[[...route]]/[resource].ts`
-- [ ] Import in `route.ts`: `.route("/[resource]s", [resource])`
-- [ ] Hooks in `features/[resource]/api/`
-- [ ] 100% Zod validation
-- [ ] Auth 4 layers (see api-patterns.md)
-- [ ] Specific select
-- [ ] Error handling (400, 401, 404)
-- [ ] Toast notifications
-- [ ] Correct invalidation
+- [ ] The module and its interface have one clear domain owner
+- [ ] Route input is validated and every user-owned identifier is scoped
+- [ ] Drizzle stays out of new or materially changed route adapters
+- [ ] Reads and returned rows use explicit runtime projections
+- [ ] Hooks use the typed Hono client and canonical query keys
+- [ ] Expected and infrastructure failures remain distinguishable
+- [ ] Verification matches `AGENTS.md`

@@ -2,6 +2,10 @@ $ cat > /tmp/hono-rpc-type-inference-research.md << 'EOF'
 
 # Hono RPC Type Inference Research
 
+> Dated research, not a coding standard. Recheck claims against current Hono
+> documentation, installed versions, `AGENTS.md`, and the current code before
+> making an architecture decision.
+
 **Date:** April 1, 2026  
 **Researcher:** AI Assistant  
 **Context:** Finance Platform with 25+ endpoints using Hono RPC

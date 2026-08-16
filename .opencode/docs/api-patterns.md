@@ -1,5 +1,9 @@
 # API Patterns - Aureo
 
+> Historical reference only. Verify every example against `AGENTS.md`, current
+> source, and installed dependency documentation before use. This file is not a
+> coding standard and may describe legacy route-level persistence.
+
 Hono.js + Zod + Clerk patterns.
 
 ## Setup

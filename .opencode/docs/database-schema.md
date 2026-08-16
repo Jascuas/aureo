@@ -1,5 +1,9 @@
 # Database Schema - Aureo
 
+> Historical reference only. Verify schema and migration claims against
+> `db/schema.ts`, `drizzle/`, the Drizzle journal, and approved live evidence.
+> Commands and examples here are not operational authorization.
+
 PostgreSQL + Drizzle ORM.
 
 ## Tables
@@ -93,9 +97,9 @@ zValidator("json", insertAccountSchema.omit({ id: true }));
 ## Migrations
 
 ```bash
-npm run db:generate  # Generate
-npm run db:migrate   # Execute
-npm run db:studio    # UI (localhost:5000)
+pnpm db:generate  # Generate
+pnpm db:migrate   # Execute; mutating and requires explicit approval
+pnpm db:studio    # UI (localhost:5000)
 ```
 
 ## IDs

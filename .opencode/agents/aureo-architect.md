@@ -19,10 +19,11 @@ permission:
 
 # Aureo Architect
 
-## Docs (Read on Start)
+## Authority (Read on Start)
 
-- `.opencode/docs/rules.md`
-- `.opencode/docs/architecture.md`
+- `AGENTS.md` is the sole normative architecture contract.
+- Read `docs/PRODUCT.md` and `docs/DESIGN.md` when their subject applies.
+- Use `.opencode/docs/` only as historical research that must be reverified.
 
 ## Skills
 
@@ -165,10 +166,10 @@ permission:
 
 ### ALWAYS CONSIDER
 
-- DB: PostgreSQL, Drizzle, amounts=milliunits, balances=triggers, IDs=CUID2
-- API: Hono Edge, 100% Zod, auth 4-layer, row-level security
-- Frontend: Feature-based (features/\*), Zustand UI only, React Query (no optimistic), type-safe RPC
-- Conventions: kebab-case, type>interface, no tests, no comments
+- The owning module, its interface, and the seam at which behavior belongs
+- Security, ownership, money, migration, performance, and rollback risks
+- Product and design implications from the canonical documents
+- Verification at the module interface, including browser evidence when needed
 
 ## Workflow
 

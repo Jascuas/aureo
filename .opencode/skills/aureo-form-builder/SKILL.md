@@ -1,13 +1,15 @@
 # Aureo Form Builder
 
-Generates forms with Zod + React Hook Form validation.
+Compatibility helper for Aureo forms. `AGENTS.md`, `docs/PRODUCT.md`, and
+`docs/DESIGN.md` are authoritative. This skill must not create a parallel form,
+state, or visual system.
 
 ## When to Use This Skill
 
 ✅ **USE when**:
 
 - Creating complete form for CRUD (create + edit + delete) of an entity
-- Generating form + new sheet + edit sheet + zustand stores (complete set)
+- Building a create/edit workflow whose shared form behavior is real
 - Implementing complex validation with Zod + React Hook Form
 - Need form with loading states, disabled states, confirm dialogs
 - Form uses standard fields: Input, Textarea, DatePicker, Select, AmountInput
@@ -18,58 +20,24 @@ Generates forms with Zod + React Hook Form validation.
 - Form has very custom business logic → implement manually
 - Only editing existing form (not creating from scratch) → edit file directly
 
-## Structure (3 files)
+## Required shape
 
-**1. Form**: `features/[entity]/components/[entity]-form.tsx`
-
-- Props: `id?, defaultValues?, onSubmit, onDelete?, disabled?`
-- React Hook Form + zodResolver
-- Show delete button only if `id` exists
-
-**2. New Sheet**: `new-[entity]-sheet.tsx`
-
-- Zustand hook: `useNew[Entity]()`
-- Mutation hook: `useCreate[Entity]()`
-- Loading state: `Loader2` during `isPending`
-
-**3. Edit Sheet**: `edit-[entity]-sheet.tsx`
-
-- Zustand hook: `useOpen[Entity]()` (with `id`)
-- Query: `useGet[Entity](id)`
-- Mutations: `useEdit + useDelete`
-- Confirm dialog: `useConfirm` for delete
-- Loading states: query + mutations
-
-## Zustand Stores
-
-**use-new-[entity].ts**:
-
-```typescript
-type NewState = { isOpen: boolean; onOpen: () => void; onClose: () => void };
-export const useNewEntity = create<NewState>((set) => ({
-  isOpen: false,
-  onOpen: () => set({ isOpen: true }),
-  onClose: () => set({ isOpen: false }),
-}));
-```
-
-**use-open-[entity].ts**: Same + `id?: string` + `onOpen: (id: string) => void`
-
-## Field Types
-
-**Input**: `<Input {...field} />`  
-**Textarea**: `<Textarea {...field} value={field.value ?? ""} />`  
-**DatePicker**: `<DatePicker value={field.value} onChange={field.onChange} />`  
-**Select**: `<GenericSelect options={} value={} onChange={} onCreate={} />`  
-**Amount**: `<AmountInput {...field} />` (see `lib/utils.ts` for milliunits conversion)
+- Put route-only UI and behavior in the owning `_components/` and `_hooks/`;
+  put reusable domain UI in `features/<domain>/components/`.
+- Reuse `components/ui/` primitives and semantic tokens. Do not generate a new
+  design system or raw palette.
+- Keep simple overlay state local. Use Zustand only for genuinely cross-tree,
+  ephemeral workflow state; never duplicate server records.
+- The form value must match the server contract. Dates, EUR amounts, account,
+  category, and transaction type values must serialize without widening types.
+- Pending, success, partial-success, and failure states must be truthful and
+  accessible. A failed response never produces a success toast.
 
 ## Checklist
 
-- Form component + validation schema
-- New sheet + create mutation
-- Edit sheet + edit/delete mutations + confirm dialog
-- Zustand stores (new + open)
-- Loading/disabled states
-- Toast notifications (in mutation hooks)
-
-Complete reference: See `features/accounts/components/` and `state-management.md`
+- Smallest correct owner selected
+- No unnecessary store, wrapper, schema, or duplicated query state
+- Visible labels and associated validation errors
+- EUR and Spanish product contract preserved
+- Keyboard, focus restoration, mobile, and reduced-motion behavior verified
+- Mutation response and cache invalidation verified

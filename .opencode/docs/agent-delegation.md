@@ -1,7 +1,9 @@
-# Agent Delegation Guide
+# Legacy OpenCode Role Guide
 
-This guide defines how `@aureo-dev`, `@aureo-pm`, and `@aureo-architect`
-coordinate through Plane.
+This file describes compatibility roles for older local OpenCode tooling. It
+does not define coding or delivery policy. `AGENTS.md` is the sole normative
+agent contract, and the installed `plane-ticket-routing` skill is the
+executable Plane/Hermes runbook.
 
 ## Shared rules
 
@@ -13,7 +15,8 @@ coordinate through Plane.
 - Plane mutations require explicit authorization in the current task.
 - Merge, push, deployment, destructive data changes, and `Done` remain human
   gates.
-- Follow `.opencode/docs/plane-workflow.md` for lifecycle and MCP behavior.
+- Resolve lifecycle, labels, IDs, and MCP behavior live through the installed
+  `plane-ticket-routing` skill.
 
 ## Roles
 
@@ -53,9 +56,11 @@ Todo AUR-N
   -> authorized claim
   -> In Progress
   -> @aureo-dev implementation
-  -> independent verification
-  -> Ready to Merge
-  -> human review and integration
+  -> Agent Review
+  -> Automated QA when browser evidence is required
+  -> Human Approval
+  -> Ready to Merge after explicit approval
+  -> explicit integration
   -> Done
 ```
 
@@ -67,11 +72,11 @@ Todo AUR-N
   -> human approval
   -> In Progress
   -> @aureo-dev implementation
-  -> verification
-  -> Review
-  -> Manual Testing when user-facing
-  -> Ready to Merge
-  -> human integration
+  -> Agent Review
+  -> Automated QA when user-facing
+  -> Human Approval
+  -> Ready to Merge after explicit approval
+  -> explicit integration
   -> Done
 ```
 

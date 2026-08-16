@@ -1,6 +1,7 @@
 # Aureo Migration Helper
 
-Migrations with Drizzle ORM.
+Compatibility checklist for Drizzle migrations. `AGENTS.md` is authoritative;
+this skill never authorizes applying a migration or changing production data.
 
 ## When to Use This Skill
 
@@ -16,16 +17,19 @@ Migrations with Drizzle ORM.
 ❌ **DON'T USE when**:
 
 - Only querying DB without schema changes → use Drizzle query directly
-- Simple modification (1 field) → do it directly without skill
+- A schema change is not approved or lacks a data/rollback plan
 - Seed data or population scripts → write script directly
 
 ## Workflow
 
-1. **Modify schema**: `db/schema.ts`
-2. **Generate migration**: `npm run db:generate` → creates `drizzle/XXXX.sql`
-3. **Review SQL**: verify generated changes
-4. **Execute**: `npm run db:migrate`
-5. **Zod schema**: `createInsertSchema(table)`
+1. **Plan data behavior**: existing rows, invariants, rollback, and verification.
+2. **Modify schema**: `db/schema.ts`.
+3. **Generate migration**: `pnpm db:generate`.
+4. **Review SQL and journal**: verify generated files and Drizzle metadata.
+5. **Stop for approval**: never run `pnpm db:migrate`, `pnpm db:up`, or another
+   configured database mutation without explicit user authorization.
+6. **Verify separately**: generated, journaled, applied, and live behavior are
+   distinct facts.
 
 ## Patterns
 
@@ -68,11 +72,11 @@ export const itemsRelations = relations(items, ({ one }) => ({
 
 ## Drizzle Studio
 
-`npm run db:studio` (port 5000)
+`pnpm db:studio` uses configured infrastructure and requires target awareness.
 
 ## ⚠️ Critical
 
-**Amounts**: Always `integer` in milliunits (×1000). See `lib/utils.ts` for conversion.  
-**Balances**: NEVER mutate in code - automatic DB triggers.
-
-Complete reference: See `database-schema.md`
+**Amounts**: Preserve the approved integer-milliunit contract and conversion
+helpers. **Balances**: the current sign conflict is unresolved; do not change
+the trigger, stored signs, or existing balances without the approved plan
+required by `AGENTS.md`.
