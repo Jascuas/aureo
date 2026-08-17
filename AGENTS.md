@@ -31,6 +31,9 @@ Do not add `CLAUDE.md` or another repository-level agent instruction file.
   gap, and track remediation separately. Do not weaken the rule merely to match
   the checkout.
 - Live Plane state is authoritative for work-item status and ownership.
+- Operational Plane/Hermes commands, runtime paths, states, identifiers, and
+  capability checks belong to the installed `plane-ticket-routing` skill and
+  live systems. Do not duplicate that runbook in repository documentation.
 - `.opencode/docs/` contains legacy research and compatibility references for
   older local tooling. It is non-normative, may be stale, and must be verified
   against this file, the current code, and live systems before use.
@@ -322,23 +325,28 @@ grounds are prohibited.
   repository documentation must not duplicate mutable operational metadata.
 - Read live Plane state before reporting whether a work item is untouched,
   active, blocked, or complete.
-- This Plane deployment does not support PQL or structured server filters. List
-  work items first and filter them client-side using live state IDs.
 - Only one implementation ticket may be active globally across Aureo and Axion.
 - Every Plane mutation requires explicit user authorization in the current task.
 - Automatic queue selection considers only `Todo` tickets carrying the explicit
-  `hermes-auto` label. Do not add that label merely because a ticket is ready.
+  `hermes-auto` label. Adding that label is a human start command; do not add it
+  merely because a ticket appears ready.
 - Do not claim unattended automation is active without verifying the current
-  scheduler and network path.
+  scheduler, network path, and dependency preflight.
 - Reference the Plane identifier in commits and handoffs when work belongs to a
   ticket.
 - Hermes may prepare a plan, branch, worktree, implementation, and verification
-  evidence. It never merges, pushes, deploys, or marks a ticket `Done`
-  automatically.
-- Human review is required before integration. `Done` means integrated and
-  shipped, not merely coded or locally verified.
+  evidence. The execution runner stops at `Human Approval` and never merges,
+  pushes, deploys, or marks a ticket `Done`.
+- After human approval, only an explicitly invoked integrator may act on the
+  exact ticket once Plane shows `Ready to Merge`.
+- `Done` means the integration or PR merge was confirmed. It does not
+  independently prove a production deployment beyond repository-connected
+  deployment checks.
 - Preserve existing user changes and Hermes worktrees. Do not delete or rewrite
   them during cleanup without explicit approval.
+- Do not add a repository-level Plane/Hermes runbook. Project-specific
+  exceptions belong in this section or `docs/EXCEPTIONS.md`; executable
+  operation remains owned by the installed skill.
 
 ## Git and scope discipline
 
