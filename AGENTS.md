@@ -31,9 +31,9 @@ Do not add `CLAUDE.md` or another repository-level agent instruction file.
   gap, and track remediation separately. Do not weaken the rule merely to match
   the checkout.
 - Live Plane state is authoritative for work-item status and ownership.
-- Operational Plane/Hermes commands, runtime paths, states, identifiers, and
-  capability checks belong to the installed `plane-ticket-routing` skill and
-  live systems. Do not duplicate that runbook in repository documentation.
+- Plane work-management procedures and current MCP capabilities belong to the
+  installed `plane-work-management` skill and live systems. Do not duplicate
+  mutable operational metadata in repository documentation.
 - `.opencode/docs/` contains legacy research and compatibility references for
   older local tooling. It is non-normative, may be stale, and must be verified
   against this file, the current code, and live systems before use.
@@ -285,7 +285,7 @@ grounds are prohibited.
   to the authenticated user before reading, mutating, or using it in a trigger.
 - Secrets remain in the process environment or the approved credential store.
   Never commit keys or copy them into JSON, TOML, YAML, Markdown, source files,
-  logs, Plane tickets, or Hermes artifacts.
+  logs, tickets, or external automation artifacts.
 - Do not inspect `.env` or credential values unless the user explicitly approves
   it and the task requires it.
 
@@ -316,37 +316,31 @@ grounds are prohibited.
   result contract. Do not report an operation as successful when only part of it
   completed.
 
-## Plane and Hermes workflow
+## Plane work management
 
 - Plane workspace `walle`, project `aureo`, prefix `AUR`, is the shared work
   ledger.
-- Use the installed `plane-ticket-routing` skill as the executable Plane/Hermes
-  runbook. Resolve states, labels, types, IDs, and runtime availability live;
-  repository documentation must not duplicate mutable operational metadata.
-- Read live Plane state before reporting whether a work item is untouched,
-  active, blocked, or complete.
-- Only one implementation ticket may be active globally across Aureo and Axion.
-- Every Plane mutation requires explicit user authorization in the current task.
-- Automatic queue selection considers only `Todo` tickets carrying the explicit
-  `hermes-auto` label. Adding that label is a human start command; do not add it
-  merely because a ticket appears ready.
-- Do not claim unattended automation is active without verifying the current
-  scheduler, network path, and dependency preflight.
+- Use the installed `plane-work-management` skill to read, audit, select,
+  propose, create, refine, comment on, or update Plane work items.
+- Read live Plane state before reporting status or ownership. Resolve states,
+  labels, types, IDs, relations, and current MCP capabilities live; do not rely
+  on copied UUIDs, ports, filters, or stale ticket data.
+- Inspect existing work items before proposing or creating one. Avoid duplicates
+  and make overlaps, ownership boundaries, parent/child roles, dependencies, and
+  blockers explicit.
+- A ready ticket states verified evidence, bounded scope and non-goals,
+  observable acceptance criteria, dependencies, risks, and verification. Keep
+  unresolved product decisions as proposals.
+- Plane reads are allowed when relevant to the task. Every mutation requires
+  explicit user authorization in the current task and a re-read of the exact
+  target immediately beforehand.
+- When asked what to work on next, propose the exact candidate using live
+  priority, readiness, dependencies, and current ownership. Do not claim,
+  assign, or move it automatically.
 - Reference the Plane identifier in commits and handoffs when work belongs to a
   ticket.
-- Hermes may prepare a plan, branch, worktree, implementation, and verification
-  evidence. The execution runner stops at `Human Approval` and never merges,
-  pushes, deploys, or marks a ticket `Done`.
-- After human approval, only an explicitly invoked integrator may act on the
-  exact ticket once Plane shows `Ready to Merge`.
-- `Done` means the integration or PR merge was confirmed. It does not
-  independently prove a production deployment beyond repository-connected
-  deployment checks.
-- Preserve existing user changes and Hermes worktrees. Do not delete or rewrite
-  them during cleanup without explicit approval.
-- Do not add a repository-level Plane/Hermes runbook. Project-specific
-  exceptions belong in this section or `docs/EXCEPTIONS.md`; executable
-  operation remains owned by the installed skill.
+- External routing or automation policy is outside this repository contract and
+  must not be inferred from this section.
 
 ## Git and scope discipline
 
