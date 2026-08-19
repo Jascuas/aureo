@@ -53,11 +53,15 @@ export const AiImportStepContent = memo(function AiImportStepContent({
       return <UploadStep accountId={accountId} />;
 
     case ImportStep.MAPPING:
+      if (!csvData) {
+        return <UploadStep accountId={accountId} />;
+      }
+
       return (
         <MappingStep
           accountId={accountId}
-          headers={csvData!.headers}
-          sampleRows={csvData!.rows.slice(0, 5).map((r) => r.data)}
+          headers={csvData.headers}
+          sampleRows={csvData.rows.slice(0, 5).map((r) => r.data)}
           detectionResult={columnMapping.detectionResult || undefined}
           onMappingChange={setFinalMapping}
         />
