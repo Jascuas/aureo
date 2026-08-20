@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetAccountSummary } from "@/features/summary/api/use-get-account-summary";
@@ -46,7 +44,6 @@ const AccountsCardLoading = () => (
       <span className="text-crt-muted text-2xs font-bold uppercase tracking-[0.1em]">
         <span className="text-crt-accent">▌</span> ACCOUNTS
       </span>
-      <span className="text-crt-dim text-2xs uppercase tracking-[0.08em]">SYNC --:--</span>
     </CardHeader>
     <CardContent className="px-4 pb-4 lg:px-5 lg:pb-5">
       <div className="acct-list-a">
@@ -67,18 +64,9 @@ const AccountsCardLoading = () => (
 export const AccountsCard = () => {
   const { data, isLoading } = useGetAccountSummary();
 
-  const syncTimeRef = useRef<string>("");
-  useEffect(() => {
-    syncTimeRef.current = new Date().toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-  }, []);
-
   if (isLoading) return <AccountsCardLoading />;
 
-  const rows = (data ?? []).filter((r) => r.value !== 0);
+  const rows = data ?? [];
   const maxAbs = rows.reduce((m, r) => Math.max(m, Math.abs(r.value)), 0);
   const totalAbs = rows.reduce((s, r) => s + Math.abs(r.value), 0);
   const total = rows.reduce((s, r) => s + r.value, 0);
@@ -89,9 +77,6 @@ export const AccountsCard = () => {
       <CardHeader className="flex flex-row items-center justify-between px-4 pt-4 pb-3 lg:px-5 lg:pt-5">
         <span className="text-crt-muted text-2xs font-bold uppercase tracking-[0.1em]">
           <span className="text-crt-accent">▌</span> ACCOUNTS
-        </span>
-        <span className="text-crt-dim text-2xs uppercase tracking-[0.08em]">
-          SYNC {syncTimeRef.current || "--:--"}
         </span>
       </CardHeader>
 
