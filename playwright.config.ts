@@ -10,6 +10,12 @@ export default defineConfig({
     baseURL: E2E_BASE_URL,
     trace: "retain-on-failure",
   },
+  webServer: {
+    command: "pnpm dev:e2e",
+    reuseExistingServer: false,
+    timeout: 120_000,
+    url: E2E_BASE_URL,
+  },
   projects: [
     {
       name: "setup",
@@ -21,6 +27,16 @@ export default defineConfig({
       testIgnore: "**/*.setup.ts",
       use: {
         ...devices["Desktop Chrome"],
+        storageState: E2E_STORAGE_STATE_PATH,
+      },
+    },
+    {
+      name: "iphone-13",
+      dependencies: ["setup"],
+      testIgnore: "**/*.setup.ts",
+      use: {
+        ...devices["iPhone 13"],
+        browserName: "chromium",
         storageState: E2E_STORAGE_STATE_PATH,
       },
     },

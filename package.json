@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev -p 4000",
-    "dev:e2e": "next dev -p ${PLAYWRIGHT_PORT:-4100}",
+    "dev:e2e": "NEXT_PUBLIC_APP_URL=${PLAYWRIGHT_BASE_URL:-http://localhost:${PLAYWRIGHT_PORT:-4100}} next dev -p ${PLAYWRIGHT_PORT:-4100}",
     "e2e:fixture": "node --experimental-strip-types scripts/seed-e2e-accounts.ts",
     "build": "next build",
     "start": "next start",

@@ -15,9 +15,10 @@ function requiredEnvironmentVariable(name: string): string {
 }
 
 export const E2E_STORAGE_STATE_PATH = ".playwright/qa-user.json";
+export const E2E_PORT = process.env.PLAYWRIGHT_PORT ?? "4100";
 export const E2E_BASE_URL =
   process.env.PLAYWRIGHT_BASE_URL ??
-  `http://127.0.0.1:${process.env.PLAYWRIGHT_PORT ?? "4100"}`;
+  `http://localhost:${E2E_PORT}`;
 
 export function getE2EClerkUserEmail(): string {
   return requiredEnvironmentVariable("E2E_CLERK_USER_EMAIL");
