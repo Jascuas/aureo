@@ -1,34 +1,13 @@
 "use client";
 
-import { getAccountSummaryMetrics } from "@/components/dashboard/accounts-card-lib";
+import {
+  getAccountRowColors,
+  getAccountSummaryMetrics,
+} from "@/components/dashboard/accounts-card-lib";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetAccountSummary } from "@/features/summary/api/use-get-account-summary";
 import { formatCurrency } from "@/lib/utils";
-
-/* ─── palette ────────────────────────────────────────────────────────── */
-
-const PIE_COLORS = [
-  "var(--crt-pie-1)",
-  "var(--crt-pie-2)",
-  "var(--crt-pie-3)",
-  "var(--crt-pie-4)",
-  "var(--crt-pie-5)",
-  "var(--crt-pie-6)",
-  "var(--crt-pie-7)",
-  "var(--crt-pie-8)",
-  "var(--crt-pie-9)",
-  "var(--crt-pie-10)",
-  "var(--crt-pie-11)",
-  "var(--crt-pie-12)",
-  "var(--crt-pie-13)",
-  "var(--crt-pie-14)",
-  "var(--crt-pie-15)",
-];
-
-function paletteColor(index: number): string {
-  return PIE_COLORS[index % PIE_COLORS.length];
-}
 
 function fillColor(c: string): string {
   return `color-mix(in oklch, ${c} 8%, transparent)`;
@@ -80,6 +59,7 @@ export const AccountsCard = () => {
   const { rows, maxAbs, totalAbs, total } = getAccountSummaryMetrics(
     data ?? [],
   );
+  const rowColors = getAccountRowColors(rows);
 
   return (
     <Card className="border-border h-full border drop-shadow-sm">
@@ -99,7 +79,7 @@ export const AccountsCard = () => {
         ) : (
           <div className="acct-list-a">
             {rows.map((acct, i) => {
-              const c = paletteColor(i);
+              const c = rowColors[i];
               const pct = fillPct(Math.abs(acct.value), maxAbs);
               const sharePct =
                 totalAbs > 0
