@@ -5,9 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "next dev -p 4000",
+    "dev:e2e": "NEXT_PUBLIC_APP_URL=${PLAYWRIGHT_BASE_URL:-http://localhost:${PLAYWRIGHT_PORT:-4100}} next dev -p ${PLAYWRIGHT_PORT:-4100}",
+    "e2e:fixture": "node --experimental-strip-types scripts/seed-e2e-accounts.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "test:accounts-card": "node --experimental-strip-types scripts/test-accounts-card.ts",
+    "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio  --port 5000",
@@ -73,7 +77,9 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@clerk/testing": "^2.2.27",
     "@eslint/js": "9.39.4",
+    "@playwright/test": "^1.62.1",
     "@types/node": "^25.5.0",
     "@types/papaparse": "5.5.2",
     "@types/react": "19.2.14",
