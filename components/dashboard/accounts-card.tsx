@@ -1,5 +1,6 @@
 "use client";
 
+import { getAccountSummaryMetrics } from "@/components/dashboard/accounts-card-lib";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetAccountSummary } from "@/features/summary/api/use-get-account-summary";
@@ -8,11 +9,21 @@ import { formatCurrency } from "@/lib/utils";
 /* ─── palette ────────────────────────────────────────────────────────── */
 
 const PIE_COLORS = [
-  "var(--crt-pie-1)",  "var(--crt-pie-2)",  "var(--crt-pie-3)",
-  "var(--crt-pie-4)",  "var(--crt-pie-5)",  "var(--crt-pie-6)",
-  "var(--crt-pie-7)",  "var(--crt-pie-8)",  "var(--crt-pie-9)",
-  "var(--crt-pie-10)", "var(--crt-pie-11)", "var(--crt-pie-12)",
-  "var(--crt-pie-13)", "var(--crt-pie-14)", "var(--crt-pie-15)",
+  "var(--crt-pie-1)",
+  "var(--crt-pie-2)",
+  "var(--crt-pie-3)",
+  "var(--crt-pie-4)",
+  "var(--crt-pie-5)",
+  "var(--crt-pie-6)",
+  "var(--crt-pie-7)",
+  "var(--crt-pie-8)",
+  "var(--crt-pie-9)",
+  "var(--crt-pie-10)",
+  "var(--crt-pie-11)",
+  "var(--crt-pie-12)",
+  "var(--crt-pie-13)",
+  "var(--crt-pie-14)",
+  "var(--crt-pie-15)",
 ];
 
 function paletteColor(index: number): string {
@@ -41,7 +52,7 @@ function signColor(value: number): string {
 const AccountsCardLoading = () => (
   <Card className="border-border h-full border drop-shadow-sm">
     <CardHeader className="flex flex-row items-center justify-between px-4 pt-4 pb-3 lg:px-5 lg:pt-5">
-      <span className="text-crt-muted text-2xs font-bold uppercase tracking-[0.1em]">
+      <span className="text-crt-muted text-2xs font-bold tracking-[0.1em] uppercase">
         <span className="text-crt-accent">▌</span> ACCOUNTS
       </span>
     </CardHeader>
@@ -66,16 +77,15 @@ export const AccountsCard = () => {
 
   if (isLoading) return <AccountsCardLoading />;
 
-  const rows = data ?? [];
-  const maxAbs = rows.reduce((m, r) => Math.max(m, Math.abs(r.value)), 0);
-  const totalAbs = rows.reduce((s, r) => s + Math.abs(r.value), 0);
-  const total = rows.reduce((s, r) => s + r.value, 0);
+  const { rows, maxAbs, totalAbs, total } = getAccountSummaryMetrics(
+    data ?? [],
+  );
 
   return (
     <Card className="border-border h-full border drop-shadow-sm">
       {/* ── header ── */}
       <CardHeader className="flex flex-row items-center justify-between px-4 pt-4 pb-3 lg:px-5 lg:pt-5">
-        <span className="text-crt-muted text-2xs font-bold uppercase tracking-[0.1em]">
+        <span className="text-crt-muted text-2xs font-bold tracking-[0.1em] uppercase">
           <span className="text-crt-accent">▌</span> ACCOUNTS
         </span>
       </CardHeader>
@@ -83,7 +93,7 @@ export const AccountsCard = () => {
       {/* ── body ── */}
       <CardContent className="px-4 pb-4 lg:px-5 lg:pb-5">
         {rows.length === 0 ? (
-          <p className="text-muted-foreground py-8 text-center text-2xs uppercase tracking-widest">
+          <p className="text-muted-foreground text-2xs py-8 text-center tracking-widest uppercase">
             No accounts
           </p>
         ) : (
@@ -126,7 +136,9 @@ export const AccountsCard = () => {
 
         {/* ── footer ── */}
         <div className="acct-foot-a">
-          <span className="text-crt-muted text-2xs uppercase tracking-[0.1em]">TOTAL</span>
+          <span className="text-crt-muted text-2xs tracking-[0.1em] uppercase">
+            TOTAL
+          </span>
           <span
             className="text-sm font-bold tabular-nums"
             style={{ color: signColor(total) }}
