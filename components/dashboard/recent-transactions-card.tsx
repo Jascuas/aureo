@@ -15,7 +15,60 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useGetRecentTransactions } from "@/features/transactions/api/use-get-recent-transactions";
-import { formatCurrency, formatDashboardDate } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
+
+const DASHBOARD_TIME_ZONE = "Europe/Madrid";
+const dashboardDateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "2-digit",
+  month: "short",
+  timeZone: DASHBOARD_TIME_ZONE,
+  year: "numeric",
+});
+
+function parseDashboardDate(value: unknown): Date | null {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  if (typeof value === "string") {
+    const normalizedValue = value.trim();
+    const dateOnlyMatch = normalizedValue.match(
+      /^(\d{4})-(\d{2})-(\d{2})(?:$|T)/,
+    );
+
+    if (dateOnlyMatch) {
+      const [, year, month, day] = dateOnlyMatch.map(Number);
+      const parsed = new Date(Date.UTC(year, month - 1, day, 12));
+
+      return parsed.getUTCFullYear() === year &&
+        parsed.getUTCMonth() === month - 1 &&
+        parsed.getUTCDate() === day
+        ? parsed
+        : null;
+    }
+
+    if (!normalizedValue) return null;
+    const parsed = new Date(normalizedValue);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  if (typeof value !== "number") return null;
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatDashboardDate(value: unknown): string {
+  const date = parseDashboardDate(value);
+  if (!date) return "—";
+
+  const parts = dashboardDateFormatter.formatToParts(date);
+  const day = parts.find(({ type }) => type === "day")?.value;
+  const month = parts.find(({ type }) => type === "month")?.value;
+  const year = parts.find(({ type }) => type === "year")?.value;
+
+  return day && month && year ? `${month} ${day}, ${year}` : "—";
+}
 
 const RecentTransactionsLoading = () => (
   <Card className="border-border border drop-shadow-sm">
