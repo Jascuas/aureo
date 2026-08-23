@@ -56,6 +56,52 @@ export function formatCurrency(value: number) {
   }).format(value);
 }
 
+const dashboardDateFormatters = {
+  axis: new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    month: "short",
+    timeZone: "Europe/Madrid",
+  }),
+  full: new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    month: "short",
+    timeZone: "Europe/Madrid",
+    year: "numeric",
+  }),
+} as const;
+
+function parseDashboardDate(value: unknown): Date | null {
+  if (value instanceof Date) {
+    return isValid(value) ? value : null;
+  }
+
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split("-").map(Number);
+    const parsed = new Date(0);
+    parsed.setUTCHours(12, 0, 0, 0);
+    parsed.setUTCFullYear(year, month - 1, day);
+
+    return parsed.getUTCFullYear() === year &&
+      parsed.getUTCMonth() === month - 1 &&
+      parsed.getUTCDate() === day
+      ? parsed
+      : null;
+  }
+
+  if (typeof value !== "string" && typeof value !== "number") return null;
+
+  const parsed = new Date(value);
+  return isValid(parsed) ? parsed : null;
+}
+
+export function formatDashboardDate(
+  value: unknown,
+  style: keyof typeof dashboardDateFormatters = "full",
+) {
+  const date = parseDashboardDate(value);
+  return date ? dashboardDateFormatters[style].format(date) : "—";
+}
+
 export function calculatePercentageChange(current: number, previous: number) {
   if (previous === 0) {
     return previous === current ? 0 : 100;

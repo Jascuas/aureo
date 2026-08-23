@@ -1,6 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
 import { useMemo } from "react";
 import { Bar, BarChart, XAxis, YAxis } from "recharts";
 
@@ -11,7 +10,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { AreaSeries, OverTimeData } from "@/lib/types";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDashboardDate } from "@/lib/utils";
 
 type BarVariantProps = {
   data: OverTimeData;
@@ -38,7 +37,7 @@ export const BarVariant = ({ data, series }: BarVariantProps) => {
           axisLine={false}
           tickLine={false}
           dataKey="date"
-          tickFormatter={(value) => format(value, "dd MMM")}
+          tickFormatter={(value) => formatDashboardDate(value, "axis")}
           style={{ fontSize: "12px" }}
           tickMargin={16}
         />
@@ -52,9 +51,7 @@ export const BarVariant = ({ data, series }: BarVariantProps) => {
           cursor={{ fill: "rgba(255,255,255,0.1)" }}
           content={
             <ChartTooltipContent
-              labelFormatter={(value) =>
-                format(new Date(value), "MMM dd, yyyy")
-              }
+              labelFormatter={(value) => formatDashboardDate(value)}
               formatter={(value) => [
                 formatCurrency(Number(value)),
               ]}

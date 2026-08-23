@@ -1,6 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
 import { useMemo } from "react";
 import { Area, AreaChart, XAxis, YAxis } from "recharts";
 
@@ -11,7 +10,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { AreaSeries } from "@/lib/types";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDashboardDate } from "@/lib/utils";
 
 type AreaVariantProps = {
   data: unknown[];
@@ -38,7 +37,7 @@ export const AreaVariant = ({ data, series }: AreaVariantProps) => {
           axisLine={false}
           tickLine={false}
           dataKey="date"
-          tickFormatter={(value) => format(value, "dd MMM")}
+          tickFormatter={(value) => formatDashboardDate(value, "axis")}
           style={{ fontSize: "12px" }}
           tickMargin={16}
         />
@@ -55,9 +54,7 @@ export const AreaVariant = ({ data, series }: AreaVariantProps) => {
           cursor={false}
           content={
             <ChartTooltipContent
-              labelFormatter={(value) =>
-                format(new Date(value), "MMM dd, yyyy")
-              }
+              labelFormatter={(value) => formatDashboardDate(value)}
               formatter={(value) => [
                 formatCurrency(Number(value)),
               ]}

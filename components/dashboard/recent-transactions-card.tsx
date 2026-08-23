@@ -1,6 +1,5 @@
 "use client";
 
-import { format, isValid } from "date-fns";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useGetRecentTransactions } from "@/features/transactions/api/use-get-recent-transactions";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDashboardDate } from "@/lib/utils";
 
 const RecentTransactionsLoading = () => (
   <Card className="border-border border drop-shadow-sm">
@@ -86,10 +85,7 @@ export const RecentTransactionsCard = () => {
             </TableHeader>
             <TableBody>
               {data.map((tx) => {
-                const dateValue = new Date(tx.date);
-                const formattedDate = isValid(dateValue)
-                  ? format(dateValue, "MMM dd, yyyy")
-                  : "—";
+                const formattedDate = formatDashboardDate(tx.date);
 
                 return (
                   <TableRow key={tx.id}>
