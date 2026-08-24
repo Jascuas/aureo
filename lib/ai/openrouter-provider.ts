@@ -53,7 +53,7 @@ export class OpenRouterProvider implements AIProvider {
     }
 
     // Generic error
-    console.error(`OpenRouter ${operation} error:`, error);
+    console.error(`OpenRouter ${operation} error`);
     throw new Error(`Failed to ${operation} with AI`, { cause: error });
   }
 
@@ -123,7 +123,7 @@ export class OpenRouterProvider implements AIProvider {
       );
       return result;
     } catch (parseError) {
-      console.error("JSON parse error for column detection:", parseError);
+      console.error("JSON parse error for column detection");
       throw parseError;
     }
   }
@@ -152,7 +152,7 @@ export class OpenRouterProvider implements AIProvider {
       }>(systemPrompt, userPrompt);
       return result.results;
     } catch (parseError) {
-      console.error("JSON parse error for duplicate detection:", parseError);
+      console.error("JSON parse error for duplicate detection");
       throw parseError;
     }
   }
@@ -193,7 +193,7 @@ export class OpenRouterProvider implements AIProvider {
       }>(systemPrompt, userPrompt);
       return result.results;
     } catch (parseError) {
-      console.error("JSON parse error for categorization:", parseError);
+      console.error("JSON parse error for categorization");
       throw parseError;
     }
   }

@@ -60,7 +60,7 @@ export class GeminiProvider implements AIProvider {
     }
 
     // Generic error
-    console.error(`Gemini ${operation} error:`, error);
+    console.error(`Gemini ${operation} error`);
     throw new Error(`Failed to ${operation} with AI`, { cause: error });
   }
 
@@ -106,15 +106,10 @@ export class GeminiProvider implements AIProvider {
         console.error("JSON parse error for column detection:");
         console.error("Raw text length:", text.length);
         console.error("Cleaned text length:", cleanedText.length);
-        console.error("First 500 chars:", cleanedText.substring(0, 500));
-        console.error(
-          "Last 500 chars:",
-          cleanedText.substring(cleanedText.length - 500),
-        );
         throw parseError;
       }
     } catch (error) {
-      console.error("Gemini categorization error:", error);
+      console.error("Gemini column detection error");
       throw new Error("Failed to categorize transactions with AI", {
         cause: error,
       });
@@ -158,15 +153,10 @@ export class GeminiProvider implements AIProvider {
         console.error("JSON parse error for duplicate detection:");
         console.error("Raw text length:", text.length);
         console.error("Cleaned text length:", cleanedText.length);
-        console.error("First 500 chars:", cleanedText.substring(0, 500));
-        console.error(
-          "Last 500 chars:",
-          cleanedText.substring(cleanedText.length - 500),
-        );
         throw parseError;
       }
     } catch (error) {
-      console.error("Gemini duplicate detection error:", error);
+      console.error("Gemini duplicate detection error");
       throw new Error("Failed to detect duplicates with AI", { cause: error });
     }
   }
@@ -221,26 +211,14 @@ export class GeminiProvider implements AIProvider {
         console.error("JSON parse error for categorization:");
         console.error("Raw text length:", text.length);
         console.error("Cleaned text length:", cleanedText.length);
-        console.error("Error message:", message);
 
-        // If error mentions a position, show context around it
+        // A parser position is useful without exposing model output.
         const posMatch = message.match(/position (\d+)/);
         if (posMatch) {
           const errorPos = parseInt(posMatch[1], 10);
-          const contextStart = Math.max(0, errorPos - 200);
-          const contextEnd = Math.min(cleanedText.length, errorPos + 200);
-          console.error(`Context around position ${errorPos}:`);
-          console.error(cleanedText.substring(contextStart, contextEnd));
-          console.error(
-            " ".repeat(errorPos - contextStart) + "^--- ERROR HERE",
-          );
+          console.error(`JSON parse error position: ${errorPos}`);
         }
 
-        console.error("First 500 chars:", cleanedText.substring(0, 500));
-        console.error(
-          "Last 500 chars:",
-          cleanedText.substring(cleanedText.length - 500),
-        );
         throw parseError;
       }
     } catch (error) {
