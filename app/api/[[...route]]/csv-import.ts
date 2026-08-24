@@ -133,6 +133,34 @@ const asDatabaseError = (error: unknown): DatabaseError =>
     ? (error as DatabaseError)
     : {};
 
+type CsvImportOperation =
+  | "analyze"
+  | "detect_duplicates"
+  | "categorize"
+  | "match_payees"
+  | "get_templates"
+  | "save_template"
+  | "update_template"
+  | "delete_template"
+  | "bulk_import";
+
+type CsvImportFailureCategory =
+  | "unexpected"
+  | "rate_limit"
+  | "foreign_key_violation"
+  | "duplicate_key";
+
+const logCsvImportFailure = (
+  operation: CsvImportOperation,
+  category: CsvImportFailureCategory,
+) => {
+  console.error("[CSV Import API] operation failed", { operation, category });
+};
+
+const logCsvImportCount = (operation: CsvImportOperation, count: number) => {
+  console.info("[CSV Import API] operation", { operation, count });
+};
+
 // ============================================================================
 // Routes
 // ============================================================================
@@ -180,8 +208,8 @@ const app = new Hono<AppEnv>()
             aiTransactions: result.aiTransactions,
           },
         });
-      } catch (error) {
-        console.error("Analyze error:", error);
+      } catch {
+        logCsvImportFailure("analyze", "unexpected");
         return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
       }
     },
@@ -220,8 +248,8 @@ const app = new Hono<AppEnv>()
             },
           },
         });
-      } catch (error) {
-        console.error("Duplicate detection error:", error);
+      } catch {
+        logCsvImportFailure("detect_duplicates", "unexpected");
         return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
       }
     },
@@ -235,11 +263,7 @@ const app = new Hono<AppEnv>()
       const userId = c.var.userId;
       const { transactions } = c.req.valid("json");
 
-      console.log("[CSV Import API] Categorize request:", {
-        userId,
-        transactionCount: transactions.length,
-        firstTransaction: transactions[0],
-      });
+      logCsvImportCount("categorize", transactions.length);
 
       try {
         const results = await categorizeTransactions(
@@ -259,7 +283,10 @@ const app = new Hono<AppEnv>()
           },
         });
       } catch (error) {
-        console.error("Categorization error:", error);
+        logCsvImportFailure(
+          "categorize",
+          isRateLimitError(error) ? "rate_limit" : "unexpected",
+        );
 
         // Handle rate limit errors specifically
         if (isRateLimitError(error)) {
@@ -305,8 +332,8 @@ const app = new Hono<AppEnv>()
             summary: result.summary,
           },
         });
-      } catch (error) {
-        console.error("Payee matching error:", error);
+      } catch {
+        logCsvImportFailure("match_payees", "unexpected");
         return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
       }
     },
@@ -342,8 +369,8 @@ const app = new Hono<AppEnv>()
         .orderBy(importTemplates.updatedAt);
 
       return c.json({ data: templates });
-    } catch (error) {
-      console.error("Get templates error:", error);
+    } catch {
+      logCsvImportFailure("get_templates", "unexpected");
       return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
     }
   })
@@ -368,8 +395,11 @@ const app = new Hono<AppEnv>()
 
         return c.json({ data: template });
       } catch (error) {
-        console.error("Save template error:", error);
         const databaseError = asDatabaseError(error);
+        logCsvImportFailure(
+          "save_template",
+          databaseError.code === "23505" ? "duplicate_key" : "unexpected",
+        );
 
         if (databaseError.code === "23505") {
           if (
@@ -420,8 +450,11 @@ const app = new Hono<AppEnv>()
 
         return c.json({ data: template });
       } catch (error) {
-        console.error("Update template error:", error);
         const databaseError = asDatabaseError(error);
+        logCsvImportFailure(
+          "update_template",
+          databaseError.code === "23505" ? "duplicate_key" : "unexpected",
+        );
 
         if (databaseError.code === "23505") {
           return c.json(API_ERRORS.DUPLICATE_TEMPLATE_NAME, 409);
@@ -454,8 +487,8 @@ const app = new Hono<AppEnv>()
         }
 
         return c.json({ data: template });
-      } catch (error) {
-        console.error("Delete template error:", error);
+      } catch {
+        logCsvImportFailure("delete_template", "unexpected");
         return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
       }
     },
@@ -520,28 +553,7 @@ const app = new Hono<AppEnv>()
           transactionTypeId: tx.transactionTypeId,
         }));
 
-        console.log("=".repeat(80));
-        console.log("🔍 BULK IMPORT");
-        console.log("=".repeat(80));
-        console.log(`Account ID: ${accountId}`);
-        console.log(`User ID: ${userId}`);
-        console.log(`Total transactions: ${transactionsToInsert.length}`);
-        console.log("\n📋 Transactions to insert:\n");
-        transactionsToInsert.forEach((tx, index) => {
-          console.log(`\n--- Transaction ${index + 1} ---`);
-          console.log(`ID: ${tx.id}`);
-          console.log(`Date: ${tx.date.toISOString()}`);
-          console.log(
-            `Amount: ${tx.amount} milliunits (${tx.amount / 1000} EUR)`,
-          );
-          console.log(`Payee: ${tx.payee}`);
-          console.log(`Notes: ${tx.notes || "(none)"}`);
-          console.log(`Category ID: ${tx.categoryId || "(none)"}`);
-          console.log(`Transaction Type ID: ${tx.transactionTypeId}`);
-        });
-        console.log("\n" + "=".repeat(80));
-        console.log("✅ INSERTING TRANSACTIONS TO DATABASE");
-        console.log("=".repeat(80) + "\n");
+        logCsvImportCount("bulk_import", transactionsToInsert.length);
 
         const inserted = await db
           .insert(transactions)
@@ -556,8 +568,6 @@ const app = new Hono<AppEnv>()
           },
         });
       } catch (error) {
-        console.error("Bulk import error:", error);
-
         // Drizzle/Neon wraps PostgreSQL errors - extract the real error
         const databaseError = asDatabaseError(error);
         const pgError = asDatabaseError(databaseError.cause ?? error);
@@ -566,13 +576,18 @@ const app = new Hono<AppEnv>()
         const errorDetail = pgError.detail ?? databaseError.detail;
         const errorConstraint = pgError.constraint ?? databaseError.constraint;
 
-        console.error("Error details:", {
-          code: errorCode,
-          message: errorMessage,
-          constraint: errorConstraint,
-          detail: errorDetail,
-          stack: databaseError.stack?.split("\n").slice(0, 3),
-        });
+        const failureCategory =
+          errorCode === "23503" ||
+          errorMessage.includes("violates foreign key constraint") ||
+          errorMessage.includes("foreign key")
+            ? "foreign_key_violation"
+            : errorCode === "23505" ||
+                errorMessage.includes("duplicate key") ||
+                errorMessage.includes("already exists")
+              ? "duplicate_key"
+              : "unexpected";
+
+        logCsvImportFailure("bulk_import", failureCategory);
 
         // Foreign key constraint violation (invalid category/transaction type)
         if (
