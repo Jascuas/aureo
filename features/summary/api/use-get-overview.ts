@@ -3,6 +3,8 @@ import { useSearchParams } from "next/navigation";
 
 import { client } from "@/lib/hono";
 
+import { summaryQueryKeys } from "./query-keys";
+
 export const useGetOverview = () => {
   const searchParams = useSearchParams();
   const from = searchParams.get("from") || "";
@@ -10,7 +12,7 @@ export const useGetOverview = () => {
   const accountId = searchParams.get("accountId") || "";
 
   const query = useQuery({
-    queryKey: ["overview", { from, to, accountId }],
+    queryKey: summaryQueryKeys.overview({ from, to, accountId }),
     queryFn: async () => {
       const res = await client.api.summary.overview.$get({
         query: {

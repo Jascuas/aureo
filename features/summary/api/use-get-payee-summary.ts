@@ -3,6 +3,8 @@ import { useSearchParams } from "next/navigation";
 
 import { client } from "@/lib/hono";
 
+import { summaryQueryKeys } from "./query-keys";
+
 type PayeeSummaryType = "Income" | "Expense" | "Refund";
 
 type Options = {
@@ -22,7 +24,13 @@ export function useGetPayeeSummary({
   const topStr = String(top);
 
   return useQuery({
-    queryKey: ["by-payee", { type, from, to, accountId, top: topStr }],
+    queryKey: summaryQueryKeys.byPayee({
+      type,
+      from,
+      to,
+      accountId,
+      top: topStr,
+    }),
     queryFn: async () => {
       const res = await client.api.summary["by-payee"].$get({
         query: { type, from, to, accountId, top: topStr },
