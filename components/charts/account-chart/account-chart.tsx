@@ -2,7 +2,7 @@
 
 import { FileSearch } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Pie, PieChart, Sector } from "recharts";
+import { Pie, PieChart, Sector, type SectorProps } from "recharts";
 
 import { SpendingPieLoading } from "@/components/loading/spending-pie-loading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -124,8 +124,7 @@ export const AccountChart = () => {
                   innerRadius={60}
                   strokeWidth={5}
                   activeIndex={ACTIVE_INDEX}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  activeShape={(props: any) => (
+                  activeShape={(props: SectorProps) => (
                     <Sector
                       {...props}
                       outerRadius={(props.outerRadius ?? 0) + 10}
