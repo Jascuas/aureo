@@ -18,6 +18,45 @@ import { parseDateRange } from "@/lib/date-utils";
 import type { AppEnv } from "@/lib/hono-env";
 import { requireId } from "@/lib/validation-middleware";
 
+const transactionCursorSchema = z.string().transform((cursor, ctx) => {
+  let value: unknown;
+
+  try {
+    value = JSON.parse(cursor);
+  } catch {
+    ctx.addIssue({
+      code: "custom",
+      message: "Cursor must be valid JSON",
+    });
+    return z.NEVER;
+  }
+
+  const parsedCursor = z
+    .object({
+      date: z.string(),
+      id: z.string().min(1),
+    })
+    .safeParse(value);
+
+  if (!parsedCursor.success) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Cursor must include a valid date and a non-empty id",
+    });
+    return z.NEVER;
+  }
+
+  if (Number.isNaN(new Date(parsedCursor.data.date).getTime())) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Cursor date must be valid",
+    });
+    return z.NEVER;
+  }
+
+  return parsedCursor.data;
+});
+
 const app = new Hono<AppEnv>()
   .get(
     "/",
@@ -27,9 +66,14 @@ const app = new Hono<AppEnv>()
         from: z.string().optional(),
         to: z.string().optional(),
         accountId: z.string().optional(),
-        cursor: z.string().optional(),
+        cursor: transactionCursorSchema.optional(),
         limit: z.coerce.number().min(1).max(100).default(50),
       }),
+      (result, c) => {
+        if (!result.success) {
+          return c.json(API_ERRORS.BAD_REQUEST, 400);
+        }
+      },
     ),
     clerkMiddleware(),
     requireAuth,
@@ -38,10 +82,7 @@ const app = new Hono<AppEnv>()
       const { from, to, accountId, cursor, limit } = c.req.valid("query");
       const { startDate, endDate } = parseDateRange(from, to);
 
-      // Parse cursor if provided
-      const parsedCursor = cursor
-        ? (JSON.parse(cursor) as { date: string; id: string })
-        : null;
+      const parsedCursor = cursor ?? null;
 
       // Fetch one extra record to determine if there are more pages
       const data = await db
