@@ -92,6 +92,7 @@ export const CategoryForm = ({
                   value={field.value}
                   onChange={field.onChange}
                   disabled={disabled}
+                  isClearable
                 />
               </FormControl>
 
