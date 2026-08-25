@@ -17,6 +17,8 @@ export const useDeleteTransaction = (id?: string) => {
         param: { id },
       });
 
+      if (!response.ok) throw new Error("Failed to delete transaction.");
+
       return await response.json();
     },
     onSuccess: () => {
