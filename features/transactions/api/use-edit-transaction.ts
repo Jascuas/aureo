@@ -21,6 +21,8 @@ export const useEditTransaction = (id?: string) => {
         param: { id },
       });
 
+      if (!response.ok) throw new Error("Failed to edit transaction.");
+
       return await response.json();
     },
     onSuccess: () => {
