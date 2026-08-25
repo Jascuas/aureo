@@ -7,6 +7,24 @@ type DatePattern = {
   example: string;
 };
 
+function createValidatedUtcDate(
+  year: number,
+  month: number,
+  day: number,
+): Date | null {
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+}
+
 const DATE_PATTERNS: DatePattern[] = [
   {
     format: 'DD/MM/YYYY',
@@ -15,7 +33,11 @@ const DATE_PATTERNS: DatePattern[] = [
       const match = value.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
       if (!match) return null;
       const [, day, month, year] = match;
-      return new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
+      return createValidatedUtcDate(
+        parseInt(year),
+        parseInt(month),
+        parseInt(day),
+      );
     },
     example: '15/03/2024',
   },
@@ -26,7 +48,11 @@ const DATE_PATTERNS: DatePattern[] = [
       const match = value.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
       if (!match) return null;
       const [, year, month, day] = match;
-      return new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
+      return createValidatedUtcDate(
+        parseInt(year),
+        parseInt(month),
+        parseInt(day),
+      );
     },
     example: '2024-03-15',
   },
@@ -37,7 +63,11 @@ const DATE_PATTERNS: DatePattern[] = [
       const match = value.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
       if (!match) return null;
       const [, month, day, year] = match;
-      return new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
+      return createValidatedUtcDate(
+        parseInt(year),
+        parseInt(month),
+        parseInt(day),
+      );
     },
     example: '03/15/2024',
   },
@@ -49,7 +79,11 @@ const DATE_PATTERNS: DatePattern[] = [
       if (!match) return null;
       const [, day, month, year] = match;
       const fullYear = parseInt(year) + (parseInt(year) > 50 ? 1900 : 2000);
-      return new Date(Date.UTC(fullYear, parseInt(month) - 1, parseInt(day)));
+      return createValidatedUtcDate(
+        fullYear,
+        parseInt(month),
+        parseInt(day),
+      );
     },
     example: '15/03/24',
   },
@@ -70,7 +104,7 @@ const DATE_PATTERNS: DatePattern[] = [
       };
       const month = monthMap[monthStr.toLowerCase()];
       if (month === undefined) return null;
-      return new Date(Date.UTC(parseInt(year), month, parseInt(day)));
+      return createValidatedUtcDate(parseInt(year), month + 1, parseInt(day));
     },
     example: '15-Jan-2024',
   },
