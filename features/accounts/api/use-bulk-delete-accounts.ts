@@ -19,6 +19,9 @@ export const useBulkDeleteAccounts = () => {
       const response = await client.api.accounts["bulk-delete"]["$post"]({
         json,
       });
+
+      if (!response.ok) throw new Error("Failed to delete account(s).");
+
       return await response.json();
     },
     onSuccess: () => {
