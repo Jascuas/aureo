@@ -14,6 +14,8 @@ export const useCreateAccount = () => {
     mutationFn: async (json) => {
       const response = await client.api.accounts.$post({ json });
 
+      if (!response.ok) throw new Error("Failed to create account.");
+
       return await response.json();
     },
     onSuccess: () => {

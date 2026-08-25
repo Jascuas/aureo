@@ -21,6 +21,8 @@ export const useEditAccount = (id?: string) => {
         param: { id },
       });
 
+      if (!response.ok) throw new Error("Failed to edit account.");
+
       return await response.json();
     },
     onSuccess: () => {

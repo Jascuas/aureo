@@ -17,6 +17,8 @@ export const useDeleteAccount = (id?: string) => {
         param: { id },
       });
 
+      if (!response.ok) throw new Error("Failed to delete account.");
+
       return await response.json();
     },
     onSuccess: () => {
