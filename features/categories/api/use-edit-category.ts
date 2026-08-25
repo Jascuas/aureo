@@ -21,6 +21,8 @@ export const useEditCategory = (id?: string) => {
         param: { id },
       });
 
+      if (!response.ok) throw new Error("Failed to edit category.");
+
       return await response.json();
     },
     onSuccess: () => {

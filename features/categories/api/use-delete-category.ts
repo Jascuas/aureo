@@ -17,6 +17,8 @@ export const useDeleteCategory = (id?: string) => {
         param: { id },
       });
 
+      if (!response.ok) throw new Error("Failed to delete category.");
+
       return await response.json();
     },
     onSuccess: () => {
