@@ -3,6 +3,8 @@ import { useSearchParams } from "next/navigation";
 
 import { client } from "@/lib/hono";
 
+import { summaryQueryKeys } from "./query-keys";
+
 export type CategorySummaryType = "Income" | "Expense" | "Refund" | "All";
 
 type Options = {
@@ -22,7 +24,13 @@ export function useGetCategorySummary({
   const topStr = String(top);
 
   return useQuery({
-    queryKey: ["by-category", { type, from, to, accountId, top: topStr }],
+    queryKey: summaryQueryKeys.byCategory({
+      type,
+      from,
+      to,
+      accountId,
+      top: topStr,
+    }),
     queryFn: async () => {
       const res = await client.api.summary["by-category"].$get({
         query: { type, from, to, accountId, top: topStr },

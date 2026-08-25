@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 
 import { client } from "@/lib/hono";
 
+import { summaryQueryKeys } from "./query-keys";
+
 export type AccountSummaryRow = {
   id: string;
   name: string;
@@ -11,7 +13,7 @@ export type AccountSummaryRow = {
 /** Fetches per-account current balances for the donut chart. */
 export function useGetAccountSummary() {
   return useQuery({
-    queryKey: ["by-account"],
+    queryKey: summaryQueryKeys.byAccount(),
     queryFn: async (): Promise<AccountSummaryRow[]> => {
       const res = await client.api.summary["by-account"].$get();
       if (!res.ok) throw new Error("Failed to fetch account summary.");
