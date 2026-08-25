@@ -106,7 +106,7 @@ const RecentTransactionsLoading = () => (
 );
 
 export const RecentTransactionsCard = () => {
-  const { data, isLoading } = useGetRecentTransactions();
+  const { data, isError, isLoading, refetch } = useGetRecentTransactions();
 
   if (isLoading) return <RecentTransactionsLoading />;
 
@@ -121,7 +121,16 @@ export const RecentTransactionsCard = () => {
         </Button>
       </CardHeader>
       <CardContent>
-        {!data || data.length === 0 ? (
+        {isError ? (
+          <div className="flex flex-col items-center gap-3 py-8 text-center" role="alert">
+            <p className="text-destructive text-xs">
+              Unable to load recent transactions. Please try again.
+            </p>
+            <Button size="sm" variant="outline" onClick={() => void refetch()}>
+              Retry
+            </Button>
+          </div>
+        ) : !data || data.length === 0 ? (
           <p className="text-muted-foreground py-8 text-center text-xs uppercase tracking-widest">
             No transactions found
           </p>
