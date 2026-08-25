@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { SingleValue } from "react-select";
+import ReactSelect, { type SingleValue } from "react-select";
 import CreatableSelect from "react-select/creatable";
 
 type SelectProps = {
@@ -10,6 +10,7 @@ type SelectProps = {
   options?: { label: string; value: string }[];
   value?: string | null | undefined;
   disabled?: boolean;
+  isClearable?: boolean;
   placeholder?: string;
 };
 
@@ -19,6 +20,7 @@ export const Select = ({
   onCreate,
   options = [],
   disabled,
+  isClearable,
   placeholder,
 }: SelectProps) => {
   const onSelect = (option: SingleValue<{ label: string; value: string }>) => {
@@ -29,54 +31,58 @@ export const Select = ({
     return options.find((option) => option.value === value);
   }, [options, value]);
 
-  return (
-    <CreatableSelect
-      placeholder={placeholder}
-      className="h-10 text-sm"
-      styles={{
-        control: (base) => ({
-          ...base,
-          backgroundColor: "hsl(var(--background))",
+  const selectProps = {
+    placeholder,
+    className: "h-10 text-sm",
+    styles: {
+      control: (base: object) => ({
+        ...base,
+        backgroundColor: "hsl(var(--background))",
+        borderColor: "hsl(var(--border))",
+        ":hover": {
           borderColor: "hsl(var(--border))",
-          ":hover": {
-            borderColor: "hsl(var(--border))",
-          },
-        }),
-        menu: (base) => ({
-          ...base,
-          backgroundColor: "hsl(var(--popover))",
-        }),
-        option: (base, state) => ({
-          ...base,
-          backgroundColor: state.isFocused
-            ? "hsl(var(--accent))"
-            : "hsl(var(--popover))",
-          color: "hsl(var(--popover-foreground))",
-          ":active": {
-            backgroundColor: "hsl(var(--accent))",
-          },
-        }),
-        input: (base) => ({
-          ...base,
-          color: "hsl(var(--foreground))",
-        }),
-        singleValue: (base) => ({
-          ...base,
-          color: "hsl(var(--foreground))",
-        }),
-        placeholder: (base) => ({
-          ...base,
-          color: "hsl(var(--muted-foreground))",
-        }),
-        indicatorSeparator: () => ({
-          display: "none",
-        }),
-      }}
-      value={formattedValue}
-      onChange={onSelect}
-      options={options}
-      onCreateOption={onCreate}
-      isDisabled={disabled}
-    />
+        },
+      }),
+      menu: (base: object) => ({
+        ...base,
+        backgroundColor: "hsl(var(--popover))",
+      }),
+      option: (base: object, state: { isFocused: boolean }) => ({
+        ...base,
+        backgroundColor: state.isFocused
+          ? "hsl(var(--accent))"
+          : "hsl(var(--popover))",
+        color: "hsl(var(--popover-foreground))",
+        ":active": {
+          backgroundColor: "hsl(var(--accent))",
+        },
+      }),
+      input: (base: object) => ({
+        ...base,
+        color: "hsl(var(--foreground))",
+      }),
+      singleValue: (base: object) => ({
+        ...base,
+        color: "hsl(var(--foreground))",
+      }),
+      placeholder: (base: object) => ({
+        ...base,
+        color: "hsl(var(--muted-foreground))",
+      }),
+      indicatorSeparator: () => ({
+        display: "none",
+      }),
+    },
+    value: formattedValue,
+    onChange: onSelect,
+    options,
+    isDisabled: disabled,
+    isClearable,
+  };
+
+  return onCreate ? (
+    <CreatableSelect {...selectProps} onCreateOption={onCreate} />
+  ) : (
+    <ReactSelect {...selectProps} />
   );
 };
