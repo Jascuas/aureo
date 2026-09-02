@@ -1,4 +1,3 @@
-import { clerkMiddleware } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { differenceInDays, subDays } from "date-fns";
 import { and, eq, gte, lte } from "drizzle-orm";
@@ -19,7 +18,6 @@ import {
 
 const app = new Hono<AppEnv>().get(
   "/overview",
-  clerkMiddleware(),
   requireAuth,
   zValidator(
     "query",

@@ -1,4 +1,3 @@
-import { clerkMiddleware } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { createId } from "@paralleldrive/cuid2";
 import { and, desc, eq, gt, gte, inArray, lt, lte, or, sql } from "drizzle-orm";
@@ -75,7 +74,6 @@ const app = new Hono<AppEnv>()
         }
       },
     ),
-    clerkMiddleware(),
     requireAuth,
     async (c) => {
       const userId = c.var.userId;
@@ -144,7 +142,6 @@ const app = new Hono<AppEnv>()
         id: z.string().optional(),
       }),
     ),
-    clerkMiddleware(),
     requireAuth,
     requireId,
     async (c) => {
@@ -175,7 +172,6 @@ const app = new Hono<AppEnv>()
   )
   .post(
     "/",
-    clerkMiddleware(),
     requireAuth,
     zValidator(
       "json",
@@ -200,7 +196,6 @@ const app = new Hono<AppEnv>()
   )
   .post(
     "/bulk-delete",
-    clerkMiddleware(),
     requireAuth,
     zValidator(
       "json",
@@ -243,7 +238,6 @@ const app = new Hono<AppEnv>()
   )
   .post(
     "/bulk-create",
-    clerkMiddleware(),
     requireAuth,
     zValidator("json", z.array(insertTransactionSchema.omit({ id: true }))),
     async (c) => {
@@ -271,7 +265,6 @@ const app = new Hono<AppEnv>()
         id: z.string().optional(),
       }),
     ),
-    clerkMiddleware(),
     requireAuth,
     requireId,
     zValidator(
@@ -320,7 +313,6 @@ const app = new Hono<AppEnv>()
         id: z.string().optional(),
       }),
     ),
-    clerkMiddleware(),
     requireAuth,
     requireId,
     async (c) => {

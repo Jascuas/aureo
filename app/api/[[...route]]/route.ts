@@ -1,5 +1,9 @@
+import { clerkMiddleware } from "@hono/clerk-auth";
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
+
+import { requireAuth } from "@/lib/auth-middleware";
+import type { AppEnv } from "@/lib/hono-env";
 
 import accounts from "./accounts";
 import admin from "./admin";
@@ -11,8 +15,9 @@ import transactions from "./transactions";
 
 export const runtime = "edge";
 
-const app = new Hono()
+const app = new Hono<AppEnv>()
   .basePath("/api")
+  .use("*", clerkMiddleware(), requireAuth)
   .route("/accounts", accounts)
   .route("/admin", admin)
   .route("/categories", categories)

@@ -1,4 +1,3 @@
-import { clerkMiddleware } from "@hono/clerk-auth";
 import { desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 
@@ -10,7 +9,6 @@ import { convertAmountFromMilliunits } from "@/lib/utils";
 
 const app = new Hono<AppEnv>().get(
   "/by-account",
-  clerkMiddleware(),
   requireAuth,
   async (c) => {
     const userId = c.var.userId;
