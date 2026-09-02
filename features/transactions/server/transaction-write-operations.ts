@@ -31,6 +31,14 @@ export type TransactionBulkWriteResult =
   | { ok: true; data: TransactionResponse[] }
   | { ok: false; reason: "not_found" };
 
+export type TransactionDeleteResponse = {
+  id: string;
+};
+
+export type TransactionDeleteResult =
+  | { ok: true; data: TransactionDeleteResponse }
+  | { ok: false; reason: "not_found" };
+
 const transactionReferences = (
   userId: string,
   values: readonly TransactionWriteValues[],
@@ -63,6 +71,14 @@ export type TransactionWriteDependencies = {
     id: string,
     values: TransactionWriteValues,
   ) => Promise<TransactionResponse | undefined>;
+  delete: (
+    userId: string,
+    id: string,
+  ) => Promise<TransactionDeleteResponse | undefined>;
+  deleteMany: (
+    userId: string,
+    ids: string[],
+  ) => Promise<TransactionDeleteResponse[]>;
 };
 
 const transactionWriteDependencies: TransactionWriteDependencies = {
@@ -102,6 +118,53 @@ const transactionWriteDependencies: TransactionWriteDependencies = {
       .returning(transactionProjection);
 
     return data;
+  },
+  delete: async (userId, id) => {
+    const transactionsToDelete = db.$with("transactions_to_delete").as(
+      db
+        .select({ id: transactions.id })
+        .from(transactions)
+        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+        .where(and(eq(transactions.id, id), eq(accounts.userId, userId))),
+    );
+
+    const [data] = await db
+      .with(transactionsToDelete)
+      .delete(transactions)
+      .where(
+        inArray(
+          transactions.id,
+          sql`(select id from ${transactionsToDelete})`,
+        ),
+      )
+      .returning({ id: transactions.id });
+
+    return data;
+  },
+  deleteMany: async (userId, ids) => {
+    const transactionsToDelete = db.$with("transactions_to_delete").as(
+      db
+        .select({ id: transactions.id })
+        .from(transactions)
+        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+        .where(
+          and(
+            inArray(transactions.id, ids),
+            eq(accounts.userId, userId),
+          ),
+        ),
+    );
+
+    return db
+      .with(transactionsToDelete)
+      .delete(transactions)
+      .where(
+        inArray(
+          transactions.id,
+          sql`(select id from ${transactionsToDelete})`,
+        ),
+      )
+      .returning({ id: transactions.id });
   },
 };
 
@@ -157,10 +220,26 @@ export const createTransactionWriteOperations = (
 
     return { ok: true, data };
   },
+  deleteTransaction: async (
+    userId: string,
+    id: string,
+  ): Promise<TransactionDeleteResult> => {
+    const data = await dependencies.delete(userId, id);
+
+    if (!data) {
+      return { ok: false, reason: "not_found" };
+    }
+
+    return { ok: true, data };
+  },
+  deleteTransactions: (userId: string, ids: string[]) =>
+    dependencies.deleteMany(userId, ids),
 });
 
 const transactionWriteOperations = createTransactionWriteOperations();
 
 export const createTransaction = transactionWriteOperations.createTransaction;
 export const createTransactions = transactionWriteOperations.createTransactions;
+export const deleteTransaction = transactionWriteOperations.deleteTransaction;
+export const deleteTransactions = transactionWriteOperations.deleteTransactions;
 export const updateTransaction = transactionWriteOperations.updateTransaction;

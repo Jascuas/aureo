@@ -1,141 +1,44 @@
 import { zValidator } from "@hono/zod-validator";
-import { and, desc, eq, gt, gte, inArray, lt, lte, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
-import { db } from "@/db/drizzle";
+import { insertTransactionSchema } from "@/db/schema";
 import {
-  accounts,
-  categories,
-  insertTransactionSchema,
-  transactions,
-} from "@/db/schema";
+  TRANSACTION_BULK_LIMIT,
+  transactionIdsSchema,
+  transactionListQuerySchema,
+} from "@/features/transactions/lib/transaction-list-input";
+import {
+  getTransaction,
+  listTransactions,
+} from "@/features/transactions/server/transaction-list-operations";
 import {
   createTransaction,
   createTransactions,
+  deleteTransaction,
+  deleteTransactions,
   updateTransaction,
 } from "@/features/transactions/server/transaction-write-operations";
 import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
-import { parseDateRange } from "@/lib/date-utils";
 import type { AppEnv } from "@/lib/hono-env";
 import { requireId } from "@/lib/validation-middleware";
 
-const transactionCursorSchema = z.string().transform((cursor, ctx) => {
-  let value: unknown;
-
-  try {
-    value = JSON.parse(cursor);
-  } catch {
-    ctx.addIssue({
-      code: "custom",
-      message: "Cursor must be valid JSON",
-    });
-    return z.NEVER;
-  }
-
-  const parsedCursor = z
-    .object({
-      date: z.string(),
-      id: z.string().min(1),
-    })
-    .safeParse(value);
-
-  if (!parsedCursor.success) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Cursor must include a valid date and a non-empty id",
-    });
-    return z.NEVER;
-  }
-
-  if (Number.isNaN(new Date(parsedCursor.data.date).getTime())) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Cursor date must be valid",
-    });
-    return z.NEVER;
-  }
-
-  return parsedCursor.data;
-});
+const transactionValuesSchema = insertTransactionSchema.omit({ id: true });
 
 const app = new Hono<AppEnv>()
   .get(
     "/",
-    zValidator(
-      "query",
-      z.object({
-        from: z.string().optional(),
-        to: z.string().optional(),
-        accountId: z.string().optional(),
-        cursor: transactionCursorSchema.optional(),
-        limit: z.coerce.number().min(1).max(100).default(50),
-      }),
-      (result, c) => {
-        if (!result.success) {
-          return c.json(API_ERRORS.BAD_REQUEST, 400);
-        }
-      },
-    ),
+    zValidator("query", transactionListQuerySchema, (result, c) => {
+      if (!result.success) {
+        return c.json(API_ERRORS.BAD_REQUEST, 400);
+      }
+    }),
     requireAuth,
     async (c) => {
-      const userId = c.var.userId;
-      const { from, to, accountId, cursor, limit } = c.req.valid("query");
-      const { startDate, endDate } = parseDateRange(from, to);
+      const data = await listTransactions(c.var.userId, c.req.valid("query"));
 
-      const parsedCursor = cursor ?? null;
-
-      // Fetch one extra record to determine if there are more pages
-      const data = await db
-        .select({
-          id: transactions.id,
-          date: transactions.date,
-          category: categories.name,
-          categoryId: transactions.categoryId,
-          payee: transactions.payee,
-          amount: transactions.amount,
-          notes: transactions.notes,
-          account: accounts.name,
-          accountId: transactions.accountId,
-        })
-        .from(transactions)
-        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-        .leftJoin(categories, eq(transactions.categoryId, categories.id))
-        .where(
-          and(
-            accountId ? eq(transactions.accountId, accountId) : undefined,
-            eq(accounts.userId, userId),
-            gte(transactions.date, startDate),
-            lte(transactions.date, endDate),
-            // Cursor pagination logic
-            parsedCursor
-              ? or(
-                  lt(transactions.date, new Date(parsedCursor.date)),
-                  and(
-                    eq(transactions.date, new Date(parsedCursor.date)),
-                    gt(transactions.id, parsedCursor.id),
-                  ),
-                )
-              : undefined,
-          ),
-        )
-        .orderBy(desc(transactions.date), desc(transactions.id))
-        .limit(limit + 1);
-
-      // Determine if there are more pages
-      const hasMore = data.length > limit;
-      const items = hasMore ? data.slice(0, limit) : data;
-
-      // Generate next cursor if there are more pages
-      const nextCursor = hasMore
-        ? JSON.stringify({
-            date: items[items.length - 1].date.toISOString(),
-            id: items[items.length - 1].id,
-          })
-        : null;
-
-      return c.json({ data: items, nextCursor, hasMore });
+      return c.json(data);
     },
   )
   .get(
@@ -149,23 +52,7 @@ const app = new Hono<AppEnv>()
     requireAuth,
     requireId,
     async (c) => {
-      const userId = c.var.userId;
-      const id = c.var.validatedId;
-
-      const [data] = await db
-        .select({
-          id: transactions.id,
-          date: transactions.date,
-          categoryId: transactions.categoryId,
-          payee: transactions.payee,
-          amount: transactions.amount,
-          notes: transactions.notes,
-          accountId: transactions.accountId,
-          transactionTypeId: transactions.transactionTypeId,
-        })
-        .from(transactions)
-        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-        .where(and(eq(transactions.id, id), eq(accounts.userId, userId)));
+      const data = await getTransaction(c.var.userId, c.var.validatedId);
 
       if (!data) {
         return c.json(API_ERRORS.NOT_FOUND, 404);
@@ -177,17 +64,9 @@ const app = new Hono<AppEnv>()
   .post(
     "/",
     requireAuth,
-    zValidator(
-      "json",
-      insertTransactionSchema.omit({
-        id: true,
-      }),
-    ),
+    zValidator("json", transactionValuesSchema),
     async (c) => {
-      const userId = c.var.userId;
-      const values = c.req.valid("json");
-
-      const result = await createTransaction(userId, values);
+      const result = await createTransaction(c.var.userId, c.req.valid("json"));
 
       if (!result.ok) {
         return c.json(API_ERRORS.NOT_FOUND, 404);
@@ -202,38 +81,11 @@ const app = new Hono<AppEnv>()
     zValidator(
       "json",
       z.object({
-        ids: z.array(z.string()),
+        ids: transactionIdsSchema,
       }),
     ),
     async (c) => {
-      const userId = c.var.userId;
-      const values = c.req.valid("json");
-
-      const transactionsToDelete = db.$with("transactions_to_delete").as(
-        db
-          .select({ id: transactions.id })
-          .from(transactions)
-          .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-          .where(
-            and(
-              inArray(transactions.id, values.ids),
-              eq(accounts.userId, userId),
-            ),
-          ),
-      );
-
-      const data = await db
-        .with(transactionsToDelete)
-        .delete(transactions)
-        .where(
-          inArray(
-            transactions.id,
-            sql`(select id from ${transactionsToDelete})`,
-          ),
-        )
-        .returning({
-          id: transactions.id,
-        });
+      const data = await deleteTransactions(c.var.userId, c.req.valid("json").ids);
 
       return c.json({ data });
     },
@@ -241,12 +93,9 @@ const app = new Hono<AppEnv>()
   .post(
     "/bulk-create",
     requireAuth,
-    zValidator("json", z.array(insertTransactionSchema.omit({ id: true }))),
+    zValidator("json", z.array(transactionValuesSchema).min(1).max(TRANSACTION_BULK_LIMIT)),
     async (c) => {
-      const userId = c.var.userId;
-      const values = c.req.valid("json");
-
-      const result = await createTransactions(userId, values);
+      const result = await createTransactions(c.var.userId, c.req.valid("json"));
 
       if (!result.ok) {
         return c.json(API_ERRORS.NOT_FOUND, 404);
@@ -265,18 +114,13 @@ const app = new Hono<AppEnv>()
     ),
     requireAuth,
     requireId,
-    zValidator(
-      "json",
-      insertTransactionSchema.omit({
-        id: true,
-      }),
-    ),
+    zValidator("json", transactionValuesSchema),
     async (c) => {
-      const userId = c.var.userId;
-      const id = c.var.validatedId;
-      const values = c.req.valid("json");
-
-      const result = await updateTransaction(userId, id, values);
+      const result = await updateTransaction(
+        c.var.userId,
+        c.var.validatedId,
+        c.req.valid("json"),
+      );
 
       if (!result.ok) {
         return c.json(API_ERRORS.NOT_FOUND, 404);
@@ -296,35 +140,13 @@ const app = new Hono<AppEnv>()
     requireAuth,
     requireId,
     async (c) => {
-      const userId = c.var.userId;
-      const id = c.var.validatedId;
+      const result = await deleteTransaction(c.var.userId, c.var.validatedId);
 
-      const transactionsToDelete = db.$with("transactions_to_delete").as(
-        db
-          .select({ id: transactions.id })
-          .from(transactions)
-          .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-          .where(and(eq(transactions.id, id), eq(accounts.userId, userId))),
-      );
-
-      const [data] = await db
-        .with(transactionsToDelete)
-        .delete(transactions)
-        .where(
-          inArray(
-            transactions.id,
-            sql`(select id from ${transactionsToDelete})`,
-          ),
-        )
-        .returning({
-          id: transactions.id,
-        });
-
-      if (!data) {
+      if (!result.ok) {
         return c.json(API_ERRORS.NOT_FOUND, 404);
       }
 
-      return c.json({ data });
+      return c.json({ data: result.data });
     },
   );
 

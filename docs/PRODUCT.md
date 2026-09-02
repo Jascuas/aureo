@@ -71,6 +71,9 @@ decorative dashboard with unverified data.
 - Keep date, amount, account, type, category, payee, and notes understandable at
   the point of review.
 - Never report a failed write as successful.
+- Transaction date filters interpret `YYYY-MM-DD` bounds as complete calendar
+  days in `Europe/Madrid`, including daylight-saving transitions. The selected
+  final date remains inclusive.
 
 ### Categories
 
