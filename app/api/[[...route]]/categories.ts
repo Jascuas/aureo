@@ -1,5 +1,4 @@
 import { zValidator } from "@hono/zod-validator";
-import { createId } from "@paralleldrive/cuid2";
 import { and, eq, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { Hono } from "hono";
@@ -7,6 +6,10 @@ import { z } from "zod";
 
 import { db } from "@/db/drizzle";
 import { categories, insertCategorySchema } from "@/db/schema";
+import {
+  createCategory,
+  updateCategory,
+} from "@/features/categories/server/category-write-operations";
 import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
@@ -70,22 +73,20 @@ const app = new Hono<AppEnv>()
       "json",
       insertCategorySchema.pick({
         name: true,
+        parentId: true,
       }),
     ),
     async (c) => {
       const userId = c.var.userId;
       const values = c.req.valid("json");
 
-      const [data] = await db
-        .insert(categories)
-        .values({
-          id: createId(),
-          userId,
-          ...values,
-        })
-        .returning();
+      const result = await createCategory(userId, values);
 
-      return c.json({ data });
+      if (!result.ok) {
+        return c.json(API_ERRORS.NOT_FOUND, 404);
+      }
+
+      return c.json({ data: result.data });
     },
   )
   .post(
@@ -138,17 +139,13 @@ const app = new Hono<AppEnv>()
       const id = c.var.validatedId;
       const values = c.req.valid("json");
 
-      const [data] = await db
-        .update(categories)
-        .set(values)
-        .where(and(eq(categories.userId, userId), eq(categories.id, id)))
-        .returning();
+      const result = await updateCategory(userId, id, values);
 
-      if (!data) {
+      if (!result.ok) {
         return c.json(API_ERRORS.NOT_FOUND, 404);
       }
 
-      return c.json({ data });
+      return c.json({ data: result.data });
     },
   )
   .delete(

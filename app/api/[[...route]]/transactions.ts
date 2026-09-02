@@ -1,5 +1,4 @@
 import { zValidator } from "@hono/zod-validator";
-import { createId } from "@paralleldrive/cuid2";
 import { and, desc, eq, gt, gte, inArray, lt, lte, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -11,6 +10,11 @@ import {
   insertTransactionSchema,
   transactions,
 } from "@/db/schema";
+import {
+  createTransaction,
+  createTransactions,
+  updateTransaction,
+} from "@/features/transactions/server/transaction-write-operations";
 import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
 import { parseDateRange } from "@/lib/date-utils";
@@ -180,18 +184,16 @@ const app = new Hono<AppEnv>()
       }),
     ),
     async (c) => {
-      const _userId = c.var.userId;
+      const userId = c.var.userId;
       const values = c.req.valid("json");
 
-      const [data] = await db
-        .insert(transactions)
-        .values({
-          id: createId(),
-          ...values,
-        })
-        .returning();
+      const result = await createTransaction(userId, values);
 
-      return c.json({ data });
+      if (!result.ok) {
+        return c.json(API_ERRORS.NOT_FOUND, 404);
+      }
+
+      return c.json({ data: result.data });
     },
   )
   .post(
@@ -241,20 +243,16 @@ const app = new Hono<AppEnv>()
     requireAuth,
     zValidator("json", z.array(insertTransactionSchema.omit({ id: true }))),
     async (c) => {
-      const _userId = c.var.userId;
+      const userId = c.var.userId;
       const values = c.req.valid("json");
 
-      const data = await db
-        .insert(transactions)
-        .values(
-          values.map((value) => ({
-            id: createId(),
-            ...value,
-          })),
-        )
-        .returning();
+      const result = await createTransactions(userId, values);
 
-      return c.json({ data });
+      if (!result.ok) {
+        return c.json(API_ERRORS.NOT_FOUND, 404);
+      }
+
+      return c.json({ data: result.data });
     },
   )
   .patch(
@@ -278,31 +276,13 @@ const app = new Hono<AppEnv>()
       const id = c.var.validatedId;
       const values = c.req.valid("json");
 
-      const transactionsToUpdate = db.$with("transactions_to_update").as(
-        db
-          .select({ id: transactions.id })
-          .from(transactions)
-          .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-          .where(and(eq(transactions.id, id), eq(accounts.userId, userId))),
-      );
+      const result = await updateTransaction(userId, id, values);
 
-      const [data] = await db
-        .with(transactionsToUpdate)
-        .update(transactions)
-        .set(values)
-        .where(
-          inArray(
-            transactions.id,
-            sql`(select id from ${transactionsToUpdate})`,
-          ),
-        )
-        .returning();
-
-      if (!data) {
+      if (!result.ok) {
         return c.json(API_ERRORS.NOT_FOUND, 404);
       }
 
-      return c.json({ data });
+      return c.json({ data: result.data });
     },
   )
   .delete(
