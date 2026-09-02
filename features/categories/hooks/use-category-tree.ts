@@ -68,62 +68,36 @@ export const useCategoryTree = (
     if (!categories?.length) return [];
 
     const excludeId = topSuggestion?.id ?? null;
+    const pathsById = new Map<string, string>();
+    const groupsByRootId = new Map<string, CategoryGroup>();
+    let currentRootId: string | null = null;
 
-    // Build id → children map
-    const childrenMap = new Map<string | null, typeof categories>();
-    for (const cat of categories) {
-      const key = cat.parentId ?? null;
-      const list = childrenMap.get(key) ?? [];
-      list.push(cat);
-      childrenMap.set(key, list);
-    }
+    for (const category of categories) {
+      const parentPath =
+        category.parentId === null
+          ? ""
+          : pathsById.get(category.parentId) ?? "";
+      const path = parentPath ? `${parentPath} / ${category.name}` : category.name;
+      pathsById.set(category.id, path);
 
-    // Depth-first flatten starting from a given parentId
-    const flatten = (
-      parentId: string | null,
-      depth: number,
-      parentPath: string,
-    ): TreeItem[] => {
-      const children = (childrenMap.get(parentId) ?? []).sort((a, b) =>
-        a.name.localeCompare(b.name),
-      );
-
-      const result: TreeItem[] = [];
-      for (const cat of children) {
-        const path = parentPath ? `${parentPath} / ${cat.name}` : cat.name;
-        if (cat.id !== excludeId) {
-          result.push({ id: cat.id, name: cat.name, depth, path });
-        }
-        result.push(...flatten(cat.id, depth + 1, path));
-      }
-      return result;
-    };
-
-    // Each root becomes a group
-    const roots = (childrenMap.get(null) ?? []).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
-
-    const result: CategoryGroup[] = [];
-    for (const root of roots) {
-      const rootPath = root.name;
-      const items: TreeItem[] = [];
-
-      // Root itself (selectable, depth 0) — unless it's the top suggestion
-      if (root.id !== excludeId) {
-        items.push({ id: root.id, name: root.name, depth: 0, path: rootPath });
+      if (category.depth === 0) {
+        currentRootId = category.id;
+        groupsByRootId.set(category.id, { rootName: category.name, items: [] });
       }
 
-      // Descendants
-      items.push(...flatten(root.id, 1, rootPath));
+      if (currentRootId === null || category.id === excludeId) {
+        continue;
+      }
 
-      // Skip groups that became empty after excluding the top suggestion
-      if (items.length === 0) continue;
-
-      result.push({ rootName: root.name, items });
+      groupsByRootId.get(currentRootId)?.items.push({
+        id: category.id,
+        name: category.name,
+        depth: category.depth,
+        path,
+      });
     }
 
-    return result;
+    return [...groupsByRootId.values()].filter((group) => group.items.length > 0);
   }, [categories, topSuggestion?.id]);
 
   return { topSuggestion, groups, isLoading };

@@ -85,7 +85,7 @@ export const CategoryForm = ({
                   placeholder="Select a parent category"
                   options={categoryOptions}
                   value={field.value}
-                  onChange={field.onChange}
+                  onChange={(value) => field.onChange(value ?? null)}
                   disabled={disabled}
                   isClearable
                 />

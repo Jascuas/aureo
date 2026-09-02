@@ -19,7 +19,7 @@ export const NewCategorySheet = () => {
   const categoriesQuery = useGetCategories();
   const categoryOptions =
     categoriesQuery.data?.map((category) => ({
-      label: category.name,
+      label: `${"— ".repeat(category.depth)}${category.name}`,
       value: category.id,
     })) ?? [];
 

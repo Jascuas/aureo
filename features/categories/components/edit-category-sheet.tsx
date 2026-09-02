@@ -31,27 +31,31 @@ export const EditCategorySheet = () => {
   const deleteMutation = useDeleteCategory(id);
   const categoriesQuery = useGetCategories();
 
-  const getDescendantIds = (categoryId: string): string[] => {
-    const descendants: string[] = [categoryId];
-    const children =
-      categoriesQuery.data?.filter((c) => c.parentId === categoryId) ?? [];
-
-    for (const child of children) {
-      descendants.push(...getDescendantIds(child.id));
-    }
-
-    return descendants;
-  };
-
   const categoryOptions = useMemo(() => {
     if (!categoriesQuery.data || !id) return [];
 
-    const excludedIds = getDescendantIds(id);
+    const excludedIds = new Set([id]);
+    let foundDescendant = true;
+
+    while (foundDescendant) {
+      foundDescendant = false;
+
+      for (const category of categoriesQuery.data) {
+        if (
+          category.parentId !== null &&
+          excludedIds.has(category.parentId) &&
+          !excludedIds.has(category.id)
+        ) {
+          excludedIds.add(category.id);
+          foundDescendant = true;
+        }
+      }
+    }
 
     return categoriesQuery.data
-      .filter((category) => !excludedIds.includes(category.id))
+      .filter((category) => !excludedIds.has(category.id))
       .map((category) => ({
-        label: category.name,
+        label: `${"— ".repeat(category.depth)}${category.name}`,
         value: category.id,
       }));
   }, [categoriesQuery.data, id]);
