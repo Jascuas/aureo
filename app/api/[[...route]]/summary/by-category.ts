@@ -1,4 +1,3 @@
-import { clerkMiddleware } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { and, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { Hono } from "hono";
@@ -20,7 +19,6 @@ type TxType = "Income" | "Expense" | "Refund";
 
 const app = new Hono<AppEnv>().get(
   "/by-category",
-  clerkMiddleware(),
   requireAuth,
   zValidator(
     "query",

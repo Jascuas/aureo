@@ -1,4 +1,3 @@
-import { clerkMiddleware } from "@hono/clerk-auth";
 import { Hono } from "hono";
 
 import { db } from "@/db/drizzle";
@@ -8,7 +7,6 @@ import type { AppEnv } from "@/lib/hono-env";
 
 const app = new Hono<AppEnv>().get(
   "/",
-  clerkMiddleware(),
   requireAuth,
   async (c) => {
     const _userId = c.var.userId;

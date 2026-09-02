@@ -1,4 +1,3 @@
-import { clerkMiddleware } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { and, eq, gte, lte, sum } from "drizzle-orm";
 import { Hono } from "hono";
@@ -15,7 +14,6 @@ import { convertAmountFromMilliunits, fillMissingDays } from "@/lib/utils";
 
 const app = new Hono<AppEnv>().get(
   "/over-time",
-  clerkMiddleware(),
   requireAuth,
   zValidator(
     "query",

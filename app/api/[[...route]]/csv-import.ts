@@ -1,4 +1,3 @@
-import { clerkMiddleware } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { createId } from "@paralleldrive/cuid2";
 import { and, eq } from "drizzle-orm";
@@ -168,7 +167,6 @@ const logCsvImportCount = (operation: CsvImportOperation, count: number) => {
 const app = new Hono<AppEnv>()
   .post(
     "/analyze",
-    clerkMiddleware(),
     requireAuth,
     zValidator("json", analyzeSchema),
     async (c) => {
@@ -216,7 +214,6 @@ const app = new Hono<AppEnv>()
   )
   .post(
     "/detect-duplicates",
-    clerkMiddleware(),
     requireAuth,
     zValidator("json", detectDuplicatesSchema),
     async (c) => {
@@ -256,7 +253,6 @@ const app = new Hono<AppEnv>()
   )
   .post(
     "/categorize",
-    clerkMiddleware(),
     requireAuth,
     zValidator("json", categorizeTransactionsSchema),
     async (c) => {
@@ -306,7 +302,6 @@ const app = new Hono<AppEnv>()
   )
   .post(
     "/match-payees",
-    clerkMiddleware(),
     requireAuth,
     zValidator("json", matchPayeesSchema),
     async (c) => {
@@ -341,7 +336,7 @@ const app = new Hono<AppEnv>()
   // ============================================================================
   // Template Management
   // ============================================================================
-  .get("/templates", clerkMiddleware(), requireAuth, async (c) => {
+  .get("/templates", requireAuth, async (c) => {
     const userId = c.var.userId;
     const accountId = c.req.query("accountId");
 
@@ -376,7 +371,6 @@ const app = new Hono<AppEnv>()
   })
   .post(
     "/templates",
-    clerkMiddleware(),
     requireAuth,
     zValidator("json", saveTemplateSchema),
     async (c) => {
@@ -423,7 +417,6 @@ const app = new Hono<AppEnv>()
   .patch(
     "/templates/:id",
     zValidator("param", z.object({ id: z.string().optional() })),
-    clerkMiddleware(),
     requireAuth,
     requireId,
     zValidator("json", updateTemplateSchema),
@@ -467,7 +460,6 @@ const app = new Hono<AppEnv>()
   .delete(
     "/templates/:id",
     zValidator("param", z.object({ id: z.string().optional() })),
-    clerkMiddleware(),
     requireAuth,
     requireId,
     async (c) => {
@@ -498,7 +490,6 @@ const app = new Hono<AppEnv>()
   // ============================================================================
   .post(
     "/import",
-    clerkMiddleware(),
     requireAuth,
     zValidator(
       "json",
