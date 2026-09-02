@@ -2,9 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 
 import { client } from "@/lib/hono";
 
+import { transactionTypeQueryKeys } from "./query-keys";
+
 export const useGetTransactionTypes = () => {
   const query = useQuery({
-    queryKey: ["transaction-types"],
+    queryKey: transactionTypeQueryKeys.all,
     staleTime: Infinity,
     queryFn: async () => {
       const response = await client.api["transaction-types"].$get();

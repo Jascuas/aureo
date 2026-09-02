@@ -4,6 +4,8 @@ import { useSearchParams } from "next/navigation";
 import { client } from "@/lib/hono";
 import { convertAmountFromMilliunits } from "@/lib/utils";
 
+import { transactionQueryKeys } from "./query-keys";
+
 export const useGetTransactions = () => {
   const searchParams = useSearchParams();
   const from = searchParams.get("from") || "";
@@ -11,7 +13,7 @@ export const useGetTransactions = () => {
   const accountId = searchParams.get("accountId") || "";
 
   const query = useInfiniteQuery({
-    queryKey: ["transactions", { from, to, accountId }],
+    queryKey: transactionQueryKeys.list({ from, to, accountId }),
     queryFn: async ({ pageParam }) => {
       const response = await client.api.transactions.$get({
         query: {

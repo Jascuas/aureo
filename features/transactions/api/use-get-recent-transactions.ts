@@ -4,6 +4,8 @@ import { useSearchParams } from "next/navigation";
 import { client } from "@/lib/hono";
 import { convertAmountFromMilliunits } from "@/lib/utils";
 
+import { transactionQueryKeys } from "./query-keys";
+
 export const useGetRecentTransactions = () => {
   const searchParams = useSearchParams();
   const from = searchParams.get("from") || "";
@@ -11,7 +13,7 @@ export const useGetRecentTransactions = () => {
   const accountId = searchParams.get("accountId") || "";
 
   const query = useQuery({
-    queryKey: ["transactions", "recent", { from, to, accountId }],
+    queryKey: transactionQueryKeys.recent({ from, to, accountId }),
     queryFn: async () => {
       const response = await client.api.transactions.$get({
         query: {

@@ -2,7 +2,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { InferRequestType, InferResponseType } from "hono";
 import { toast } from "sonner";
 
+import { summaryQueryKeys } from "@/features/summary/api/query-keys";
 import { client } from "@/lib/hono";
+
+import { accountQueryKeys } from "./query-keys";
 
 type ResponseType = InferResponseType<typeof client.api.accounts.$post>;
 type RequestType = InferRequestType<typeof client.api.accounts.$post>["json"];
@@ -20,9 +23,8 @@ export const useCreateAccount = () => {
     },
     onSuccess: () => {
       toast.success("Account created.");
-      queryClient.invalidateQueries({ queryKey: ["accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["summary"] });
+      queryClient.invalidateQueries({ queryKey: accountQueryKeys.all });
+      queryClient.invalidateQueries({ queryKey: summaryQueryKeys.byAccount() });
     },
     onError: () => {
       toast.error("Failed to create account.");
