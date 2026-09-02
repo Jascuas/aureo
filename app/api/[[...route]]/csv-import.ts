@@ -1,22 +1,24 @@
 import { clerkMiddleware } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
-import { createId } from "@paralleldrive/cuid2";
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
 import { db } from "@/db/drizzle";
 import {
-  accounts,
   importTemplates,
   insertImportTemplateSchema,
-  transactions,
 } from "@/db/schema";
 import { analyze } from "@/features/csv-import/lib/analyzer";
 import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
 import { detectDuplicates } from "@/features/csv-import/lib/duplicate-matcher";
 import { matchPayeesToCategories } from "@/features/csv-import/lib/payee-category-matcher";
 import { categorizeTransactions } from "@/features/csv-import/lib/transaction-categorizer";
+import {
+  createImportTemplate,
+  importTransactions,
+  updateImportTemplate,
+} from "@/features/csv-import/server/csv-import-write-operations";
 import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
 import { isRateLimitError } from "@/lib/errors";
@@ -384,16 +386,13 @@ const app = new Hono<AppEnv>()
       const values = c.req.valid("json");
 
       try {
-        const [template] = await db
-          .insert(importTemplates)
-          .values({
-            id: createId(),
-            userId,
-            ...values,
-          })
-          .returning();
+        const result = await createImportTemplate(userId, values);
 
-        return c.json({ data: template });
+        if (!result.ok) {
+          return c.json(API_ERRORS.NOT_FOUND, 404);
+        }
+
+        return c.json({ data: result.data });
       } catch (error) {
         const databaseError = asDatabaseError(error);
         logCsvImportFailure(
@@ -433,22 +432,13 @@ const app = new Hono<AppEnv>()
       const values = c.req.valid("json");
 
       try {
-        const [template] = await db
-          .update(importTemplates)
-          .set({
-            ...values,
-            updatedAt: new Date(),
-          })
-          .where(
-            and(eq(importTemplates.id, id), eq(importTemplates.userId, userId)),
-          )
-          .returning();
+        const result = await updateImportTemplate(userId, id, values);
 
-        if (!template) {
+        if (!result.ok) {
           return c.json(API_ERRORS.NOT_FOUND, 404);
         }
 
-        return c.json({ data: template });
+        return c.json({ data: result.data });
       } catch (error) {
         const databaseError = asDatabaseError(error);
         logCsvImportFailure(
@@ -527,46 +517,15 @@ const app = new Hono<AppEnv>()
       const { accountId, transactions: txs } = c.req.valid("json");
 
       try {
-        // Validate account belongs to user
-        const [account] = await db
-          .select({ id: accounts.id })
-          .from(accounts)
-          .where(and(eq(accounts.id, accountId), eq(accounts.userId, userId)))
-          .limit(1);
+        const result = await importTransactions(userId, accountId, txs);
 
-        if (!account) {
-          return c.json(API_ERRORS.INVALID_ACCOUNT, 404);
+        if (!result.ok) {
+          return c.json(API_ERRORS.NOT_FOUND, 404);
         }
 
-        // NOTE: Duplicate detection is handled in the ANALYSIS step by the frontend
-        // The user has already resolved duplicates (skip/import) before reaching this endpoint
-        // No need to re-check here - just insert what the frontend sends
+        logCsvImportCount("bulk_import", txs.length);
 
-        const transactionsToInsert = txs.map((tx) => ({
-          id: createId(),
-          accountId,
-          date: tx.date,
-          amount: tx.amount,
-          payee: tx.payee,
-          notes: tx.notes || null,
-          categoryId: tx.categoryId,
-          transactionTypeId: tx.transactionTypeId,
-        }));
-
-        logCsvImportCount("bulk_import", transactionsToInsert.length);
-
-        const inserted = await db
-          .insert(transactions)
-          .values(transactionsToInsert)
-          .returning({ id: transactions.id });
-
-        return c.json({
-          data: {
-            imported: inserted.length,
-            skipped: 0,
-            errors: [],
-          },
-        });
+        return c.json({ data: result.data });
       } catch (error) {
         // Drizzle/Neon wraps PostgreSQL errors - extract the real error
         const databaseError = asDatabaseError(error);
