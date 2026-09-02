@@ -2,6 +2,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { InferRequestType, InferResponseType } from "hono";
 import { toast } from "sonner";
 
+import { accountQueryKeys } from "@/features/accounts/api/query-keys";
+import { summaryQueryKeys } from "@/features/summary/api/query-keys";
+import { transactionQueryKeys } from "@/features/transactions/api/query-keys";
 import { client } from "@/lib/hono";
 
 type SuccessResponse = InferResponseType<
@@ -30,9 +33,9 @@ export const useBulkImportTransactions = () => {
     },
     onSuccess: () => {
       toast.success("Transactions imported successfully");
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["summary"] });
-      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: transactionQueryKeys.all });
+      queryClient.invalidateQueries({ queryKey: accountQueryKeys.all });
+      queryClient.invalidateQueries({ queryKey: summaryQueryKeys.all });
     },
     onError: () => {
       toast.error("Failed to import transactions");

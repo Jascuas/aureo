@@ -2,9 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 
 import { client } from "@/lib/hono";
 
+import { categoryQueryKeys } from "./query-keys";
+
 export const useGetCategories = () => {
   const query = useQuery({
-    queryKey: ["categories"],
+    queryKey: categoryQueryKeys.all,
     queryFn: async () => {
       const response = await client.api.categories.$get();
 

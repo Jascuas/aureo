@@ -4,6 +4,8 @@ import { toast } from "sonner";
 
 import { client } from "@/lib/hono";
 
+import { categoryQueryKeys } from "./query-keys";
+
 type ResponseType = InferResponseType<typeof client.api.categories.$post>;
 type RequestType = InferRequestType<typeof client.api.categories.$post>["json"];
 
@@ -20,9 +22,7 @@ export const useCreateCategory = () => {
     },
     onSuccess: () => {
       toast.success("Category created.");
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["summary"] });
+      queryClient.invalidateQueries({ queryKey: categoryQueryKeys.all });
     },
     onError: () => {
       toast.error("Failed to create category.");
