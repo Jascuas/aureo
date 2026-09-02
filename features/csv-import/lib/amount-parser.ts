@@ -1,8 +1,12 @@
 import type { AmountFormat } from "@/features/csv-import/types/import-types";
 
-const currencyPrefixOrSuffix = /^[€$£]\s*|\s*[€$£]$/g;
+const currencyPrefix = /^[€$£]\s*/;
+const currencySuffix = /\s*[€$£]$/;
 
-// The parsed CSV sign is authoritative. No downstream import step is allowed to invert it.
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export function parseImportAmount(
   value: string,
   format: AmountFormat,
@@ -11,22 +15,24 @@ export function parseImportAmount(
   if (!trimmed) return null;
 
   const parenthesized = /^\((.*)\)$/.exec(trimmed);
-  const unsignedValue = (parenthesized?.[1] ?? trimmed)
-    .replace(currencyPrefixOrSuffix, "")
+  let signlessValue = (parenthesized?.[1] ?? trimmed).trim();
+  const sign = /^[+-]/.exec(signlessValue)?.[0];
+  if (sign) {
+    signlessValue = signlessValue.slice(sign.length).trim();
+  }
+  signlessValue = signlessValue
+    .replace(currencyPrefix, "")
+    .replace(currencySuffix, "")
     .trim();
-  const negative = parenthesized !== null || unsignedValue.startsWith("-");
-  const signlessValue = unsignedValue.replace(/^[+-]/, "");
+  const negative = parenthesized !== null || sign === "-";
 
   const escapedThousands = format.thousandsSeparator
-    ? format.thousandsSeparator.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    ? escapeRegExp(format.thousandsSeparator)
     : "";
   const integer = format.thousandsSeparator
     ? `(?:\\d{1,3}(?:${escapedThousands}\\d{3})*|\\d+)`
     : "\\d+";
-  const escapedDecimal = format.decimalSeparator.replace(
-    /[.*+?^${}()|[\]\\]/g,
-    "\\$&",
-  );
+  const escapedDecimal = escapeRegExp(format.decimalSeparator);
   const amountPattern = new RegExp(
     `^${integer}(?:${escapedDecimal}\\d{1,2})?$`,
   );
@@ -43,5 +49,8 @@ export function parseImportAmount(
     .replace(format.decimalSeparator, ".");
   const parsed = Number(normalized);
 
-  return Number.isFinite(parsed) ? (negative ? -parsed : parsed) : null;
+  if (!Number.isFinite(parsed)) return null;
+
+  const signedAmount = negative ? -parsed : parsed;
+  return format.isNegativeExpense ? signedAmount : -signedAmount;
 }

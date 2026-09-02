@@ -36,7 +36,7 @@ interface UseCSVUploadReturn {
  *  2. cap rows in dev
  *  3. set CSV data (auto-advances to MAPPING)
  *  4. reset previous duplicate resolutions
- *  5. if a compatible template exists → apply it + advance to ANALYSIS
+ *  5. if a compatible template exists → apply it for review in MAPPING
  *  6. else → run heuristic column detection
  *
  * Replaces the previous `useTemplateAutoApply` render-time effect.
@@ -49,8 +49,7 @@ export function useCSVUpload({
   const { setLoading, setError } = useImportUIActions();
   const resetUIState = useImportUIState((s) => s.reset);
 
-  const { setCSVData, setDetectionResult, setFinalMapping, nextStep } =
-    useImportSession();
+  const { setCSVData, setDetectionResult, setFinalMapping } = useImportSession();
   const { reset: resetResolutions } = useDuplicateResolutionActions();
 
   const { data: templates } = useGetTemplates(accountId);
@@ -86,7 +85,6 @@ export function useCSVUpload({
         if (template) {
           setDetectionResult(templateToDetectionResult(template, headers));
           setFinalMapping(template.columnMapping as Record<string, number>);
-          nextStep();
           return;
         }
 
@@ -110,7 +108,6 @@ export function useCSVUpload({
       templates,
       setDetectionResult,
       setFinalMapping,
-      nextStep,
       detectColumns,
     ],
   );

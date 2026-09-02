@@ -31,7 +31,7 @@ export type DateFormat =
 export type AmountFormat = {
   decimalSeparator: "." | ",";
   thousandsSeparator: "," | "." | " " | "";
-  /** Source convention persisted with templates; import parsing preserves each CSV sign exactly once. */
+  /** Whether source expenses are negative; parsing normalizes to the selected convention exactly once. */
   isNegativeExpense: boolean;
 };
 

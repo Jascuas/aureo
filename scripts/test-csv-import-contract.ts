@@ -77,8 +77,13 @@ async function main() {
   assert.equal(parseImportAmount("1234.56", plainDotFormat), 1234.56);
   assert.equal(parseImportAmount("1234,56", plainCommaFormat), 1234.56);
   assert.equal(parseImportAmount("(12.34)", usFormat), -12.34);
+  assert.equal(parseImportAmount("12.34", { ...usFormat, isNegativeExpense: false }), -12.34);
+  assert.equal(parseImportAmount("-12.34", { ...usFormat, isNegativeExpense: false }), 12.34);
   assert.equal(parseImportAmount("12.34abc", usFormat), null);
   assert.equal(parseImportAmount("", euFormat), null);
+
+  assert.equal(parseImportAmount("1.234", euFormat), 1234);
+  assert.equal(parseImportAmount("1,234", usFormat), 1234);
 
   const malformed = new File(
     ["Date,Amount,Payee\n31/12/2024,12,34,Coffee\n01/01/2025,5.00\n"],

@@ -7,7 +7,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { DateFormat } from "@/features/csv-import/types/import-types";
+import type {
+  AmountFormat,
+  DateFormat,
+} from "@/features/csv-import/types/import-types";
 
 const DATE_FORMATS: { value: DateFormat; label: string; example: string }[] = [
   { value: "DD/MM/YYYY", label: "DD/MM/YYYY", example: "31/12/2024" },
@@ -64,11 +67,7 @@ type FormatDetectorProps = {
   dateFormat: DateFormat;
   onDateFormatChange: (format: DateFormat) => void;
 
-  amountFormat: {
-    decimalSeparator: "." | ",";
-    thousandsSeparator: "," | "." | " " | "";
-    isNegativeExpense: boolean;
-  };
+  amountFormat: AmountFormat;
   onAmountFormatChange: (format: FormatDetectorProps["amountFormat"]) => void;
 
   isAutoDetected?: boolean;
@@ -155,10 +154,23 @@ export const FormatDetector = ({
         </Select>
       </div>
 
-      <p className="text-muted-foreground text-sm">
-        Signed CSV amounts are preserved exactly; no additional sign conversion
-        is applied.
-      </p>
+      <div className="flex items-center gap-2">
+        <input
+          checked={amountFormat.isNegativeExpense}
+          className="size-4 border-border"
+          id="negative-expense"
+          onChange={(event) =>
+            onAmountFormatChange({
+              ...amountFormat,
+              isNegativeExpense: event.target.checked,
+            })
+          }
+          type="checkbox"
+        />
+        <label className="text-sm" htmlFor="negative-expense">
+          Expenses are negative numbers
+        </label>
+      </div>
     </div>
   );
 };
