@@ -223,7 +223,13 @@ const app = new Hono<AppEnv>()
       const { transactions } = c.req.valid("json");
 
       try {
-        const result = await detectDuplicates(userId, transactions);
+        const result = await detectDuplicates(
+          userId,
+          transactions.map((transaction, csvRowIndex) => ({
+            ...transaction,
+            csvRowIndex,
+          })),
+        );
 
         return c.json({
           data: {

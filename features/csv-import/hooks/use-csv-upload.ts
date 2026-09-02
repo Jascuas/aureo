@@ -90,7 +90,7 @@ export function useCSVUpload({
           return;
         }
 
-        detectColumns(headers, cappedRows);
+        await detectColumns(headers, cappedRows);
       } catch (err) {
         const message =
           err instanceof CSVParseError

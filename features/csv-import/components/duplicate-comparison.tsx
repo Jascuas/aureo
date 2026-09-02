@@ -101,7 +101,9 @@ export const DuplicateComparison = ({
             <Separator />
             <div>
               <p className="text-muted-foreground text-xs">Amount</p>
-              <p className="font-medium">{formatCurrency(csvRow.amount)}</p>
+              <p className="font-medium">
+                {formatCurrency(csvRow.amount / 1000)}
+              </p>
             </div>
             {csvRow.category && (
               <>
@@ -141,7 +143,7 @@ export const DuplicateComparison = ({
             <div>
               <p className="text-muted-foreground text-xs">Amount</p>
               <p className="font-medium">
-                {formatCurrency(existingTransaction.amount)}
+                {formatCurrency(existingTransaction.amount / 1000)}
               </p>
             </div>
           </CardContent>

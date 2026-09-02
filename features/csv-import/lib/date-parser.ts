@@ -28,9 +28,9 @@ function createValidatedUtcDate(
 const DATE_PATTERNS: DatePattern[] = [
   {
     format: 'DD/MM/YYYY',
-    regex: /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/,
+    regex: /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/,
     parser: (value: string) => {
-      const match = value.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+      const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
       if (!match) return null;
       const [, day, month, year] = match;
       return createValidatedUtcDate(
@@ -43,9 +43,9 @@ const DATE_PATTERNS: DatePattern[] = [
   },
   {
     format: 'YYYY-MM-DD',
-    regex: /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/,
+    regex: /^(\d{4})-(\d{1,2})-(\d{1,2})$/,
     parser: (value: string) => {
-      const match = value.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+      const match = value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
       if (!match) return null;
       const [, year, month, day] = match;
       return createValidatedUtcDate(
@@ -58,9 +58,9 @@ const DATE_PATTERNS: DatePattern[] = [
   },
   {
     format: 'MM/DD/YYYY',
-    regex: /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/,
+    regex: /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/,
     parser: (value: string) => {
-      const match = value.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+      const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
       if (!match) return null;
       const [, month, day, year] = match;
       return createValidatedUtcDate(
@@ -73,9 +73,9 @@ const DATE_PATTERNS: DatePattern[] = [
   },
   {
     format: 'DD/MM/YY',
-    regex: /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2})$/,
+    regex: /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/,
     parser: (value: string) => {
-      const match = value.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2})$/);
+      const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
       if (!match) return null;
       const [, day, month, year] = match;
       const fullYear = parseInt(year) + (parseInt(year) > 50 ? 1900 : 2000);
@@ -89,9 +89,9 @@ const DATE_PATTERNS: DatePattern[] = [
   },
   {
     format: 'DD-MMM-YYYY',
-    regex: /^(\d{1,2})[-/.]([A-Za-z]{3})[-/.](\d{4})$/,
+    regex: /^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/,
     parser: (value: string) => {
-      const match = value.match(/^(\d{1,2})[-/.]([A-Za-z]{3})[-/.](\d{4})$/);
+      const match = value.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/);
       if (!match) return null;
       const [, day, monthStr, year] = match;
       const monthMap: Record<string, number> = {
@@ -107,6 +107,71 @@ const DATE_PATTERNS: DatePattern[] = [
       return createValidatedUtcDate(parseInt(year), month + 1, parseInt(day));
     },
     example: '15-Jan-2024',
+  },
+  {
+    format: 'DD-MM-YYYY',
+    regex: /^(\d{1,2})-(\d{1,2})-(\d{4})$/,
+    parser: (value: string) => {
+      const match = value.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+      if (!match) return null;
+      const [, day, month, year] = match;
+      return createValidatedUtcDate(
+        parseInt(year),
+        parseInt(month),
+        parseInt(day),
+      );
+    },
+    example: '15-03-2024',
+  },
+  {
+    format: 'MM/DD/YY',
+    regex: /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/,
+    parser: (value: string) => {
+      const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+      if (!match) return null;
+      const [, month, day, year] = match;
+      const fullYear = parseInt(year) + (parseInt(year) > 50 ? 1900 : 2000);
+      return createValidatedUtcDate(fullYear, parseInt(month), parseInt(day));
+    },
+    example: '03/15/24',
+  },
+  {
+    format: 'DD-MMM-YY',
+    regex: /^(\d{1,2})-([A-Za-z]{3})-(\d{2})$/,
+    parser: (value: string) => {
+      const match = value.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2})$/);
+      if (!match) return null;
+      const [, day, monthStr, year] = match;
+      const monthMap: Record<string, number> = {
+        jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+        jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+        ene: 0, abr: 3, ago: 7, dic: 11,
+      };
+      const month = monthMap[monthStr.toLowerCase()];
+      if (month === undefined) return null;
+      const parsedYear = parseInt(year);
+      return createValidatedUtcDate(
+        parsedYear + (parsedYear > 50 ? 1900 : 2000),
+        month + 1,
+        parseInt(day),
+      );
+    },
+    example: '15-Jan-24',
+  },
+  {
+    format: 'YYYY/MM/DD',
+    regex: /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/,
+    parser: (value: string) => {
+      const match = value.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+      if (!match) return null;
+      const [, year, month, day] = match;
+      return createValidatedUtcDate(
+        parseInt(year),
+        parseInt(month),
+        parseInt(day),
+      );
+    },
+    example: '2024/03/15',
   },
 ];
 
@@ -139,18 +204,17 @@ export function detectDateFormat(samples: string[]): {
     }
 
     if (matches > 0) {
-      const confidence = validDates / cleanedSamples.length;
       scores.push({ format: pattern.format, matches: validDates });
-
-      if (confidence >= 0.8) {
-        return { format: pattern.format, confidence };
-      }
     }
   }
 
   if (scores.length > 0) {
     scores.sort((a, b) => b.matches - a.matches);
     const best = scores[0];
+    const tiedFormats = scores.filter((score) => score.matches === best.matches);
+    if (best.matches === 0 || tiedFormats.length > 1) {
+      return { format: 'unknown', confidence: 0 };
+    }
     return {
       format: best.format,
       confidence: best.matches / cleanedSamples.length,

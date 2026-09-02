@@ -36,7 +36,7 @@ export const DuplicateTooltipContent = ({
           </p>
           <p>
             <span className="font-medium">Amount:</span>{" "}
-            {formatCurrency(existingTransaction.amount)}
+            {formatCurrency(existingTransaction.amount / 1000)}
           </p>
         </div>
         <p className="text-xs text-blue-600">Click to resolve</p>

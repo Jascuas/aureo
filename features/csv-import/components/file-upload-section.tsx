@@ -21,9 +21,10 @@ export const FileUploadSection = ({
 }: FileUploadSectionProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   
   const validateFile = (file: File): string | null => {
-    if (!file.name.endsWith('.csv')) {
+    if (!file.name.toLowerCase().endsWith('.csv')) {
       return 'Please upload a CSV file (.csv extension required)';
     }
     
@@ -42,9 +43,11 @@ export const FileUploadSection = ({
     const validationError = validateFile(file);
     
     if (validationError) {
+      setValidationError(validationError);
       return;
     }
     
+    setValidationError(null);
     setSelectedFileName(file.name);
     onFileSelected(file);
   }, [onFileSelected]);
@@ -111,7 +114,7 @@ export const FileUploadSection = ({
           aria-label="Upload CSV file"
         />
         
-        {selectedFileName && !error && (
+        {selectedFileName && !(validationError || error) && (
           <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
             <span className="font-medium">Selected:</span>
             <span>{selectedFileName}</span>
@@ -126,10 +129,10 @@ export const FileUploadSection = ({
         )}
       </div>
       
-      {error && (
+      {(validationError || error) && (
         <Alert variant="destructive">
           <AlertCircle className="size-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{validationError || error}</AlertDescription>
         </Alert>
       )}
       

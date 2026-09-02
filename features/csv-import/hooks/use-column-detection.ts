@@ -1,10 +1,9 @@
 import { useCallback } from "react";
 
 import {
-  ColumnType,
-  DEFAULT_AMOUNT_FORMAT,
-  DEFAULT_DATE_FORMAT,
-} from "@/features/csv-import/const/import-const";
+  createColumnMapping,
+  detectColumns as detectColumnsFromSamples,
+} from "@/features/csv-import/lib/column-detector";
 import {
   useImportUIActions,
   useUIErrors,
@@ -23,7 +22,7 @@ interface UseColumnDetectionOptions {
 }
 
 interface UseColumnDetectionReturn {
-  detectColumns: (headers: string[], rows: ParsedCSVRow[]) => void;
+  detectColumns: (headers: string[], rows: ParsedCSVRow[]) => Promise<void>;
   isProcessing: boolean;
   error: string | null;
 }
@@ -36,67 +35,17 @@ export function useColumnDetection({
   const { setLoading, setError } = useImportUIActions();
 
   const detectColumns = useCallback(
-    (headers: string[], rows: ParsedCSVRow[]) => {
+    async (headers: string[], rows: ParsedCSVRow[]) => {
       setError("detection", null);
       setLoading("detectingColumns", true);
 
       try {
-        const detectionResult: ColumnDetectionResult = {
-          columns: headers.map((header, index) => {
-            let type: ColumnType = ColumnType.Unknown;
-            let confidence = 0;
-
-            const lowerHeader = header.toLowerCase();
-
-            if (/(date|fecha)/i.test(lowerHeader)) {
-              type = ColumnType.Date;
-              confidence = 0.9;
-            } else if (/(amount|importe|monto|valor)/i.test(lowerHeader)) {
-              type = ColumnType.Amount;
-              confidence = 0.9;
-            } else if (
-              /(payee|merchant|tienda|comercio|beneficiario)/i.test(lowerHeader)
-            ) {
-              type = ColumnType.Payee;
-              confidence = 0.85;
-            } else if (
-              /(description|desc|concepto|detalle)/i.test(lowerHeader)
-            ) {
-              type = ColumnType.Description;
-              confidence = 0.8;
-            } else if (/(note|nota)/i.test(lowerHeader)) {
-              type = ColumnType.Notes;
-              confidence = 0.75;
-            } else if (/(category|categor)/i.test(lowerHeader)) {
-              type = ColumnType.Category;
-              confidence = 0.8;
-            } else if (/(balance|saldo)/i.test(lowerHeader)) {
-              type = ColumnType.Balance;
-              confidence = 0.8;
-            }
-
-            const samples = rows.slice(0, 5).map((r) => r.data[index] || "");
-
-            return {
-              index,
-              name: header,
-              type,
-              confidence,
-              samples,
-            };
-          }),
-          dateFormat: DEFAULT_DATE_FORMAT,
-          amountFormat: DEFAULT_AMOUNT_FORMAT,
-          confidence: 0.85,
-          method: "heuristic" as const,
-        };
-
-        const autoMapping: Record<string, number> = {};
-        detectionResult.columns.forEach((col) => {
-          if (col.type !== ColumnType.Unknown) {
-            autoMapping[col.type] = col.index;
-          }
-        });
+        const detectionResult = await detectColumnsFromSamples(
+          headers,
+          rows.map((row) => row.data),
+          { enableAIFallback: false, minConfidence: 0.7, sampleSize: 10 },
+        );
+        const autoMapping = createColumnMapping(detectionResult);
 
         onDetected(detectionResult, autoMapping);
       } catch {

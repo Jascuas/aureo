@@ -15,7 +15,9 @@ const DATE_FORMATS: { value: DateFormat; label: string; example: string }[] = [
   { value: "YYYY-MM-DD", label: "YYYY-MM-DD", example: "2024-12-31" },
   { value: "DD-MM-YYYY", label: "DD-MM-YYYY", example: "31-12-2024" },
   { value: "DD/MM/YY", label: "DD/MM/YY", example: "31/12/24" },
+  { value: "MM/DD/YY", label: "MM/DD/YY", example: "12/31/24" },
   { value: "DD-MMM-YYYY", label: "DD-MMM-YYYY", example: "31-Dec-2024" },
+  { value: "DD-MMM-YY", label: "DD-MMM-YY", example: "31-Dec-24" },
   { value: "YYYY/MM/DD", label: "YYYY/MM/DD", example: "2024/12/31" },
 ];
 
@@ -33,10 +35,28 @@ const AMOUNT_FORMATS = [
     thousands: "." as const,
   },
   {
-    value: "space",
+    value: "space-dot",
     label: "Space Format (1 234.56)",
     decimal: "." as const,
     thousands: " " as const,
+  },
+  {
+    value: "space-comma",
+    label: "Space Format (1 234,56)",
+    decimal: "," as const,
+    thousands: " " as const,
+  },
+  {
+    value: "plain-dot",
+    label: "Decimal point (1234.56)",
+    decimal: "." as const,
+    thousands: "" as const,
+  },
+  {
+    value: "plain-comma",
+    label: "Decimal comma (1234,56)",
+    decimal: "," as const,
+    thousands: "" as const,
   },
 ];
 
@@ -110,7 +130,7 @@ export const FormatDetector = ({
           )}
         </label>
         <Select
-          value={selectedAmountFormat?.value || "us"}
+          value={selectedAmountFormat?.value || "plain-dot"}
           onValueChange={(value) => {
             const format = AMOUNT_FORMATS.find((f) => f.value === value);
             if (format) {
@@ -135,23 +155,10 @@ export const FormatDetector = ({
         </Select>
       </div>
 
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="negative-expense"
-          checked={amountFormat.isNegativeExpense}
-          onChange={(e) =>
-            onAmountFormatChange({
-              ...amountFormat,
-              isNegativeExpense: e.target.checked,
-            })
-          }
-          className="h-4 w-4 rounded border-gray-300"
-        />
-        <label htmlFor="negative-expense" className="text-sm">
-          Expenses are negative numbers
-        </label>
-      </div>
+      <p className="text-muted-foreground text-sm">
+        Signed CSV amounts are preserved exactly; no additional sign conversion
+        is applied.
+      </p>
     </div>
   );
 };
