@@ -18,6 +18,7 @@ import {
   importTransactions,
   updateImportTemplate,
 } from "@/features/csv-import/server/csv-import-write-operations";
+import { supportedTransactionTypeIdSchema } from "@/features/transaction-types/lib/transaction-types";
 import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
 import { isRateLimitError } from "@/lib/errors";
@@ -73,7 +74,7 @@ const categorizeTransactionSchema = z.object({
   historicalHint: z
     .object({
       categoryId: z.string(),
-      transactionTypeId: z.string(),
+      transactionTypeId: supportedTransactionTypeIdSchema,
       confidence: z.number(),
       matchCount: z.number().int(),
       matchType: z.enum(["exact", "fuzzy"]),
@@ -262,7 +263,11 @@ const app = new Hono<AppEnv>()
   .post(
     "/categorize",
     requireAuth,
-    zValidator("json", categorizeTransactionsSchema),
+    zValidator("json", categorizeTransactionsSchema, (result, c) => {
+      if (!result.success) {
+        return c.json(API_ERRORS.INVALID_FOREIGN_KEY, 400);
+      }
+    }),
     async (c) => {
       const userId = c.var.userId;
       const { transactions } = c.req.valid("json");
@@ -272,7 +277,7 @@ const app = new Hono<AppEnv>()
       try {
         const results = await categorizeTransactions(
           userId,
-          transactions as Parameters<typeof categorizeTransactions>[1],
+          transactions,
         );
 
         return c.json({
@@ -499,7 +504,7 @@ const app = new Hono<AppEnv>()
               payee: z.string().min(1),
               notes: z.string().optional(),
               categoryId: z.string().nullable(),
-              transactionTypeId: z.string().min(1),
+              transactionTypeId: supportedTransactionTypeIdSchema,
             }),
           )
           .min(1)
@@ -508,6 +513,11 @@ const app = new Hono<AppEnv>()
             `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.BULK_IMPORT} transactions per import`,
           ),
       }),
+      (result, c) => {
+        if (!result.success) {
+          return c.json(API_ERRORS.INVALID_FOREIGN_KEY, 400);
+        }
+      },
     ),
     async (c) => {
       const userId = c.var.userId;

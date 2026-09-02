@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import { db } from "@/db/drizzle";
 import { expensesAmountSql, incomeAmountSql } from "@/db/helpers";
-import { accounts, transactions, transactionTypes } from "@/db/schema";
+import { accounts, transactions } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
 import { calculateCurrentBalanceChange } from "@/lib/balance-utils";
 import { parseDateRange } from "@/lib/date-utils";
@@ -47,10 +47,6 @@ const app = new Hono<AppEnv>().get(
           expenses: expensesAmountSql,
         })
         .from(transactions)
-        .innerJoin(
-          transactionTypes,
-          eq(transactions.transactionTypeId, transactionTypes.id),
-        )
         .innerJoin(accounts, eq(transactions.accountId, accounts.id))
         .where(
           and(

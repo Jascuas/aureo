@@ -1,11 +1,13 @@
 import { sql } from "drizzle-orm";
 
-import { transactions, transactionTypes } from "./schema";
+import { SUPPORTED_TRANSACTION_TYPE_IDS } from "@/features/transaction-types/lib/transaction-types";
+
+import { transactions } from "./schema";
 
 export const incomeAmountSql = sql`
   SUM(
     CASE
-      WHEN ${transactionTypes.name} = 'Income'
+      WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[0]}
       THEN ${transactions.amount}
       ELSE 0
     END
@@ -15,32 +17,22 @@ export const incomeAmountSql = sql`
 export const expensesAmountSql = sql`
   SUM(
     CASE
-      WHEN ${transactionTypes.name} = 'Expense'
-      THEN ABS(${transactions.amount})      
-      WHEN ${transactionTypes.name} = 'Refund'
-      THEN -ABS(${transactions.amount})      
-      ELSE 0
-    END
-  )
-`.mapWith(Number);
-
-export const incomeWithRefundAmountSql = sql`
-  SUM(
-    CASE
-      WHEN ${transactionTypes.name} = 'Income'
-      THEN ${transactions.amount}
-      WHEN ${transactionTypes.name} = 'Refund'
-      THEN ${transactions.amount}
-      ELSE 0
-    END
-  )
-`.mapWith(Number);
-
-export const expenseOnlyAmountSql = sql`
-  SUM(
-    CASE
-      WHEN ${transactionTypes.name} = 'Expense'
+      WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[1]}
       THEN ABS(${transactions.amount})
+      WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[2]}
+      THEN -ABS(${transactions.amount})
+      ELSE 0
+    END
+  )
+`.mapWith(Number);
+
+export const transactionBalanceDeltaSql = sql`
+  SUM(
+    CASE
+      WHEN ${transactions.transactionTypeId} IN (${SUPPORTED_TRANSACTION_TYPE_IDS[0]}, ${SUPPORTED_TRANSACTION_TYPE_IDS[2]})
+      THEN ${transactions.amount}
+      WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[1]}
+      THEN -${transactions.amount}
       ELSE 0
     END
   )
@@ -48,8 +40,9 @@ export const expenseOnlyAmountSql = sql`
 
 export const categoryAmountSql = sql`
   CASE
-    WHEN ${transactionTypes.name} = 'Expense' THEN ABS(${transactions.amount})
-    WHEN ${transactionTypes.name} = 'Refund'  THEN -ABS(${transactions.amount})
-    ELSE ABS(${transactions.amount})
+    WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[0]} THEN ${transactions.amount}
+    WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[1]} THEN ABS(${transactions.amount})
+    WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[2]} THEN -ABS(${transactions.amount})
+    ELSE 0
   END
 `;

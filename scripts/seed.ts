@@ -4,6 +4,7 @@ import { config } from "dotenv";
 import { drizzle } from "drizzle-orm/neon-http";
 
 import { accounts, categories, transactions } from "@/db/schema";
+import { SUPPORTED_TRANSACTION_TYPE_IDS } from "@/features/transaction-types/lib/transaction-types";
 import { convertAmountToMilliunits } from "@/lib/utils";
 
 config({ path: ".env.local" });
@@ -94,8 +95,8 @@ const generateTransactionPerDay = (day: Date) => {
       payee: "Merchant",
       notes: "Random transaction",
       transactionTypeId: isExpense
-        ? "txd4b7kzpn2lmjv6cuqf9s3yw" // Expense
-        : "txp8azr12yckwhv9odnb30elu", // Income
+        ? SUPPORTED_TRANSACTION_TYPE_IDS[1]
+        : SUPPORTED_TRANSACTION_TYPE_IDS[0],
     });
   }
 };

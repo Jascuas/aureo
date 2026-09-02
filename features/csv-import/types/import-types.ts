@@ -5,6 +5,7 @@ import {
   MatchType,
   Resolution,
 } from "@/features/csv-import/const/import-const";
+import type { SupportedTransactionTypeId } from "@/features/transaction-types/lib/transaction-types";
 
 export { BatchProgressStage, ColumnType, ImportStep, MatchType, Resolution };
 
@@ -161,7 +162,7 @@ export type EnrichedCategorization = {
   payee: string;
   notes?: string;
   categoryId: string | null;
-  transactionTypeId: string;
+  transactionTypeId: SupportedTransactionTypeId;
   confidence: number;
   normalizedPayee: string;
   userEdited: boolean;
@@ -238,7 +239,7 @@ export type DuplicateResolution = {
 
 export type PayeeCategoryMatch = {
   categoryId: string;
-  transactionTypeId: string;
+  transactionTypeId: SupportedTransactionTypeId;
   matchCount: number;
   totalMatches: number;
   confidence: number;
@@ -273,7 +274,7 @@ export type PayeeMatchDetectionResult = {
 
 export type HistoricalHint = {
   categoryId: string;
-  transactionTypeId: string;
+  transactionTypeId: SupportedTransactionTypeId;
   confidence: number;
   matchCount: number;
   matchType: MatchType;
@@ -291,7 +292,7 @@ export type CategorizationTxInput = {
 
 export type CategorizationSuggestion = {
   categoryId: string | null;
-  transactionTypeId: string;
+  transactionTypeId: SupportedTransactionTypeId;
   confidence: number;
   normalizedPayee: string;
 };
@@ -305,7 +306,7 @@ export type CategorizationResult = {
 export type AICategorization = {
   csvRowIndex: number;
   categoryId: string | null;
-  transactionTypeId: string;
+  transactionTypeId: SupportedTransactionTypeId;
   confidence: number;
   normalizedPayee: string;
 };
@@ -315,7 +316,7 @@ export type AICategorization = {
 export type AutoResolvedTransaction = {
   csvRowIndex: number;
   categoryId: string;
-  transactionTypeId: string;
+  transactionTypeId: SupportedTransactionTypeId;
   confidence: number;
   normalizedPayee: string;
 };

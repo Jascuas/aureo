@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
 import { accounts, transactions } from "@/db/schema";
@@ -10,6 +10,43 @@ import type {
   PayeeMatchInput,
   PayeeMatchResult,
 } from "@/features/csv-import/types/import-types";
+import type { SupportedTransactionTypeId } from "@/features/transaction-types/lib/transaction-types";
+import {
+  isSupportedTransactionTypeId,
+  SUPPORTED_TRANSACTION_TYPE_IDS,
+} from "@/features/transaction-types/lib/transaction-types";
+
+type PayeeMatchRow = {
+  categoryId: string | null;
+  transactionTypeId: string;
+  matchCount: number;
+};
+
+type SupportedPayeeMatchRow = PayeeMatchRow & {
+  categoryId: string;
+  transactionTypeId: SupportedTransactionTypeId;
+};
+
+const isSupportedPayeeMatchRow = (
+  row: PayeeMatchRow,
+): row is SupportedPayeeMatchRow =>
+  row.categoryId !== null && isSupportedTransactionTypeId(row.transactionTypeId);
+
+const toPayeeCategoryMatches = (
+  rows: PayeeMatchRow[],
+  matchType: MatchType,
+): PayeeCategoryMatch[] => {
+  const totalMatches = rows.reduce((sum, row) => sum + row.matchCount, 0);
+
+  return rows.filter(isSupportedPayeeMatchRow).map((row) => ({
+    categoryId: row.categoryId,
+    transactionTypeId: row.transactionTypeId,
+    matchCount: row.matchCount,
+    totalMatches,
+    confidence: row.matchCount / totalMatches,
+    matchType,
+  }));
+};
 
 async function findExactPayeeMatches(
   userId: string,
@@ -24,27 +61,17 @@ async function findExactPayeeMatches(
     .from(transactions)
     .innerJoin(accounts, eq(transactions.accountId, accounts.id))
     .where(
-      sql`${accounts.userId} = ${userId}
-          AND LOWER(${transactions.payee}) = LOWER(${input.payee})
+      and(
+        eq(accounts.userId, userId),
+        sql`LOWER(${transactions.payee}) = LOWER(${input.payee})
           AND ${transactions.categoryId} IS NOT NULL`,
+        inArray(transactions.transactionTypeId, SUPPORTED_TRANSACTION_TYPE_IDS),
+      ),
     )
     .groupBy(transactions.categoryId, transactions.transactionTypeId)
     .orderBy(sql`COUNT(*) DESC`);
 
-  if (rows.length === 0) return [];
-
-  const totalMatches = rows.reduce((sum, r) => sum + r.matchCount, 0);
-
-  return rows
-    .filter((r) => r.categoryId !== null)
-    .map((r) => ({
-      categoryId: r.categoryId!,
-      transactionTypeId: r.transactionTypeId,
-      matchCount: r.matchCount,
-      totalMatches,
-      confidence: r.matchCount / totalMatches,
-      matchType: MatchType.Exact,
-    }));
+  return toPayeeCategoryMatches(rows, MatchType.Exact);
 }
 
 async function findFuzzyPayeeMatches(
@@ -52,7 +79,6 @@ async function findFuzzyPayeeMatches(
   input: PayeeMatchInput,
 ): Promise<PayeeCategoryMatch[]> {
   const threshold = CSV_IMPORT_CONFIG.PAYEE_MATCHING.SIMILARITY_THRESHOLD;
-
   const rows = await db
     .select({
       categoryId: transactions.categoryId,
@@ -62,27 +88,17 @@ async function findFuzzyPayeeMatches(
     .from(transactions)
     .innerJoin(accounts, eq(transactions.accountId, accounts.id))
     .where(
-      sql`${accounts.userId} = ${userId}
-          AND similarity(${transactions.payee}, ${input.payee}::text) > ${threshold}
+      and(
+        eq(accounts.userId, userId),
+        sql`similarity(${transactions.payee}, ${input.payee}::text) > ${threshold}
           AND ${transactions.categoryId} IS NOT NULL`,
+        inArray(transactions.transactionTypeId, SUPPORTED_TRANSACTION_TYPE_IDS),
+      ),
     )
     .groupBy(transactions.categoryId, transactions.transactionTypeId)
     .orderBy(sql`COUNT(*) DESC`);
 
-  if (rows.length === 0) return [];
-
-  const totalMatches = rows.reduce((sum, r) => sum + r.matchCount, 0);
-
-  return rows
-    .filter((r) => r.categoryId !== null)
-    .map((r) => ({
-      categoryId: r.categoryId!,
-      transactionTypeId: r.transactionTypeId,
-      matchCount: r.matchCount,
-      totalMatches,
-      confidence: r.matchCount / totalMatches,
-      matchType: MatchType.Fuzzy,
-    }));
+  return toPayeeCategoryMatches(rows, MatchType.Fuzzy);
 }
 
 export async function matchPayeesToCategories(
@@ -104,9 +120,8 @@ export async function matchPayeesToCategories(
       matches = await findFuzzyPayeeMatches(userId, input);
     }
 
-    // Filter out matches that don't meet minimum count requirement
     const qualifiedMatches = matches.filter(
-      (m) => m.matchCount >= MIN_MATCH_COUNT,
+      (match) => match.matchCount >= MIN_MATCH_COUNT,
     );
 
     results.push({

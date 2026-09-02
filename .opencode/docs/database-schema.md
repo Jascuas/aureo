@@ -51,22 +51,26 @@ PostgreSQL + Drizzle ORM.
 ```
 
 **Available Types:**
-- `txp8azr12yckwhv9odnb30elu` - Income
-- `txd4b7kzpn2lmjv6cuqf9s3yw` - Expense
-- `uo4hd5voxicrkfovkx0bo8xg` - Transfer
+- `income` - Income
+- `expense` - Expense
+- `refund` - Refund
+
+Transfer is unsupported until its paired-entry model, import behavior, and
+historical-data plan are separately approved.
 
 **API Endpoint:**
 - `GET /api/transaction-types` - List all types (auth required)
 
 **Usage in code:**
 ```typescript
-// Seed/migration scripts - use actual IDs
+// Seed scripts import SUPPORTED_TRANSACTION_TYPE_IDS from
+// features/transaction-types/lib/transaction-types.ts.
 transactionTypeId: isExpense 
-  ? "txd4b7kzpn2lmjv6cuqf9s3yw" // Expense
-  : "txp8azr12yckwhv9odnb30elu" // Income
+  ? SUPPORTED_TRANSACTION_TYPE_IDS[1] // Expense
+  : SUPPORTED_TRANSACTION_TYPE_IDS[0] // Income
 ```
 
-- ⚠️ UI selector NOT implemented
+- The UI selector and write endpoints only accept these three stable IDs.
 
 ## Relations
 

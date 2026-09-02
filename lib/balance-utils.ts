@@ -3,6 +3,7 @@ import { and, eq, gte } from "drizzle-orm";
 import { sum } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
+import { transactionBalanceDeltaSql } from "@/db/helpers";
 import { accounts, transactions } from "@/db/schema";
 
 type CurrentBalanceChangeResult = {
@@ -54,7 +55,7 @@ export async function calculateCurrentBalanceChange(
 
     const [rowAfter] = await db
       .select({
-        netAfterEndDate: sum(transactions.amount).mapWith(Number),
+        netAfterEndDate: transactionBalanceDeltaSql,
       })
       .from(transactions)
       .innerJoin(accounts, eq(transactions.accountId, accounts.id))
@@ -78,7 +79,7 @@ export async function calculateCurrentBalanceChange(
 
   const [row] = await db
     .select({
-      netSinceThen: sum(transactions.amount).mapWith(Number),
+      netSinceThen: transactionBalanceDeltaSql,
     })
     .from(transactions)
     .innerJoin(accounts, eq(transactions.accountId, accounts.id))
@@ -149,7 +150,7 @@ export async function calculateBalanceForPeriod(
 
   const [row] = await db
     .select({
-      netAfterPeriod: sum(transactions.amount).mapWith(Number),
+      netAfterPeriod: transactionBalanceDeltaSql,
     })
     .from(transactions)
     .innerJoin(accounts, eq(transactions.accountId, accounts.id))

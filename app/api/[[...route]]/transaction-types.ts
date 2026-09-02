@@ -1,25 +1,16 @@
 import { Hono } from "hono";
 
-import { db } from "@/db/drizzle";
-import { transactionTypes } from "@/db/schema";
+import { SUPPORTED_TRANSACTION_TYPES } from "@/features/transaction-types/lib/transaction-types";
 import { requireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
 
 const app = new Hono<AppEnv>().get(
   "/",
   requireAuth,
-  async (c) => {
-    const _userId = c.var.userId;
-
-    const data = await db
-      .select({
-        id: transactionTypes.id,
-        name: transactionTypes.name,
-      })
-      .from(transactionTypes);
-
-    return c.json({ data });
-  },
+  (c) =>
+    c.json({
+      data: SUPPORTED_TRANSACTION_TYPES.map(({ id, name }) => ({ id, name })),
+    }),
 );
 
 export default app;

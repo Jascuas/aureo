@@ -1,8 +1,9 @@
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 
 import { db } from "@/db/drizzle";
-import { accounts, transactions, transactionTypes } from "@/db/schema";
+import { transactionBalanceDeltaSql } from "@/db/helpers";
+import { accounts, transactions } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
 import { convertAmountFromMilliunits } from "@/lib/utils";
@@ -28,21 +29,10 @@ const app = new Hono<AppEnv>().get(
       userAccounts.map(async (account) => {
         const result = await db
           .select({
-            calculatedBalance: sql<number>`
-            COALESCE(SUM(
-              CASE 
-                WHEN LOWER(${transactionTypes.name}) IN ('income') THEN ${transactions.amount}
-                WHEN LOWER(${transactionTypes.name}) = 'expense' THEN -${transactions.amount}
-                ELSE 0
-              END
-            ), 0)
-          `.as("calculated_balance"),
+            calculatedBalance: transactionBalanceDeltaSql,
           })
           .from(transactions)
-          .leftJoin(
-            transactionTypes,
-            eq(transactions.transactionTypeId, transactionTypes.id),
-          )
+
           .where(eq(transactions.accountId, account.id));
 
         const calculatedBalance = result[0]?.calculatedBalance ?? 0;

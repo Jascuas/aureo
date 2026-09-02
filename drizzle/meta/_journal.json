@@ -29,6 +29,13 @@
       "when": 1775414612919,
       "tag": "0003_left_the_hood",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788360730890,
+      "tag": "0005_canonical_transaction_type_semantics",
+      "breakpoints": true
     }
   ]
 }
