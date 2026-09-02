@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { and, eq } from "drizzle-orm";
-import { Hono } from "hono";
+import { Hono, type MiddlewareHandler } from "hono";
 import { z } from "zod";
 
 import { db } from "@/db/drizzle";
@@ -20,7 +20,7 @@ import {
 } from "@/features/csv-import/server/csv-import-write-operations";
 import { supportedTransactionTypeIdSchema } from "@/features/transaction-types/lib/transaction-types";
 import { API_ERRORS } from "@/lib/api-errors";
-import { requireAuth } from "@/lib/auth-middleware";
+import { requireAuth as defaultRequireAuth } from "@/lib/auth-middleware";
 import { isRateLimitError } from "@/lib/errors";
 import type { AppEnv } from "@/lib/hono-env";
 import { requireId } from "@/lib/validation-middleware";
@@ -167,7 +167,12 @@ const logCsvImportCount = (operation: CsvImportOperation, count: number) => {
 // Routes
 // ============================================================================
 
-const app = new Hono<AppEnv>()
+export const createCsvImportApp = (
+  authMiddleware: MiddlewareHandler<AppEnv> = defaultRequireAuth,
+) => {
+  const requireAuth = authMiddleware;
+
+  return new Hono<AppEnv>()
   .post(
     "/analyze",
     requireAuth,
@@ -606,5 +611,6 @@ const app = new Hono<AppEnv>()
       }
     },
   );
+};
 
-export default app;
+export default createCsvImportApp();

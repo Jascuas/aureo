@@ -13,9 +13,9 @@ DECLARE
 BEGIN
   IF (TG_OP = 'INSERT') THEN
     balance_delta := CASE NEW.transaction_type_id
-      WHEN 'income' THEN NEW.amount
-      WHEN 'expense' THEN -NEW.amount
-      WHEN 'refund' THEN NEW.amount
+      WHEN 'income' THEN ABS(NEW.amount)
+      WHEN 'expense' THEN -ABS(NEW.amount)
+      WHEN 'refund' THEN ABS(NEW.amount)
       ELSE 0
     END;
 
@@ -26,9 +26,9 @@ BEGIN
     RETURN NEW;
   ELSIF (TG_OP = 'DELETE') THEN
     balance_delta := CASE OLD.transaction_type_id
-      WHEN 'income' THEN -OLD.amount
-      WHEN 'expense' THEN OLD.amount
-      WHEN 'refund' THEN -OLD.amount
+      WHEN 'income' THEN -ABS(OLD.amount)
+      WHEN 'expense' THEN ABS(OLD.amount)
+      WHEN 'refund' THEN -ABS(OLD.amount)
       ELSE 0
     END;
 
@@ -39,15 +39,15 @@ BEGIN
     RETURN OLD;
   ELSIF (TG_OP = 'UPDATE') THEN
     old_balance_delta := CASE OLD.transaction_type_id
-      WHEN 'income' THEN -OLD.amount
-      WHEN 'expense' THEN OLD.amount
-      WHEN 'refund' THEN -OLD.amount
+      WHEN 'income' THEN -ABS(OLD.amount)
+      WHEN 'expense' THEN ABS(OLD.amount)
+      WHEN 'refund' THEN -ABS(OLD.amount)
       ELSE 0
     END;
     balance_delta := CASE NEW.transaction_type_id
-      WHEN 'income' THEN NEW.amount
-      WHEN 'expense' THEN -NEW.amount
-      WHEN 'refund' THEN NEW.amount
+      WHEN 'income' THEN ABS(NEW.amount)
+      WHEN 'expense' THEN -ABS(NEW.amount)
+      WHEN 'refund' THEN ABS(NEW.amount)
       ELSE 0
     END;
 
@@ -71,3 +71,10 @@ BEGIN
   RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
+--> statement-breakpoint
+DROP TRIGGER IF EXISTS transactions_balance_trigger ON transactions;
+--> statement-breakpoint
+CREATE TRIGGER transactions_balance_trigger
+AFTER INSERT OR UPDATE OR DELETE ON transactions
+FOR EACH ROW
+EXECUTE FUNCTION update_account_balance();

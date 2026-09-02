@@ -12,6 +12,7 @@ import {
   type ImportTemplateWriteValues,
   type ImportTransactionValues,
 } from "@/features/csv-import/server/csv-import-write-operations";
+import { isSupportedTransactionTypeId } from "@/features/transaction-types/lib/transaction-types";
 
 import {
   authorizeOwnedReferences,
@@ -33,7 +34,7 @@ const lookup: OwnedReferenceLookup = {
   findOwnedCategoryIds: async (_userId, ids) =>
     ids.filter((id) => id.startsWith("owned-category")),
   findTransactionTypeIds: async (ids) =>
-    ids.filter((id) => id.startsWith("transaction-type")),
+    ids.filter(isSupportedTransactionTypeId),
 };
 
 const authorize = (input: OwnedReferenceInput) =>
@@ -46,7 +47,7 @@ const sameUserTransaction: TransactionWriteValues = {
   date: new Date("2026-09-02T00:00:00.000Z"),
   notes: null,
   payee: "Same user payee",
-  transactionTypeId: "transaction-type-income",
+  transactionTypeId: "income",
 };
 
 const sameUserCategory: CategoryWriteValues = {
@@ -73,7 +74,7 @@ const sameUserImport: ImportTransactionValues[] = [
     date: new Date("2026-09-02T00:00:00.000Z"),
     notes: null,
     payee: "Imported same user payee",
-    transactionTypeId: "transaction-type-income",
+    transactionTypeId: "income",
   },
 ];
 
@@ -90,7 +91,7 @@ const ownedReferenceAuthorizer = async (
     (id) =>
       id !== null &&
       id !== undefined &&
-      (id.startsWith("owned-") || id.startsWith("transaction-type")),
+      (id.startsWith("owned-") || isSupportedTransactionTypeId(id)),
   )
     ? { ok: true }
     : notFound;
@@ -211,14 +212,16 @@ test("transaction create, bulk-create, and update authorize references before wr
     true,
   );
   assert.equal(writes.update, 1);
-  assert.deepEqual(
-    await operations.updateTransaction("user-1", "transaction-1", {
-      ...sameUserTransaction,
-      transactionTypeId: "foreign-transaction-type",
-    }),
-    notFound,
+  assert.equal(
+    (
+      await operations.updateTransaction("user-1", "transaction-1", {
+        ...sameUserTransaction,
+        transactionTypeId: "expense",
+      })
+    ).ok,
+    true,
   );
-  assert.equal(writes.update, 1);
+  assert.equal(writes.update, 2);
 });
 
 test("category create and update reject foreign or empty parent references before writing", async () => {
@@ -335,11 +338,13 @@ test("CSV import rejects foreign accounts, categories, and transaction types bef
     ]),
     notFound,
   );
-  assert.deepEqual(
-    await operations.importTransactions("user-1", "owned-account-1", [
-      { ...sameUserImport[0], transactionTypeId: "foreign-transaction-type" },
-    ]),
-    notFound,
+  assert.equal(
+    (
+      await operations.importTransactions("user-1", "owned-account-1", [
+        { ...sameUserImport[0], transactionTypeId: "refund" },
+      ])
+    ).ok,
+    true,
   );
-  assert.equal(writes, 1);
+  assert.equal(writes, 2);
 });

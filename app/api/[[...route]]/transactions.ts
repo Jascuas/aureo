@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
-import { Hono } from "hono";
+import { Hono, type MiddlewareHandler } from "hono";
 import { z } from "zod";
 
 import { insertTransactionSchema } from "@/db/schema";
@@ -21,7 +21,7 @@ import {
   updateTransaction,
 } from "@/features/transactions/server/transaction-write-operations";
 import { API_ERRORS } from "@/lib/api-errors";
-import { requireAuth } from "@/lib/auth-middleware";
+import { requireAuth as defaultRequireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
 import { requireId } from "@/lib/validation-middleware";
 
@@ -30,7 +30,12 @@ const transactionWriteSchema = transactionValuesSchema.extend({
   transactionTypeId: supportedTransactionTypeIdSchema,
 });
 
-const app = new Hono<AppEnv>()
+export const createTransactionsApp = (
+  authMiddleware: MiddlewareHandler<AppEnv> = defaultRequireAuth,
+) => {
+  const requireAuth = authMiddleware;
+
+  return new Hono<AppEnv>()
   .get(
     "/",
     zValidator("query", transactionListQuerySchema, (result, c) => {
@@ -169,5 +174,6 @@ const app = new Hono<AppEnv>()
       return c.json({ data: result.data });
     },
   );
+};
 
-export default app;
+export default createTransactionsApp();

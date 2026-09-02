@@ -5,14 +5,18 @@ import { fileURLToPath, pathToFileURL, URL } from "node:url";
 const extensions = [".ts", ".tsx"];
 
 const resolveTypeScriptPath = async (pathWithoutExtension) => {
-  for (const extension of extensions) {
-    const path = `${pathWithoutExtension}${extension}`;
+  const paths = extensions.flatMap((extension) => [
+    `${pathWithoutExtension}${extension}`,
+    resolvePath(pathWithoutExtension, `index${extension}`),
+  ]);
+
+  for (const path of paths) {
 
     try {
       await access(path);
       return pathToFileURL(path).href;
     } catch {
-      continue;
+      // Try the next TypeScript file or index path.
     }
   }
 

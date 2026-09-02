@@ -4,6 +4,10 @@ import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
 import { importTemplates, transactions } from "@/db/schema";
+import {
+  normalizeTransactionAmount,
+  type SupportedTransactionTypeId,
+} from "@/features/transaction-types/lib/transaction-types";
 import { ensureOwnedReferences } from "@/features/transactions/server/owned-references";
 
 export type ImportTemplateWriteValues = Omit<
@@ -13,8 +17,10 @@ export type ImportTemplateWriteValues = Omit<
 
 export type ImportTransactionValues = Omit<
   InferInsertModel<typeof transactions>,
-  "accountId" | "id"
->;
+  "accountId" | "id" | "transactionTypeId"
+> & {
+  transactionTypeId: SupportedTransactionTypeId;
+};
 
 export type ImportTemplateResponse = {
   accountId: string;
@@ -48,6 +54,13 @@ const templateProjection = {
   name: importTemplates.name,
   updatedAt: importTemplates.updatedAt,
 };
+
+const normalizeImportTransactionValues = (
+  values: ImportTransactionValues,
+): ImportTransactionValues => ({
+  ...values,
+  amount: normalizeTransactionAmount(values.transactionTypeId, values.amount),
+});
 
 export type CsvImportWriteDependencies = {
   authorizeReferences: typeof ensureOwnedReferences;
@@ -160,7 +173,10 @@ export const createCsvImportWriteOperations = (
       return authorization;
     }
 
-    const imported = await dependencies.insertTransactions(accountId, values);
+    const imported = await dependencies.insertTransactions(
+      accountId,
+      values.map(normalizeImportTransactionValues),
+    );
 
     return {
       ok: true,

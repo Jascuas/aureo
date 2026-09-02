@@ -4,13 +4,19 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
 import { accounts, transactions } from "@/db/schema";
+import {
+  normalizeTransactionAmount,
+  type SupportedTransactionTypeId,
+} from "@/features/transaction-types/lib/transaction-types";
 
 import { ensureOwnedReferences } from "./owned-references";
 
 export type TransactionWriteValues = Omit<
   InferInsertModel<typeof transactions>,
-  "id"
->;
+  "id" | "transactionTypeId"
+> & {
+  transactionTypeId: SupportedTransactionTypeId;
+};
 
 export type TransactionResponse = {
   id: string;
@@ -47,6 +53,13 @@ const transactionReferences = (
   accountIds: values.map((value) => value.accountId),
   categoryIds: values.map((value) => value.categoryId),
   transactionTypeIds: values.map((value) => value.transactionTypeId),
+});
+
+const normalizeTransactionWriteValues = (
+  values: TransactionWriteValues,
+): TransactionWriteValues => ({
+  ...values,
+  amount: normalizeTransactionAmount(values.transactionTypeId, values.amount),
 });
 
 const transactionProjection = {
@@ -183,7 +196,10 @@ export const createTransactionWriteOperations = (
       return authorization;
     }
 
-    return { ok: true, data: await dependencies.create(values) };
+    return {
+      ok: true,
+      data: await dependencies.create(normalizeTransactionWriteValues(values)),
+    };
   },
   createTransactions: async (
     userId: string,
@@ -197,7 +213,10 @@ export const createTransactionWriteOperations = (
       return authorization;
     }
 
-    return { ok: true, data: await dependencies.createMany(values) };
+    return {
+      ok: true,
+      data: await dependencies.createMany(values.map(normalizeTransactionWriteValues)),
+    };
   },
   updateTransaction: async (
     userId: string,
@@ -212,7 +231,11 @@ export const createTransactionWriteOperations = (
       return authorization;
     }
 
-    const data = await dependencies.update(userId, id, values);
+    const data = await dependencies.update(
+      userId,
+      id,
+      normalizeTransactionWriteValues(values),
+    );
 
     if (!data) {
       return { ok: false, reason: "not_found" };

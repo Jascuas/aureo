@@ -1,45 +1,46 @@
 import { z } from "zod";
 
-export const SUPPORTED_TRANSACTION_TYPE_IDS = [
-  "income",
-  "expense",
-  "refund",
-] as const;
-
-export const TRANSACTION_TYPE_NAMES = ["Income", "Expense", "Refund"] as const;
-
-export type SupportedTransactionTypeId =
-  (typeof SUPPORTED_TRANSACTION_TYPE_IDS)[number];
-export type TransactionTypeName = (typeof TRANSACTION_TYPE_NAMES)[number];
-export type SummaryTransactionTypeName = TransactionTypeName | "All";
-
-type TransactionTypeDefinition = {
-  id: SupportedTransactionTypeId;
-  name: TransactionTypeName;
-  balanceEffect: "increase" | "decrease";
-  expenseSummaryEffect: "include" | "offset" | "exclude";
-};
-
-export const SUPPORTED_TRANSACTION_TYPES: readonly TransactionTypeDefinition[] = [
+export const SUPPORTED_TRANSACTION_TYPES = [
   {
-    id: SUPPORTED_TRANSACTION_TYPE_IDS[0],
-    name: TRANSACTION_TYPE_NAMES[0],
+    id: "income",
+    name: "Income",
     balanceEffect: "increase",
     expenseSummaryEffect: "exclude",
   },
   {
-    id: SUPPORTED_TRANSACTION_TYPE_IDS[1],
-    name: TRANSACTION_TYPE_NAMES[1],
+    id: "expense",
+    name: "Expense",
     balanceEffect: "decrease",
     expenseSummaryEffect: "include",
   },
   {
-    id: SUPPORTED_TRANSACTION_TYPE_IDS[2],
-    name: TRANSACTION_TYPE_NAMES[2],
+    id: "refund",
+    name: "Refund",
     balanceEffect: "increase",
     expenseSummaryEffect: "offset",
   },
-];
+] as const;
+
+export type SupportedTransactionType =
+  (typeof SUPPORTED_TRANSACTION_TYPES)[number];
+export type SupportedTransactionTypeId = SupportedTransactionType["id"];
+export type TransactionTypeName = SupportedTransactionType["name"];
+export type SummaryTransactionTypeName = TransactionTypeName | "All";
+
+const [incomeTransactionType, expenseTransactionType, refundTransactionType] =
+  SUPPORTED_TRANSACTION_TYPES;
+
+export const SUPPORTED_TRANSACTION_TYPE_IDS = [
+  incomeTransactionType.id,
+  expenseTransactionType.id,
+  refundTransactionType.id,
+] as const;
+
+export const TRANSACTION_TYPE_NAMES = [
+  incomeTransactionType.name,
+  expenseTransactionType.name,
+  refundTransactionType.name,
+] as const;
 
 export const supportedTransactionTypeIdSchema = z.enum(
   SUPPORTED_TRANSACTION_TYPE_IDS,
@@ -51,10 +52,51 @@ export const isSupportedTransactionTypeId = (
 
 export const getTransactionTypeForAmount = (
   amount: number,
-): TransactionTypeDefinition =>
-  amount < 0
-    ? SUPPORTED_TRANSACTION_TYPES[1]
-    : SUPPORTED_TRANSACTION_TYPES[0];
+): SupportedTransactionType =>
+  amount < 0 ? expenseTransactionType : incomeTransactionType;
+
+const getSupportedTransactionType = (
+  id: SupportedTransactionTypeId,
+): SupportedTransactionType => {
+  const transactionType = SUPPORTED_TRANSACTION_TYPES.find(
+    (candidate) => candidate.id === id,
+  );
+
+  if (!transactionType) {
+    throw new Error(`Unsupported transaction type ID: ${id}`);
+  }
+
+  return transactionType;
+};
+
+export const normalizeTransactionAmount = (
+  transactionTypeId: SupportedTransactionTypeId,
+  amount: number,
+): number => {
+  const { balanceEffect } = getSupportedTransactionType(transactionTypeId);
+  const absoluteAmount = Math.abs(amount);
+
+  return balanceEffect === "decrease" ? -absoluteAmount : absoluteAmount;
+};
+
+export const getTransactionSummaryAmounts = (
+  transactionTypeId: SupportedTransactionTypeId,
+  amount: number,
+) => {
+  const transactionType = getSupportedTransactionType(transactionTypeId);
+  const normalizedAmount = normalizeTransactionAmount(transactionTypeId, amount);
+
+  return {
+    balanceDelta: normalizedAmount,
+    expenses:
+      transactionType.expenseSummaryEffect === "include"
+        ? Math.abs(normalizedAmount)
+        : transactionType.expenseSummaryEffect === "offset"
+          ? -Math.abs(normalizedAmount)
+          : 0,
+    income: transactionType.name === "Income" ? normalizedAmount : 0,
+  };
+};
 
 export const getSummaryTransactionTypeIds = (
   type: SummaryTransactionTypeName,

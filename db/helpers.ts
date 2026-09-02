@@ -8,7 +8,7 @@ export const incomeAmountSql = sql`
   SUM(
     CASE
       WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[0]}
-      THEN ${transactions.amount}
+      THEN ABS(${transactions.amount})
       ELSE 0
     END
   )
@@ -30,9 +30,9 @@ export const transactionBalanceDeltaSql = sql`
   SUM(
     CASE
       WHEN ${transactions.transactionTypeId} IN (${SUPPORTED_TRANSACTION_TYPE_IDS[0]}, ${SUPPORTED_TRANSACTION_TYPE_IDS[2]})
-      THEN ${transactions.amount}
+      THEN ABS(${transactions.amount})
       WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[1]}
-      THEN -${transactions.amount}
+      THEN -ABS(${transactions.amount})
       ELSE 0
     END
   )
@@ -40,7 +40,7 @@ export const transactionBalanceDeltaSql = sql`
 
 export const categoryAmountSql = sql`
   CASE
-    WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[0]} THEN ${transactions.amount}
+    WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[0]} THEN ABS(${transactions.amount})
     WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[1]} THEN ABS(${transactions.amount})
     WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[2]} THEN -ABS(${transactions.amount})
     ELSE 0
