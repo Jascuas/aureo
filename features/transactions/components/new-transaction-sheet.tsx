@@ -1,5 +1,4 @@
 import { Loader2 } from "lucide-react";
-import { z } from "zod";
 
 import {
   Sheet,
@@ -8,7 +7,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { insertTransactionSchema } from "@/db/schema";
 import { useCreateAccount } from "@/features/accounts/api/use-create-account";
 import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
 import { useCreateCategory } from "@/features/categories/api/use-create-category";
@@ -16,23 +14,10 @@ import { useGetCategories } from "@/features/categories/api/use-get-categories";
 import { useGetTransactionTypes } from "@/features/transaction-types/api/use-get-transaction-types";
 import { useCreateTransaction } from "@/features/transactions/api/use-create-transaction";
 import { useNewTransaction } from "@/features/transactions/hooks/use-new-transaction";
+import type { TransactionMutationValues } from "@/features/transactions/lib/transaction-form-schema";
 import type { Account, Category, TransactionType } from "@/lib/api-types";
 
 import { TransactionForm } from "./transaction-form";
-
-const _formSchema = z.object({
-  date: z.coerce.date(),
-  accountId: z.string(),
-  categoryId: z.string().nullable().optional(),
-  payee: z.string(),
-  amount: z.string(),
-  notes: z.string().nullable().optional(),
-  transactionTypeId: z.string(),
-});
-
-const _apiSchema = insertTransactionSchema.omit({ id: true });
-
-type ApiFormValues = z.input<typeof _apiSchema>;
 
 export const NewTransactionSheet = () => {
   const { isOpen, onClose } = useNewTransaction();
@@ -74,7 +59,7 @@ export const NewTransactionSheet = () => {
     accountQuery.isLoading ||
     transactionTypesQuery.isLoading;
 
-  const onSubmit = (values: ApiFormValues) => {
+  const onSubmit = (values: TransactionMutationValues) => {
     createMutation.mutate(values, {
       onSuccess: () => {
         onClose();

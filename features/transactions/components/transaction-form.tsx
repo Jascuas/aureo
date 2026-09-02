@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Trash } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 import { AmountInput } from "@/components/inputs/amount-input";
 import { DatePicker } from "@/components/inputs/date-picker";
@@ -18,28 +17,17 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { insertTransactionSchema } from "@/db/schema";
+import {
+  transactionFormSchema,
+  type TransactionFormValues,
+  type TransactionMutationValues,
+} from "@/features/transactions/lib/transaction-form-schema";
 import { convertAmountToMilliunits } from "@/lib/utils";
-
-const formSchema = z.object({
-  date: z.coerce.date(),
-  accountId: z.string(),
-  categoryId: z.string().nullable().optional(),
-  payee: z.string(),
-  amount: z.string(),
-  notes: z.string().nullable().optional(),
-  transactionTypeId: z.string(),
-});
-
-type FormValues = z.input<typeof formSchema>;
-type ApiFormValues = z.input<
-  ReturnType<typeof insertTransactionSchema.omit<{ id: true }>>
->;
 
 type TransactionFormProps = {
   id?: string;
-  defaultValues?: FormValues;
-  onSubmit: (values: ApiFormValues) => void;
+  defaultValues?: TransactionFormValues;
+  onSubmit: (values: TransactionMutationValues) => void;
   onDelete?: () => void;
   disabled?: boolean;
   accountOptions: { label: string; value: string }[];
@@ -61,11 +49,11 @@ export const TransactionForm = ({
   onCreateAccount,
   onCreateCategory,
 }: TransactionFormProps) => {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<TransactionFormValues>({
+    resolver: zodResolver(transactionFormSchema),
     defaultValues,
   });
-  const handleSubmit = (values: FormValues) => {
+  const handleSubmit = (values: TransactionFormValues) => {
     const amount = parseFloat(values.amount);
     const amountInMilliunits = convertAmountToMilliunits(amount);
 

@@ -6,14 +6,8 @@ import { MappingStep } from "@/features/csv-import/components/ai-import-steps/ma
 import { ReviewStep } from "@/features/csv-import/components/ai-import-steps/review-step";
 import { UploadStep } from "@/features/csv-import/components/ai-import-steps/upload-step";
 import { ImportStep } from "@/features/csv-import/const/import-const";
+import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
 import { useDuplicateResolutionActions } from "@/features/csv-import/store/duplicate-resolution";
-import {
-  useAnalyzedRows,
-  useColumnMapping,
-  useCSVData,
-  useCurrentStep,
-  useImportSessionActions,
-} from "@/features/csv-import/store/import-session";
 
 interface AiImportStepContentProps {
   accountId?: string;
@@ -41,11 +35,13 @@ export const AiImportStepContent = memo(function AiImportStepContent({
   retryCategorize,
   handleCategoryChange,
 }: AiImportStepContentProps) {
-  const currentStep = useCurrentStep();
-  const csvData = useCSVData();
-  const columnMapping = useColumnMapping();
-  const analyzedRows = useAnalyzedRows();
-  const { setFinalMapping } = useImportSessionActions();
+  const {
+    currentStep,
+    csvData,
+    columnMapping,
+    analyzedRows,
+    setFinalMapping,
+  } = useImportSession();
   const { skipAllExact, getPendingCount } = useDuplicateResolutionActions();
 
   switch (currentStep) {

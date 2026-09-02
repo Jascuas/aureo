@@ -6,13 +6,13 @@ import {
   DEFAULT_AMOUNT_FORMAT,
   DEFAULT_DATE_FORMAT,
 } from "@/features/csv-import/const/import-const";
+import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
 import {
   CATEGORIZE_BATCH_SIZE,
   mergeAutoResolvedAndAi,
   runCategorizeBatches,
 } from "@/features/csv-import/lib/analysis-pipeline";
 import { prepareTransactionsForAnalysis } from "@/features/csv-import/lib/transaction-mapper";
-import { useAnalyzedRows } from "@/features/csv-import/store/import-session";
 import { useImportUIActions } from "@/features/csv-import/store/import-ui-state";
 import type {
   AmountFormat,
@@ -39,7 +39,7 @@ export function useCategorizeRetry({
 }: UseCategorizeRetryOptions) {
   const categorizeMutation = useCategorizeTransactions();
   const { setLoading, setError, setBatchProgress } = useImportUIActions();
-  const analyzedRows = useAnalyzedRows();
+  const { analyzedRows } = useImportSession();
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const retry = useCallback(async () => {

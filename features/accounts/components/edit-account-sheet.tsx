@@ -1,5 +1,4 @@
 import { Loader2 } from "lucide-react";
-import { z } from "zod";
 
 import {
   Sheet,
@@ -8,20 +7,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { insertAccountSchema } from "@/db/schema";
 import { useDeleteAccount } from "@/features/accounts/api/use-delete-account";
 import { useEditAccount } from "@/features/accounts/api/use-edit-account";
 import { useGetAccount } from "@/features/accounts/api/use-get-account";
 import { useOpenAccount } from "@/features/accounts/hooks/use-open-account";
+import type { AccountFormValues } from "@/features/accounts/lib/account-form-schema";
 import { useConfirm } from "@/hooks/use-confirm";
 
 import { AccountForm } from "./account-form";
-
-const _formSchema = insertAccountSchema.pick({
-  name: true,
-});
-
-type FormValues = z.infer<typeof _formSchema>;
 
 export const EditAccountSheet = () => {
   const { isOpen, onClose, id } = useOpenAccount();
@@ -39,7 +32,7 @@ export const EditAccountSheet = () => {
 
   const isLoading = accountQuery.isLoading;
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = (values: AccountFormValues) => {
     editMutation.mutate(values, {
       onSuccess: () => {
         onClose();

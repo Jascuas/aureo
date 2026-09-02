@@ -5,9 +5,12 @@ import { toast } from "sonner";
 
 import { useSelectAccount } from "@/features/accounts/hooks/use-select-account";
 import { AiImportCard } from "@/features/csv-import/components/ai-import-card";
-import { useImportSession } from "@/features/csv-import/store/import-session";
+import {
+  ImportSessionProvider,
+  useImportSession,
+} from "@/features/csv-import/hooks/use-import-session";
 
-const UploadPage = () => {
+const UploadPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const accountId = searchParams.get("accountId") || undefined;
@@ -44,5 +47,11 @@ const UploadPage = () => {
     </div>
   );
 };
+
+const UploadPage = () => (
+  <ImportSessionProvider>
+    <UploadPageContent />
+  </ImportSessionProvider>
+);
 
 export default UploadPage;

@@ -1,9 +1,3 @@
-import type {
-  AmountFormat,
-  DateFormat,
-  HeuristicConfig,
-} from "../types/import-types";
-
 export enum ImportStep {
   UPLOAD = "UPLOAD",
   MAPPING = "MAPPING",
@@ -38,16 +32,16 @@ export enum ColumnType {
   Unknown = "unknown",
 }
 
-export const DEFAULT_HEURISTIC_CONFIG: HeuristicConfig = {
+export const DEFAULT_HEURISTIC_CONFIG = {
   minConfidence: 0.7,
   sampleSize: 10,
   enableAIFallback: true,
-};
+} as const;
 
-export const DEFAULT_DATE_FORMAT: DateFormat = "DD/MM/YYYY";
+export const DEFAULT_DATE_FORMAT = "DD/MM/YYYY";
 
-export const DEFAULT_AMOUNT_FORMAT: AmountFormat = {
+export const DEFAULT_AMOUNT_FORMAT = {
   decimalSeparator: ",",
   thousandsSeparator: ".",
   isNegativeExpense: true,
-};
+} as const;

@@ -462,7 +462,7 @@ const app = new Hono<AppEnv>()
           .where(
             and(eq(importTemplates.id, id), eq(importTemplates.userId, userId)),
           )
-          .returning();
+          .returning({ id: importTemplates.id });
 
         if (!template) {
           return c.json(API_ERRORS.NOT_FOUND, 404);

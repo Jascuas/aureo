@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 import { AnalysisSection } from "@/features/csv-import/components/analysis-section";
-import { useAnalyzedRows } from "@/features/csv-import/store/import-session";
+import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
 import {
   useAnalyzeComplete,
   useBatchProgress,
@@ -29,7 +29,7 @@ export function AnalysisStep({
   const errors = useUIErrors();
   const batchProgress = useBatchProgress();
   const analyzeComplete = useAnalyzeComplete();
-  const analyzedRows = useAnalyzedRows();
+  const { analyzedRows } = useImportSession();
   const { setAnalyzeComplete } = useImportUIActions();
 
   const isAnalyzing = loading.analyzing;

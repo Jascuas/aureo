@@ -1,16 +1,12 @@
-export {
+import {
   BatchProgressStage,
   ColumnType,
   ImportStep,
   MatchType,
   Resolution,
-} from "../const/import-const";
-import {
-  BatchProgressStage,
-  ColumnType,
-  MatchType,
-  Resolution,
-} from "../const/import-const";
+} from "@/features/csv-import/const/import-const";
+
+export { BatchProgressStage, ColumnType, ImportStep, MatchType, Resolution };
 
 export type DetectedColumn = {
   index: number;

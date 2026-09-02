@@ -1,5 +1,6 @@
-import { ColumnType } from "../const/import-const";
-import type { AmountFormat } from "../types/import-types";
+import { ColumnType } from "@/features/csv-import/const/import-const";
+import type { AmountFormat } from "@/features/csv-import/types/import-types";
+
 import { looksLikeDate } from "./date-parser";
 
 export const HEADER_PATTERNS: Record<ColumnType, string[]> = {

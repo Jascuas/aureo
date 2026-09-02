@@ -2,6 +2,7 @@ import { useCallback } from "react";
 
 import { useGetTemplates } from "@/features/csv-import/api/use-get-templates";
 import { useColumnDetection } from "@/features/csv-import/hooks/use-column-detection";
+import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
 import { MAX_IMPORT_ROWS_DEV } from "@/features/csv-import/lib/config";
 import {
   CSVParseError,
@@ -12,7 +13,6 @@ import {
   templateToDetectionResult,
 } from "@/features/csv-import/lib/template-applier";
 import { useDuplicateResolutionActions } from "@/features/csv-import/store/duplicate-resolution";
-import { useImportSessionActions } from "@/features/csv-import/store/import-session";
 import {
   useImportUIActions,
   useImportUIState,
@@ -50,7 +50,7 @@ export function useCSVUpload({
   const resetUIState = useImportUIState((s) => s.reset);
 
   const { setCSVData, setDetectionResult, setFinalMapping, nextStep } =
-    useImportSessionActions();
+    useImportSession();
   const { reset: resetResolutions } = useDuplicateResolutionActions();
 
   const { data: templates } = useGetTemplates(accountId);
@@ -66,7 +66,7 @@ export function useCSVUpload({
     async (file: File) => {
       // A new file invalidates any prior analysis. Wipe ephemeral UI flags
       // (analyzeComplete, errors, batchProgress, loading) so the Analysis step
-      // re-triggers cleanly. Persisted analyzedRows are cleared by setCSVData.
+      // re-triggers cleanly. Route-scoped import data is cleared by setCSVData.
       resetUIState();
       setError("upload", null);
       setLoading("parsingCSV", true);
