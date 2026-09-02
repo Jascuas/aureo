@@ -7,9 +7,12 @@ import { accounts, transactions } from "@/db/schema";
 
 import { ensureOwnedReferences } from "./owned-references";
 
-type TransactionWriteValues = Omit<InferInsertModel<typeof transactions>, "id">;
+export type TransactionWriteValues = Omit<
+  InferInsertModel<typeof transactions>,
+  "id"
+>;
 
-type TransactionResponse = {
+export type TransactionResponse = {
   id: string;
   accountId: string;
   amount: number;
@@ -20,11 +23,11 @@ type TransactionResponse = {
   transactionTypeId: string;
 };
 
-type TransactionWriteResult =
+export type TransactionWriteResult =
   | { ok: true; data: TransactionResponse }
   | { ok: false; reason: "not_found" };
 
-type TransactionBulkWriteResult =
+export type TransactionBulkWriteResult =
   | { ok: true; data: TransactionResponse[] }
   | { ok: false; reason: "not_found" };
 
@@ -49,82 +52,115 @@ const transactionProjection = {
   transactionTypeId: transactions.transactionTypeId,
 };
 
-export const createTransaction = async (
-  userId: string,
-  values: TransactionWriteValues,
-): Promise<TransactionWriteResult> => {
-  const authorization = await ensureOwnedReferences(
-    transactionReferences(userId, [values]),
-  );
-
-  if (!authorization.ok) {
-    return authorization;
-  }
-
-  const [data] = await db
-    .insert(transactions)
-    .values({ id: createId(), ...values })
-    .returning(transactionProjection);
-
-  return { ok: true, data };
+export type TransactionWriteDependencies = {
+  authorizeReferences: typeof ensureOwnedReferences;
+  create: (values: TransactionWriteValues) => Promise<TransactionResponse>;
+  createMany: (
+    values: TransactionWriteValues[],
+  ) => Promise<TransactionResponse[]>;
+  update: (
+    userId: string,
+    id: string,
+    values: TransactionWriteValues,
+  ) => Promise<TransactionResponse | undefined>;
 };
 
-export const createTransactions = async (
-  userId: string,
-  values: TransactionWriteValues[],
-): Promise<TransactionBulkWriteResult> => {
-  const authorization = await ensureOwnedReferences(
-    transactionReferences(userId, values),
-  );
+const transactionWriteDependencies: TransactionWriteDependencies = {
+  authorizeReferences: ensureOwnedReferences,
+  create: async (values) => {
+    const [data] = await db
+      .insert(transactions)
+      .values({ id: createId(), ...values })
+      .returning(transactionProjection);
 
-  if (!authorization.ok) {
-    return authorization;
-  }
-
-  const data = await db
-    .insert(transactions)
-    .values(values.map((value) => ({ id: createId(), ...value })))
-    .returning(transactionProjection);
-
-  return { ok: true, data };
-};
-
-export const updateTransaction = async (
-  userId: string,
-  id: string,
-  values: TransactionWriteValues,
-): Promise<TransactionWriteResult> => {
-  const authorization = await ensureOwnedReferences(
-    transactionReferences(userId, [values]),
-  );
-
-  if (!authorization.ok) {
-    return authorization;
-  }
-
-  const transactionsToUpdate = db.$with("transactions_to_update").as(
+    return data;
+  },
+  createMany: (values) =>
     db
-      .select({ id: transactions.id })
-      .from(transactions)
-      .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-      .where(and(eq(transactions.id, id), eq(accounts.userId, userId))),
-  );
+      .insert(transactions)
+      .values(values.map((value) => ({ id: createId(), ...value })))
+      .returning(transactionProjection),
+  update: async (userId, id, values) => {
+    const transactionsToUpdate = db.$with("transactions_to_update").as(
+      db
+        .select({ id: transactions.id })
+        .from(transactions)
+        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+        .where(and(eq(transactions.id, id), eq(accounts.userId, userId))),
+    );
 
-  const [data] = await db
-    .with(transactionsToUpdate)
-    .update(transactions)
-    .set(values)
-    .where(
-      inArray(
-        transactions.id,
-        sql`(select id from ${transactionsToUpdate})`,
-      ),
-    )
-    .returning(transactionProjection);
+    const [data] = await db
+      .with(transactionsToUpdate)
+      .update(transactions)
+      .set(values)
+      .where(
+        inArray(
+          transactions.id,
+          sql`(select id from ${transactionsToUpdate})`,
+        ),
+      )
+      .returning(transactionProjection);
 
-  if (!data) {
-    return { ok: false, reason: "not_found" };
-  }
-
-  return { ok: true, data };
+    return data;
+  },
 };
+
+export const createTransactionWriteOperations = (
+  dependencies: TransactionWriteDependencies = transactionWriteDependencies,
+) => ({
+  createTransaction: async (
+    userId: string,
+    values: TransactionWriteValues,
+  ): Promise<TransactionWriteResult> => {
+    const authorization = await dependencies.authorizeReferences(
+      transactionReferences(userId, [values]),
+    );
+
+    if (!authorization.ok) {
+      return authorization;
+    }
+
+    return { ok: true, data: await dependencies.create(values) };
+  },
+  createTransactions: async (
+    userId: string,
+    values: TransactionWriteValues[],
+  ): Promise<TransactionBulkWriteResult> => {
+    const authorization = await dependencies.authorizeReferences(
+      transactionReferences(userId, values),
+    );
+
+    if (!authorization.ok) {
+      return authorization;
+    }
+
+    return { ok: true, data: await dependencies.createMany(values) };
+  },
+  updateTransaction: async (
+    userId: string,
+    id: string,
+    values: TransactionWriteValues,
+  ): Promise<TransactionWriteResult> => {
+    const authorization = await dependencies.authorizeReferences(
+      transactionReferences(userId, [values]),
+    );
+
+    if (!authorization.ok) {
+      return authorization;
+    }
+
+    const data = await dependencies.update(userId, id, values);
+
+    if (!data) {
+      return { ok: false, reason: "not_found" };
+    }
+
+    return { ok: true, data };
+  },
+});
+
+const transactionWriteOperations = createTransactionWriteOperations();
+
+export const createTransaction = transactionWriteOperations.createTransaction;
+export const createTransactions = transactionWriteOperations.createTransactions;
+export const updateTransaction = transactionWriteOperations.updateTransaction;

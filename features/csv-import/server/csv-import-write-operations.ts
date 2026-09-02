@@ -6,17 +6,17 @@ import { db } from "@/db/drizzle";
 import { importTemplates, transactions } from "@/db/schema";
 import { ensureOwnedReferences } from "@/features/transactions/server/owned-references";
 
-type ImportTemplateWriteValues = Omit<
+export type ImportTemplateWriteValues = Omit<
   InferInsertModel<typeof importTemplates>,
   "createdAt" | "id" | "updatedAt" | "userId"
 >;
 
-type ImportTransactionValues = Omit<
+export type ImportTransactionValues = Omit<
   InferInsertModel<typeof transactions>,
   "accountId" | "id"
 >;
 
-type ImportTemplateResponse = {
+export type ImportTemplateResponse = {
   accountId: string;
   amountFormat: unknown;
   columnMapping: unknown;
@@ -27,11 +27,11 @@ type ImportTemplateResponse = {
   updatedAt: Date;
 };
 
-type ImportTemplateWriteResult =
+export type ImportTemplateWriteResult =
   | { ok: true; data: ImportTemplateResponse }
   | { ok: false; reason: "not_found" };
 
-type ImportTransactionsResult =
+export type ImportTransactionsResult =
   | {
       ok: true;
       data: { errors: []; imported: number; skipped: number };
@@ -49,87 +49,134 @@ const templateProjection = {
   updatedAt: importTemplates.updatedAt,
 };
 
-export const createImportTemplate = async (
-  userId: string,
-  values: ImportTemplateWriteValues,
-): Promise<ImportTemplateWriteResult> => {
-  const authorization = await ensureOwnedReferences({
-    userId,
-    accountIds: [values.accountId],
-  });
-
-  if (!authorization.ok) {
-    return authorization;
-  }
-
-  const [data] = await db
-    .insert(importTemplates)
-    .values({ id: createId(), userId, ...values })
-    .returning(templateProjection);
-
-  return { ok: true, data };
+export type CsvImportWriteDependencies = {
+  authorizeReferences: typeof ensureOwnedReferences;
+  createTemplate: (
+    userId: string,
+    values: ImportTemplateWriteValues,
+  ) => Promise<ImportTemplateResponse>;
+  updateTemplate: (
+    userId: string,
+    id: string,
+    values: Partial<ImportTemplateWriteValues>,
+  ) => Promise<ImportTemplateResponse | undefined>;
+  insertTransactions: (
+    accountId: string,
+    values: ImportTransactionValues[],
+  ) => Promise<number>;
 };
 
-export const updateImportTemplate = async (
-  userId: string,
-  id: string,
-  values: Partial<ImportTemplateWriteValues>,
-): Promise<ImportTemplateWriteResult> => {
-  const authorization = await ensureOwnedReferences({
-    userId,
-    accountIds: values.accountId ? [values.accountId] : [],
-  });
+const csvImportWriteDependencies: CsvImportWriteDependencies = {
+  authorizeReferences: ensureOwnedReferences,
+  createTemplate: async (userId, values) => {
+    const [data] = await db
+      .insert(importTemplates)
+      .values({ id: createId(), userId, ...values })
+      .returning(templateProjection);
 
-  if (!authorization.ok) {
-    return authorization;
-  }
+    return data;
+  },
+  updateTemplate: async (userId, id, values) => {
+    const [data] = await db
+      .update(importTemplates)
+      .set({ ...values, updatedAt: new Date() })
+      .where(and(eq(importTemplates.id, id), eq(importTemplates.userId, userId)))
+      .returning(templateProjection);
 
-  const [data] = await db
-    .update(importTemplates)
-    .set({ ...values, updatedAt: new Date() })
-    .where(and(eq(importTemplates.id, id), eq(importTemplates.userId, userId)))
-    .returning(templateProjection);
+    return data;
+  },
+  insertTransactions: async (accountId, values) => {
+    const inserted = await db
+      .insert(transactions)
+      .values(
+        values.map((value) => ({
+          id: createId(),
+          accountId,
+          ...value,
+        })),
+      )
+      .returning({ id: transactions.id });
 
-  if (!data) {
-    return { ok: false, reason: "not_found" };
-  }
-
-  return { ok: true, data };
+    return inserted.length;
+  },
 };
 
-export const importTransactions = async (
-  userId: string,
-  accountId: string,
-  values: ImportTransactionValues[],
-): Promise<ImportTransactionsResult> => {
-  const authorization = await ensureOwnedReferences({
-    userId,
-    accountIds: [accountId],
-    categoryIds: values.map((value) => value.categoryId),
-    transactionTypeIds: values.map((value) => value.transactionTypeId),
-  });
+export const createCsvImportWriteOperations = (
+  dependencies: CsvImportWriteDependencies = csvImportWriteDependencies,
+) => ({
+  createImportTemplate: async (
+    userId: string,
+    values: ImportTemplateWriteValues,
+  ): Promise<ImportTemplateWriteResult> => {
+    const authorization = await dependencies.authorizeReferences({
+      userId,
+      accountIds: [values.accountId],
+    });
 
-  if (!authorization.ok) {
-    return authorization;
-  }
+    if (!authorization.ok) {
+      return authorization;
+    }
 
-  const inserted = await db
-    .insert(transactions)
-    .values(
-      values.map((value) => ({
-        id: createId(),
-        accountId,
-        ...value,
-      })),
-    )
-    .returning({ id: transactions.id });
+    return {
+      ok: true,
+      data: await dependencies.createTemplate(userId, values),
+    };
+  },
+  updateImportTemplate: async (
+    userId: string,
+    id: string,
+    values: Partial<ImportTemplateWriteValues>,
+  ): Promise<ImportTemplateWriteResult> => {
+    const authorization = await dependencies.authorizeReferences({
+      userId,
+      accountIds: values.accountId === undefined ? [] : [values.accountId],
+    });
 
-  return {
-    ok: true,
-    data: {
-      errors: [],
-      imported: inserted.length,
-      skipped: 0,
-    },
-  };
-};
+    if (!authorization.ok) {
+      return authorization;
+    }
+
+    const data = await dependencies.updateTemplate(userId, id, values);
+
+    if (!data) {
+      return { ok: false, reason: "not_found" };
+    }
+
+    return { ok: true, data };
+  },
+  importTransactions: async (
+    userId: string,
+    accountId: string,
+    values: ImportTransactionValues[],
+  ): Promise<ImportTransactionsResult> => {
+    const authorization = await dependencies.authorizeReferences({
+      userId,
+      accountIds: [accountId],
+      categoryIds: values.map((value) => value.categoryId),
+      transactionTypeIds: values.map((value) => value.transactionTypeId),
+    });
+
+    if (!authorization.ok) {
+      return authorization;
+    }
+
+    const imported = await dependencies.insertTransactions(accountId, values);
+
+    return {
+      ok: true,
+      data: {
+        errors: [],
+        imported,
+        skipped: 0,
+      },
+    };
+  },
+});
+
+const csvImportWriteOperations = createCsvImportWriteOperations();
+
+export const createImportTemplate =
+  csvImportWriteOperations.createImportTemplate;
+export const updateImportTemplate =
+  csvImportWriteOperations.updateImportTemplate;
+export const importTransactions = csvImportWriteOperations.importTransactions;

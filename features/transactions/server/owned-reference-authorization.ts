@@ -16,7 +16,7 @@ export type OwnedReferenceAuthorization =
   | { ok: false; reason: "not_found" };
 
 const uniqueIds = (ids: readonly (string | null | undefined)[]) =>
-  [...new Set(ids.filter((id): id is string => Boolean(id)))];
+  [...new Set(ids.filter((id): id is string => id !== null && id !== undefined))];
 
 const allIdsAreAuthorized = (ids: readonly string[], foundIds: string[]) => {
   const foundIdSet = new Set(foundIds);
