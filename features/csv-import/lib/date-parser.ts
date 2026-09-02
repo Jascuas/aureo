@@ -1,4 +1,4 @@
-import type { DateFormat } from '../types/import-types';
+import type { DateFormat } from "@/features/csv-import/types/import-types";
 
 type DatePattern = {
   format: DateFormat;

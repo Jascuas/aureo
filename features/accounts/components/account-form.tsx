@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Trash } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,18 +12,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { insertAccountSchema } from "@/db/schema";
-
-const formSchema = insertAccountSchema.pick({
-  name: true,
-});
-
-type FormValues = z.infer<typeof formSchema>;
+import {
+  accountFormSchema,
+  type AccountFormValues,
+} from "@/features/accounts/lib/account-form-schema";
 
 type AccountFormProps = {
   id?: string;
-  defaultValues?: FormValues;
-  onSubmit: (values: FormValues) => void;
+  defaultValues?: AccountFormValues;
+  onSubmit: (values: AccountFormValues) => void;
   onDelete?: () => void;
   disabled?: boolean;
 };
@@ -36,12 +32,12 @@ export const AccountForm = ({
   onDelete,
   disabled,
 }: AccountFormProps) => {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<AccountFormValues>({
+    resolver: zodResolver(accountFormSchema),
     defaultValues,
   });
 
-  const handleSubmit = (values: FormValues) => {
+  const handleSubmit = (values: AccountFormValues) => {
     onSubmit(values);
   };
 

@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import {
   Sheet,
   SheetContent,
@@ -7,23 +5,17 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { insertAccountSchema } from "@/db/schema";
 import { useCreateAccount } from "@/features/accounts/api/use-create-account";
 import { useNewAccount } from "@/features/accounts/hooks/use-new-account";
+import type { AccountFormValues } from "@/features/accounts/lib/account-form-schema";
 
 import { AccountForm } from "./account-form";
-
-const _formSchema = insertAccountSchema.pick({
-  name: true,
-});
-
-type FormValues = z.infer<typeof _formSchema>;
 
 export const NewAccountSheet = () => {
   const { isOpen, onClose } = useNewAccount();
   const mutation = useCreateAccount();
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = (values: AccountFormValues) => {
     mutation.mutate(values, {
       onSuccess: () => {
         onClose();

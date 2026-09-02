@@ -1,13 +1,15 @@
-import { getDefaultAIProvider } from "@/lib/ai";
-
-import { DEFAULT_HEURISTIC_CONFIG } from "../const/import-const";
-import { ColumnType } from "../const/import-const";
+import {
+  ColumnType,
+  DEFAULT_HEURISTIC_CONFIG,
+} from "@/features/csv-import/const/import-const";
 import type {
   ColumnDetectionResult,
   DateFormat,
   DetectedColumn,
   HeuristicConfig,
-} from "../types/import-types";
+} from "@/features/csv-import/types/import-types";
+import { getDefaultAIProvider } from "@/lib/ai";
+
 import {
   detectAmountFormat,
   detectColumnType,

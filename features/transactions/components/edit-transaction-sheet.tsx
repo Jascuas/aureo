@@ -1,5 +1,4 @@
 import { Loader2 } from "lucide-react";
-import { z } from "zod";
 
 import {
   Sheet,
@@ -8,7 +7,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { insertTransactionSchema } from "@/db/schema";
 import { useCreateAccount } from "@/features/accounts/api/use-create-account";
 import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
 import { useCreateCategory } from "@/features/categories/api/use-create-category";
@@ -18,25 +16,14 @@ import { useDeleteTransaction } from "@/features/transactions/api/use-delete-tra
 import { useEditTransaction } from "@/features/transactions/api/use-edit-transaction";
 import { useGetTransaction } from "@/features/transactions/api/use-get-transaction";
 import { useOpenTransaction } from "@/features/transactions/hooks/use-open-transaction";
+import type {
+  TransactionFormValues,
+  TransactionMutationValues,
+} from "@/features/transactions/lib/transaction-form-schema";
 import { useConfirm } from "@/hooks/use-confirm";
 import type { Account, Category, TransactionType } from "@/lib/api-types";
 
 import { TransactionForm } from "./transaction-form";
-
-const _formSchema = z.object({
-  date: z.coerce.date(),
-  accountId: z.string(),
-  categoryId: z.string().nullable().optional(),
-  payee: z.string(),
-  amount: z.string(),
-  notes: z.string().nullable().optional(),
-  transactionTypeId: z.string(),
-});
-
-const _apiSchema = insertTransactionSchema.omit({ id: true });
-
-type FormValues = z.input<typeof _formSchema>;
-type ApiFormValues = z.input<typeof _apiSchema>;
 
 export const EditTransactionSheet = () => {
   const { isOpen, onClose, id } = useOpenTransaction();
@@ -90,7 +77,7 @@ export const EditTransactionSheet = () => {
     accountQuery.isLoading ||
     transactionTypesQuery.isLoading;
 
-  const onSubmit = (values: ApiFormValues) => {
+  const onSubmit = (values: TransactionMutationValues) => {
     editMutation.mutate(values, {
       onSuccess: () => {
         onClose();
@@ -98,8 +85,8 @@ export const EditTransactionSheet = () => {
     });
   };
 
-  const defaultValues: FormValues = transactionQuery.data
-    ? ({
+  const defaultValues: TransactionFormValues = transactionQuery.data
+    ? {
         accountId: transactionQuery.data.accountId,
         categoryId: transactionQuery.data.categoryId,
         amount: transactionQuery.data.amount.toString(),
@@ -109,8 +96,8 @@ export const EditTransactionSheet = () => {
         payee: transactionQuery.data.payee,
         notes: transactionQuery.data.notes,
         transactionTypeId: transactionQuery.data.transactionTypeId,
-      } as FormValues)
-    : ({
+      }
+    : {
         accountId: "",
         categoryId: "",
         amount: "",
@@ -118,7 +105,7 @@ export const EditTransactionSheet = () => {
         payee: "",
         notes: "",
         transactionTypeId: "",
-      } as FormValues);
+      };
 
   const onDelete = async () => {
     const ok = await confirm();

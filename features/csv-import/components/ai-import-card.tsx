@@ -13,12 +13,9 @@ import { AiImportStepContent } from "@/features/csv-import/components/ai-import-
 import { ImportStepper } from "@/features/csv-import/components/import-stepper";
 import { ImportStep } from "@/features/csv-import/const/import-const";
 import { useImportOrchestrator } from "@/features/csv-import/hooks/use-import-orchestrator";
+import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
 import { useUnloadWarning } from "@/features/csv-import/hooks/use-unload-warning";
 import { getStepTitle } from "@/features/csv-import/lib/step-titles";
-import {
-  useCurrentStep,
-  useImportSessionActions,
-} from "@/features/csv-import/store/import-session";
 
 type AiImportCardProps = {
   accountId?: string;
@@ -33,8 +30,7 @@ export const AiImportCard = ({
   onCancel,
   onImportAnother,
 }: AiImportCardProps) => {
-  const currentStep = useCurrentStep();
-  const { goToStep } = useImportSessionActions();
+  const { currentStep, goToStep } = useImportSession();
 
   const { data: accounts } = useGetAccounts();
   const accountName = accountId

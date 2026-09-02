@@ -1,6 +1,5 @@
 import { Loader2 } from "lucide-react";
 import { useMemo } from "react";
-import { z } from "zod";
 
 import {
   Sheet,
@@ -9,22 +8,15 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { insertCategorySchema } from "@/db/schema";
 import { useDeleteCategory } from "@/features/categories/api/use-delete-category";
 import { useEditCategory } from "@/features/categories/api/use-edit-category";
 import { useGetCategories } from "@/features/categories/api/use-get-categories";
 import { useGetCategory } from "@/features/categories/api/use-get-category";
 import { useOpenCategory } from "@/features/categories/hooks/use-open-category";
+import type { CategoryFormValues } from "@/features/categories/lib/category-form-schema";
 import { useConfirm } from "@/hooks/use-confirm";
 
 import { CategoryForm } from "./category-form";
-
-const _formSchema = insertCategorySchema.pick({
-  name: true,
-  parentId: true,
-});
-
-type FormValues = z.infer<typeof _formSchema>;
 
 export const EditCategorySheet = () => {
   const { isOpen, onClose, id } = useOpenCategory();
@@ -68,7 +60,7 @@ export const EditCategorySheet = () => {
 
   const isLoading = categoryQuery.isLoading;
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = (values: CategoryFormValues) => {
     editMutation.mutate(values, {
       onSuccess: () => {
         onClose();

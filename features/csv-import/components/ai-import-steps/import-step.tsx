@@ -1,8 +1,5 @@
 import { ImportSummary } from "@/features/csv-import/components/import-summary";
-import {
-  useImportResult,
-  useImportSessionActions,
-} from "@/features/csv-import/store/import-session";
+import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
 import { useUILoading } from "@/features/csv-import/store/import-ui-state";
 
 interface ImportStepProps {
@@ -11,8 +8,7 @@ interface ImportStepProps {
 }
 
 export function ImportStep({ onComplete, onImportAnother }: ImportStepProps) {
-  const importResult = useImportResult();
-  const { reset } = useImportSessionActions();
+  const { importResult, reset } = useImportSession();
   const loading = useUILoading();
 
   if (loading.categorizing || loading.analyzing) return null;

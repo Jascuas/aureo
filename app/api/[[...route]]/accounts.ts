@@ -75,7 +75,10 @@ const app = new Hono<AppEnv>()
           balance: 0,
           ...values,
         })
-        .returning();
+        .returning({
+          id: accounts.id,
+          name: accounts.name,
+        });
 
       return c.json({ data });
     },
@@ -130,7 +133,10 @@ const app = new Hono<AppEnv>()
         .update(accounts)
         .set(values)
         .where(and(eq(accounts.userId, userId), eq(accounts.id, id)))
-        .returning();
+        .returning({
+          id: accounts.id,
+          name: accounts.name,
+        });
 
       if (!data) {
         return c.json(API_ERRORS.NOT_FOUND, 404);

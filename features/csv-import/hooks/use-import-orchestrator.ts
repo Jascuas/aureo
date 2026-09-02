@@ -3,6 +3,7 @@ import { useCallback, useMemo } from "react";
 import { ImportStep } from "@/features/csv-import/const/import-const";
 import { useAnalyzeRetry } from "@/features/csv-import/hooks/use-analyze-retry";
 import { useCategorizeRetry } from "@/features/csv-import/hooks/use-categorize-retry";
+import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
 import { useTransactionAnalyzer } from "@/features/csv-import/hooks/use-transaction-analyzer";
 import { useTransactionImport } from "@/features/csv-import/hooks/use-transaction-import";
 import { validateColumnMapping } from "@/features/csv-import/lib/validators";
@@ -10,13 +11,6 @@ import {
   useDuplicateResolutionActions,
   useDuplicateResolutions,
 } from "@/features/csv-import/store/duplicate-resolution";
-import {
-  useAnalyzedRows,
-  useColumnMapping,
-  useCSVData,
-  useCurrentStep,
-  useImportSessionActions,
-} from "@/features/csv-import/store/import-session";
 import {
   useImportUIActions,
   useImportUIState,
@@ -45,13 +39,11 @@ export function useImportOrchestrator({
   accountId,
   onCancel,
 }: UseImportOrchestratorOptions): ImportOrchestrator {
-  const currentStep = useCurrentStep();
-  const csvData = useCSVData();
-  const columnMapping = useColumnMapping();
-  const analyzedRows = useAnalyzedRows();
-
   const {
-    setFinalMapping: _ignored,
+    currentStep,
+    csvData,
+    columnMapping,
+    analyzedRows,
     setDuplicates,
     setCategorizations,
     setPayeeMatches,
@@ -60,8 +52,7 @@ export function useImportOrchestrator({
     setImportResult,
     nextStep,
     reset,
-  } = useImportSessionActions();
-  void _ignored;
+  } = useImportSession();
 
   const resolutions = useDuplicateResolutions();
   const { reset: resetResolutions } = useDuplicateResolutionActions();
