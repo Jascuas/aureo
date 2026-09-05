@@ -230,6 +230,41 @@ test("transaction create, bulk-create, and update authorize references before wr
   assert.equal(writes.update, 2);
 });
 
+test("transaction writes discard import idempotency keys before persistence", async () => {
+  const persistedValues: TransactionWriteValues[] = [];
+  const operations = createTransactionWriteOperations({
+    authorizeReferences: ownedReferenceAuthorizer,
+    create: async (values) => {
+      persistedValues.push(values);
+      return transactionResponse(values);
+    },
+    createMany: async (values) => {
+      persistedValues.push(...values);
+      return values.map(transactionResponse);
+    },
+    update: async (_userId, _id, values) => {
+      persistedValues.push(values);
+      return transactionResponse(values);
+    },
+    delete: async (_userId, id) => ({ id }),
+    deleteMany: async (_userId, ids) => ids.map((id) => ({ id })),
+  });
+  const compromisedValues = {
+    ...sameUserTransaction,
+    importKey: "attempt-probe:0",
+  };
+
+  await operations.createTransaction("user-1", compromisedValues);
+  await operations.createTransactions("user-1", [compromisedValues]);
+  await operations.updateTransaction("user-1", "transaction-1", compromisedValues);
+
+  assert.equal(persistedValues.length, 3);
+  assert.equal(
+    persistedValues.every((values) => !Object.hasOwn(values, "importKey")),
+    true,
+  );
+});
+
 test("category create and update reject foreign or empty parent references before writing", async () => {
   const writes = { create: 0, update: 0 };
   const operations = createCategoryWriteOperations({
