@@ -1,11 +1,9 @@
-import { and, desc, eq, gte, lt, lte, or } from "drizzle-orm";
+import { and, desc, eq, gte, lt, or } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
 import { accounts, categories, transactions } from "@/db/schema";
-import {
-  getTransactionDateRange,
-  type TransactionListQuery,
-} from "@/features/transactions/lib/transaction-list-input";
+import type { TransactionListQuery } from "@/features/transactions/lib/transaction-list-input";
+import { getDateRange, getExclusiveEndDate } from "@/lib/date-range";
 
 export type TransactionListItem = {
   account: string;
@@ -77,7 +75,8 @@ const transactionListDependencies: TransactionListDependencies = {
     return transaction;
   },
   list: async (userId, input) => {
-    const { endDate, startDate } = getTransactionDateRange(input);
+    const { endDate, startDate } = getDateRange(input);
+    const exclusiveEndDate = getExclusiveEndDate(endDate);
 
     return db
       .select(transactionListProjection)
@@ -89,7 +88,7 @@ const transactionListDependencies: TransactionListDependencies = {
           input.accountId ? eq(transactions.accountId, input.accountId) : undefined,
           eq(accounts.userId, userId),
           gte(transactions.date, startDate),
-          lte(transactions.date, endDate),
+          lt(transactions.date, exclusiveEndDate),
           input.cursor
             ? or(
                 lt(transactions.date, input.cursor.date),

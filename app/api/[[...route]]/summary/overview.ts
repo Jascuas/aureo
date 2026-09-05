@@ -1,122 +1,28 @@
 import { zValidator } from "@hono/zod-validator";
-import { differenceInDays, subDays } from "date-fns";
-import { and, eq, gte, lte } from "drizzle-orm";
 import { Hono } from "hono";
-import { z } from "zod";
 
-import { db } from "@/db/drizzle";
-import { expensesAmountSql, incomeAmountSql } from "@/db/helpers";
-import { accounts, transactions } from "@/db/schema";
+import { summaryOverviewQuerySchema } from "@/features/summary/lib/summary-input";
+import { getSummaryOverview } from "@/features/summary/server/summary-operations";
+import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
-import { calculateCurrentBalanceChange } from "@/lib/balance-utils";
-import { parseDateRange } from "@/lib/date-utils";
 import type { AppEnv } from "@/lib/hono-env";
-import {
-  calculatePercentageChange,
-  convertAmountFromMilliunits,
-} from "@/lib/utils";
 
 const app = new Hono<AppEnv>().get(
   "/overview",
   requireAuth,
-  zValidator(
-    "query",
-    z.object({
-      from: z.string().optional(),
-      to: z.string().optional(),
-      accountId: z.string().optional(),
-    }),
-  ),
+  zValidator("query", summaryOverviewQuerySchema, (result, c) => {
+    if (!result.success) {
+      return c.json(API_ERRORS.BAD_REQUEST, 400);
+    }
+  }),
   async (c) => {
-    const userId = c.var.userId;
-    const { from, to, accountId } = c.req.valid("query");
-    const { startDate, endDate } = parseDateRange(from, to);
+    const result = await getSummaryOverview(c.var.userId, c.req.valid("query"));
 
-    const periodLength = differenceInDays(endDate, startDate) + 1;
-    const lastPeriodStart = subDays(startDate, periodLength);
-    const lastPeriodEnd = subDays(endDate, periodLength);
-
-    async function fetchFinancialData(
-      userId: string,
-      startDate: Date,
-      endDate: Date,
-    ) {
-      const [row] = await db
-        .select({
-          income: incomeAmountSql,
-          expenses: expensesAmountSql,
-        })
-        .from(transactions)
-        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-        .where(
-          and(
-            accountId ? eq(transactions.accountId, accountId) : undefined,
-            eq(accounts.userId, userId),
-            gte(transactions.date, startDate),
-            lte(transactions.date, endDate),
-          ),
-        );
-
-      return {
-        income: row.income,
-        expenses: row.expenses,
-      };
+    if (!result.ok) {
+      return c.json(API_ERRORS.INVALID_ACCOUNT, 404);
     }
 
-    const currentPeriod = await fetchFinancialData(userId, startDate, endDate);
-    const lastPeriod = await fetchFinancialData(
-      userId,
-      lastPeriodStart,
-      lastPeriodEnd,
-    );
-
-    const incomeChangePtc = calculatePercentageChange(
-      currentPeriod.income,
-      lastPeriod.income,
-    );
-
-    const expensesChangePtc = calculatePercentageChange(
-      currentPeriod.expenses,
-      lastPeriod.expenses,
-    );
-
-    // Calculate balance: balance at period end + change since period start
-    const balanceData = await calculateCurrentBalanceChange(
-      userId,
-      startDate, // Period start (for calculating change)
-      endDate, // Period end (balance at this date)
-      accountId,
-    );
-
-    const balanceChangePtc = calculatePercentageChange(
-      balanceData.currentBalanceMilli,
-      balanceData.balanceAtSinceDateMilli,
-    );
-
-    return c.json({
-      data: {
-        income: {
-          amount: convertAmountFromMilliunits(currentPeriod.income),
-          changeAmount: convertAmountFromMilliunits(
-            currentPeriod.income - lastPeriod.income,
-          ),
-          changePtc: incomeChangePtc,
-        },
-        expenses: {
-          amount: convertAmountFromMilliunits(currentPeriod.expenses),
-          changeAmount:
-            convertAmountFromMilliunits(
-              currentPeriod.expenses - lastPeriod.expenses,
-            ) * -1,
-          changePtc: expensesChangePtc * -1,
-        },
-        balance: {
-          amount: convertAmountFromMilliunits(balanceData.currentBalanceMilli),
-          changeAmount: convertAmountFromMilliunits(balanceData.changeMilli),
-          changePtc: balanceChangePtc,
-        },
-      },
-    });
+    return c.json({ data: result.data });
   },
 );
 
