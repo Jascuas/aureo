@@ -53,7 +53,7 @@ export const DuplicateResolution = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeResolution()}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="!flex max-h-[calc(100dvh-2rem)] !w-[calc(100%-2rem)] max-w-3xl !flex-col gap-4 overflow-hidden !p-4 sm:max-h-[calc(100dvh-4rem)] sm:!w-full sm:!p-6">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>Duplicate Transaction Detected</DialogTitle>
@@ -67,12 +67,14 @@ export const DuplicateResolution = ({
           </DialogDescription>
         </DialogHeader>
 
-        <DuplicateComparison
-          csvRow={csvRow}
-          existingTransaction={currentDuplicate.existingTransaction}
-          matchType={currentDuplicate.matchType}
-          score={currentDuplicate.score}
-        />
+        <div className="min-h-0 overflow-y-auto pr-1">
+          <DuplicateComparison
+            csvRow={csvRow}
+            existingTransaction={currentDuplicate.existingTransaction}
+            matchType={currentDuplicate.matchType}
+            score={currentDuplicate.score}
+          />
+        </div>
 
         <ResolutionFooter
           matchType={currentDuplicate.matchType}

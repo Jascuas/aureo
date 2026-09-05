@@ -17,12 +17,12 @@ export const ResolutionFooter = ({
   onImport,
   onClose,
 }: ResolutionFooterProps) => (
-  <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
-    <div className="flex gap-2">
+  <DialogFooter className="shrink-0 !flex-col gap-2 border-t pt-4 sm:flex-row sm:justify-between">
+    <div className="flex w-full gap-2 sm:w-auto">
       {onSkipAll && matchType === MatchType.Exact && (
         <Button
           variant="outline"
-          size="sm"
+          className="min-h-11 w-full sm:w-auto"
           onClick={() => {
             onSkipAll();
             onClose();
@@ -33,12 +33,12 @@ export const ResolutionFooter = ({
       )}
     </div>
 
-    <div className="flex gap-2">
-      <Button variant="outline" onClick={onSkip}>
+    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+      <Button className="min-h-11 w-full" variant="outline" onClick={onSkip}>
         Skip Import
         <span className="text-muted-foreground ml-2 text-xs">(Esc)</span>
       </Button>
-      <Button onClick={onImport}>
+      <Button className="min-h-11 w-full" onClick={onImport}>
         Import Anyway
         <span className="text-muted-foreground ml-2 text-xs">(Enter)</span>
       </Button>
