@@ -7,9 +7,9 @@ import { summaryQueryKeys } from "./query-keys";
 
 export const useGetOverview = () => {
   const searchParams = useSearchParams();
-  const from = searchParams.get("from") || "";
-  const to = searchParams.get("to") || "";
-  const accountId = searchParams.get("accountId") || "";
+  const from = searchParams.get("from") ?? undefined;
+  const to = searchParams.get("to") ?? undefined;
+  const accountId = searchParams.get("accountId") ?? undefined;
 
   const query = useQuery({
     queryKey: summaryQueryKeys.overview({ from, to, accountId }),

@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { getDateRange, getExclusiveEndDate } from "@/lib/date-range";
+
 import {
   createTransactionListOperations,
   type TransactionListItem,
 } from "../server/transaction-list-operations";
 import {
-  getTransactionDateRange,
   transactionIdsSchema,
   transactionListQuerySchema,
 } from "./transaction-list-input.ts";
@@ -78,18 +79,22 @@ test("transaction list input rejects malformed cursors, date ranges, and invalid
 
 test("transaction date bounds include the complete Europe/Madrid final day across DST", () => {
   assert.deepEqual(
-    getTransactionDateRange({ from: "2026-03-29", to: "2026-03-29" }),
+    getDateRange({ from: "2026-03-29", to: "2026-03-29" }),
     {
       endDate: new Date("2026-03-29T21:59:59.999Z"),
       startDate: new Date("2026-03-28T23:00:00.000Z"),
     },
   );
   assert.deepEqual(
-    getTransactionDateRange({ from: "2026-10-25", to: "2026-10-25" }),
+    getDateRange({ from: "2026-10-25", to: "2026-10-25" }),
     {
       endDate: new Date("2026-10-25T22:59:59.999Z"),
       startDate: new Date("2026-10-24T22:00:00.000Z"),
     },
+  );
+  assert.deepEqual(
+    getExclusiveEndDate(new Date("2026-03-29T21:59:59.999Z")),
+    new Date("2026-03-29T22:00:00.000Z"),
   );
 });
 

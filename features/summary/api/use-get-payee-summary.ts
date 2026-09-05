@@ -19,9 +19,9 @@ export function useGetPayeeSummary({
   top = 10,
 }: Options = {}) {
   const params = useSearchParams();
-  const from = params.get("from") ?? "";
-  const to = params.get("to") ?? "";
-  const accountId = params.get("accountId") ?? "";
+  const from = params.get("from") ?? undefined;
+  const to = params.get("to") ?? undefined;
+  const accountId = params.get("accountId") ?? undefined;
   const topStr = String(top);
 
   return useQuery({
