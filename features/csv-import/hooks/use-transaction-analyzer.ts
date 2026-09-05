@@ -102,6 +102,18 @@ export function useTransactionAnalyzer({
     );
 
     try {
+      if (transactionsForAnalysis.length === 0) {
+        callbacks.onAnalyzeComplete({
+          autoResolved: [],
+          aiTransactions: [],
+          payeeMatches: [],
+        });
+        callbacks.onCategorizationsReady([]);
+        setAnalyzeComplete(true);
+        callbacks.onComplete();
+        return;
+      }
+
       // ── Phase 1: /analyze ─────────────────────────────────────────────────
       setBatchProgress({
         current: 0,

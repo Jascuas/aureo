@@ -13,6 +13,7 @@ import type {
 type UseTransactionImportOptions = {
   accountId: string | undefined;
   categorizations: EnrichedCategorization[];
+  preImportFailedOutcomes: ImportRowOutcome[];
   resolutions: DuplicateResolution[];
   setImportResult: (result: ImportResult) => void;
   onComplete: () => void;
@@ -26,6 +27,7 @@ type UseTransactionImportReturn = {
 export function useTransactionImport({
   accountId,
   categorizations,
+  preImportFailedOutcomes,
   resolutions,
   setImportResult,
   onComplete,
@@ -40,11 +42,13 @@ export function useTransactionImport({
     if (!accountId) {
       setImportResult(
         buildImportResult(
-          categorizations.map((categorization) => ({
-            csvRowIndex: categorization.csvRowIndex,
-            reason: "No account selected.",
-            status: "failed" as const,
-          })),
+          preImportFailedOutcomes.concat(
+            categorizations.map((categorization) => ({
+              csvRowIndex: categorization.csvRowIndex,
+              reason: "No account selected.",
+              status: "failed" as const,
+            })),
+          ),
         ),
       );
       isImportingRef.current = false;
@@ -67,13 +71,15 @@ export function useTransactionImport({
     });
 
     if (rowsToImport.length === 0) {
-      setImportResult(buildImportResult(skippedOutcomes));
+      setImportResult(
+        buildImportResult([...preImportFailedOutcomes, ...skippedOutcomes]),
+      );
       onComplete();
       isImportingRef.current = false;
       return;
     }
 
-    const outcomes = [...skippedOutcomes];
+    const outcomes = [...preImportFailedOutcomes, ...skippedOutcomes];
     try {
       for (
         let start = 0;
@@ -122,6 +128,7 @@ export function useTransactionImport({
     bulkImportMutation,
     categorizations,
     onComplete,
+    preImportFailedOutcomes,
     resolutions,
     setImportResult,
   ]);
@@ -133,17 +140,19 @@ export function useTransactionImport({
 }
 
 function buildImportResult(outcomes: ImportRowOutcome[]): ImportResult {
-  return outcomes.reduce<ImportResult>(
-    (result, outcome) => ({
-      ...result,
-      errorCount: result.errorCount + (outcome.status === "failed" ? 1 : 0),
-      importedCount:
-        result.importedCount + (outcome.status === "imported" ? 1 : 0),
-      outcomes: [...result.outcomes, outcome],
-      skippedCount:
-        result.skippedCount +
-        (outcome.status === "skipped" || outcome.status === "duplicate" ? 1 : 0),
-    }),
-    { errorCount: 0, importedCount: 0, outcomes: [], skippedCount: 0 },
-  );
+  return [...outcomes]
+    .sort((first, second) => first.csvRowIndex - second.csvRowIndex)
+    .reduce<ImportResult>(
+      (result, outcome) => ({
+        ...result,
+        errorCount: result.errorCount + (outcome.status === "failed" ? 1 : 0),
+        importedCount:
+          result.importedCount + (outcome.status === "imported" ? 1 : 0),
+        outcomes: [...result.outcomes, outcome],
+        skippedCount:
+          result.skippedCount +
+          (outcome.status === "skipped" || outcome.status === "duplicate" ? 1 : 0),
+      }),
+      { errorCount: 0, importedCount: 0, outcomes: [], skippedCount: 0 },
+    );
 }

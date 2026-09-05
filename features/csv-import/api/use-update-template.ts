@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { InferRequestType, InferResponseType } from "hono";
 import { toast } from "sonner";
 
+import { getApiErrorMessage } from "@/features/csv-import/api/get-api-error-message";
 import { client } from "@/lib/hono";
 
 type SuccessResponse = InferResponseType<
@@ -28,11 +29,11 @@ export const useUpdateTemplate = () => {
       });
 
       if (!response.ok) {
-        const errorData = (await response.json()) as {
-          error?: { message?: string };
-        };
         throw new Error(
-          errorData.error?.message || "Failed to update template",
+          getApiErrorMessage(
+            await response.json(),
+            "Failed to update template",
+          ),
         );
       }
 
