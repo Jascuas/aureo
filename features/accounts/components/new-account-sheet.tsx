@@ -24,13 +24,18 @@ export const NewAccountSheet = () => {
   };
 
   return (
-    <Sheet open={isOpen || mutation.isPending} onOpenChange={onClose}>
+    <Sheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open && !mutation.isPending) onClose();
+      }}
+    >
       <SheetContent className="space-y-4">
         <SheetHeader>
-          <SheetTitle>New Account</SheetTitle>
+          <SheetTitle>Nueva cuenta</SheetTitle>
 
           <SheetDescription>
-            Create a new account to track your transactions.
+            Crea una cuenta para registrar tus transacciones.
           </SheetDescription>
         </SheetHeader>
 

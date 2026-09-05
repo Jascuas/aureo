@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { summaryQueryKeys } from "@/features/summary/api/query-keys";
 import { transactionQueryKeys } from "@/features/transactions/api/query-keys";
+import { getMutationErrorMessage } from "@/lib/api-client-error";
 import { client } from "@/lib/hono";
 
 import { categoryQueryKeys } from "./query-keys";
@@ -21,20 +22,27 @@ export const useDeleteCategory = (id?: string) => {
         param: { id },
       });
 
-      if (!response.ok) throw new Error("Failed to delete category.");
+      if (!response.ok) {
+        throw new Error(
+          getMutationErrorMessage(
+            response,
+            "No se pudo eliminar la categoría. Inténtalo de nuevo.",
+          ),
+        );
+      }
 
       return await response.json();
     },
     onSuccess: () => {
-      toast.success("Category deleted.");
+      toast.success("Categoría eliminada.");
       queryClient.invalidateQueries({ queryKey: categoryQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: transactionQueryKeys.all });
       queryClient.invalidateQueries({
         queryKey: summaryQueryKeys.byCategoryRoot(),
       });
     },
-    onError: () => {
-      toast.error("Failed to delete category.");
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 

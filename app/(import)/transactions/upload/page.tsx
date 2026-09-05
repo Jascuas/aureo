@@ -28,7 +28,7 @@ const UploadPageContent = () => {
   const handleImportAnother = async () => {
     const selectedAccountId = await confirm();
     if (!selectedAccountId) {
-      toast.error("Please select an account to continue.");
+      toast.error("Selecciona una cuenta para continuar.");
       return;
     }
     reset();

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { summaryQueryKeys } from "@/features/summary/api/query-keys";
 import { transactionQueryKeys } from "@/features/transactions/api/query-keys";
+import { getMutationErrorMessage } from "@/lib/api-client-error";
 import { client } from "@/lib/hono";
 
 import { accountQueryKeys } from "./query-keys";
@@ -25,18 +26,25 @@ export const useEditAccount = (id?: string) => {
         param: { id },
       });
 
-      if (!response.ok) throw new Error("Failed to edit account.");
+      if (!response.ok) {
+        throw new Error(
+          getMutationErrorMessage(
+            response,
+            "No se pudo actualizar la cuenta. Inténtalo de nuevo.",
+          ),
+        );
+      }
 
       return await response.json();
     },
     onSuccess: () => {
-      toast.success("Account updated.");
+      toast.success("Cuenta actualizada.");
       queryClient.invalidateQueries({ queryKey: accountQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: transactionQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: summaryQueryKeys.byAccount() });
     },
-    onError: () => {
-      toast.error("Failed to edit account.");
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 

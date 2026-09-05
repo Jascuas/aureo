@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const categoryFormSchema = z.object({
-  name: z.string(),
+  name: z.string().trim().min(1, "Introduce un nombre para la categoría."),
   parentId: z.string().nullable().optional(),
 });
 

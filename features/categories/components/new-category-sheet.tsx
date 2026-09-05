@@ -32,25 +32,37 @@ export const NewCategorySheet = () => {
   };
 
   return (
-    <Sheet open={isOpen || mutation.isPending} onOpenChange={onClose}>
+    <Sheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open && !mutation.isPending) onClose();
+      }}
+    >
       <SheetContent className="space-y-4">
         <SheetHeader>
-          <SheetTitle>New Category</SheetTitle>
+          <SheetTitle>Nueva categoría</SheetTitle>
 
           <SheetDescription>
-            Create a new category to organize your transactions.
+            Crea una categoría para organizar tus transacciones.
           </SheetDescription>
         </SheetHeader>
 
-        <CategoryForm
-          defaultValues={{
-            name: "",
-            parentId: null,
-          }}
-          categoryOptions={categoryOptions}
-          onSubmit={onSubmit}
-          disabled={mutation.isPending}
-        />
+        {categoriesQuery.isError ? (
+          <p className="text-sm text-destructive" role="alert">
+            No se pudieron cargar las categorías principales. Cierra la ventana e
+            inténtalo de nuevo.
+          </p>
+        ) : (
+          <CategoryForm
+            defaultValues={{
+              name: "",
+              parentId: null,
+            }}
+            categoryOptions={categoryOptions}
+            onSubmit={onSubmit}
+            disabled={mutation.isPending}
+          />
+        )}
       </SheetContent>
     </Sheet>
   );

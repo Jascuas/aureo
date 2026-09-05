@@ -3,6 +3,7 @@ import { InferRequestType, InferResponseType } from "hono";
 import { toast } from "sonner";
 
 import { summaryQueryKeys } from "@/features/summary/api/query-keys";
+import { getMutationErrorMessage } from "@/lib/api-client-error";
 import { client } from "@/lib/hono";
 
 import { accountQueryKeys } from "./query-keys";
@@ -17,17 +18,24 @@ export const useCreateAccount = () => {
     mutationFn: async (json) => {
       const response = await client.api.accounts.$post({ json });
 
-      if (!response.ok) throw new Error("Failed to create account.");
+      if (!response.ok) {
+        throw new Error(
+          getMutationErrorMessage(
+            response,
+            "No se pudo crear la cuenta. Inténtalo de nuevo.",
+          ),
+        );
+      }
 
       return await response.json();
     },
     onSuccess: () => {
-      toast.success("Account created.");
+      toast.success("Cuenta creada.");
       queryClient.invalidateQueries({ queryKey: accountQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: summaryQueryKeys.byAccount() });
     },
-    onError: () => {
-      toast.error("Failed to create account.");
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 

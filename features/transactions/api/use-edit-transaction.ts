@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { accountQueryKeys } from "@/features/accounts/api/query-keys";
 import { summaryQueryKeys } from "@/features/summary/api/query-keys";
+import { getMutationErrorMessage } from "@/lib/api-client-error";
 import { client } from "@/lib/hono";
 
 import { transactionQueryKeys } from "./query-keys";
@@ -25,18 +26,25 @@ export const useEditTransaction = (id?: string) => {
         param: { id },
       });
 
-      if (!response.ok) throw new Error("Failed to edit transaction.");
+      if (!response.ok) {
+        throw new Error(
+          getMutationErrorMessage(
+            response,
+            "No se pudo actualizar la transacción. Revisa los datos e inténtalo de nuevo.",
+          ),
+        );
+      }
 
       return await response.json();
     },
     onSuccess: () => {
-      toast.success("Transaction updated.");
+      toast.success("Transacción actualizada.");
       queryClient.invalidateQueries({ queryKey: transactionQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: accountQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: summaryQueryKeys.all });
     },
-    onError: () => {
-      toast.error("Failed to edit transaction.");
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 

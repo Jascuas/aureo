@@ -20,6 +20,7 @@ type GenericSelectProps<T extends string> = {
   placeholder?: string;
   icon?: ReactNode;
   onChange: (v: T) => void;
+  disabled?: boolean;
 };
 
 export function GenericSelect<T extends string>({
@@ -28,9 +29,10 @@ export function GenericSelect<T extends string>({
   placeholder = "Select…",
   icon,
   onChange,
+  disabled,
 }: GenericSelectProps<T>) {
   return (
-    <Select defaultValue={value} onValueChange={onChange}>
+    <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger className="h-9 lg:w-auto">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>

@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { InferRequestType, InferResponseType } from "hono";
 import { toast } from "sonner";
 
+import { getMutationErrorMessage } from "@/lib/api-client-error";
 import { client } from "@/lib/hono";
 
 import { categoryQueryKeys } from "./query-keys";
@@ -16,16 +17,23 @@ export const useCreateCategory = () => {
     mutationFn: async (json) => {
       const response = await client.api.categories.$post({ json });
 
-      if (!response.ok) throw new Error("Failed to create category.");
+      if (!response.ok) {
+        throw new Error(
+          getMutationErrorMessage(
+            response,
+            "No se pudo crear la categoría. Inténtalo de nuevo.",
+          ),
+        );
+      }
 
       return await response.json();
     },
     onSuccess: () => {
-      toast.success("Category created.");
+      toast.success("Categoría creada.");
       queryClient.invalidateQueries({ queryKey: categoryQueryKeys.all });
     },
-    onError: () => {
-      toast.error("Failed to create category.");
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 

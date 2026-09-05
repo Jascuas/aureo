@@ -41,26 +41,27 @@ export const AmountInput = ({
             <button
               type="button"
               onClick={onReverseValue}
+              disabled={disabled}
               className={cn(
-                "absolute left-1.5 top-1.5 flex items-center justify-center rounded-md bg-slate-400 p-2 transition hover:bg-slate-500",
-                isIncome && "bg-emerald-500 hover:bg-emerald-600",
-                isExpense && "bg-rose-500 hover:bg-rose-600"
+                "bg-muted absolute left-1.5 top-1.5 flex items-center justify-center rounded-md p-2 text-muted-foreground transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50",
+                isIncome && "bg-crt-pos text-background hover:bg-crt-pos",
+                isExpense && "bg-destructive text-destructive-foreground hover:bg-destructive",
               )}
             >
-              {!parsedValue && <Info className="size-3 text-white" />}
-              {isIncome && <PlusCircle className="size-3 text-white" />}
-              {isExpense && <MinusCircle className="size-3 text-white" />}
+              {!parsedValue && <Info className="size-3" />}
+              {isIncome && <PlusCircle className="size-3" />}
+              {isExpense && <MinusCircle className="size-3" />}
             </button>
           </TooltipTrigger>
 
           <TooltipContent>
-            Use [+] for income and [-] for expenses
+            Usa [+] para ingresos y [-] para gastos.
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
 
       <CurrencyInput
-        prefix="$"
+        prefix="€"
         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pl-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         placeholder={placeholder}
         value={value}
@@ -71,8 +72,8 @@ export const AmountInput = ({
       />
 
       <p className="mt-2 text-xs text-muted-foreground">
-        {isIncome && "This will count as an income."}
-        {isExpense && "This will count as an expense."}
+        {isIncome && "Se registrará como un ingreso."}
+        {isExpense && "Se registrará como un gasto."}
       </p>
     </div>
   );

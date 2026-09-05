@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { accountQueryKeys } from "@/features/accounts/api/query-keys";
 import { summaryQueryKeys } from "@/features/summary/api/query-keys";
+import { getMutationErrorMessage } from "@/lib/api-client-error";
 import { client } from "@/lib/hono";
 
 import { transactionQueryKeys } from "./query-keys";
@@ -24,18 +25,25 @@ export const useBulkDeleteTransactions = () => {
         json,
       });
 
-      if (!response.ok) throw new Error("Failed to delete transaction(s).");
+      if (!response.ok) {
+        throw new Error(
+          getMutationErrorMessage(
+            response,
+            "No se pudieron eliminar las transacciones. Inténtalo de nuevo.",
+          ),
+        );
+      }
 
       return await response.json();
     },
     onSuccess: () => {
-      toast.success("Transaction(s) deleted.");
+      toast.success("Transacciones eliminadas.");
       queryClient.invalidateQueries({ queryKey: transactionQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: accountQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: summaryQueryKeys.all });
     },
-    onError: () => {
-      toast.error("Failed to delete transaction(s).");
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 
