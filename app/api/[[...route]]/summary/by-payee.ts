@@ -13,6 +13,7 @@ import {
 import { requireAuth } from "@/lib/auth-middleware";
 import { parseDateRange } from "@/lib/date-utils";
 import type { AppEnv } from "@/lib/hono-env";
+import { convertAmountFromMilliunits } from "@/lib/utils";
 
 const app = new Hono<AppEnv>().get(
   "/by-payee",
@@ -37,7 +38,7 @@ const app = new Hono<AppEnv>().get(
     const rows = await db
       .select({
         name: transactions.payee,
-        value: sql`ROUND(SUM(${categoryAmountSql}) / 1000)`.mapWith(
+        valueMilliunits: sql`SUM(${categoryAmountSql})`.mapWith(
           Number,
         ),
       })
@@ -57,7 +58,12 @@ const app = new Hono<AppEnv>().get(
       .orderBy(desc(sql`SUM(${categoryAmountSql})`))
       .limit(top);
 
-    return c.json({ data: rows });
+    return c.json({
+      data: rows.map(({ valueMilliunits, ...payee }) => ({
+        ...payee,
+        value: convertAmountFromMilliunits(valueMilliunits),
+      })),
+    });
   },
 );
 

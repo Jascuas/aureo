@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import { db } from "@/db/drizzle";
 import { transactionBalanceDeltaSql } from "@/db/helpers";
 import { accounts, transactions } from "@/db/schema";
+import { calculateTotalCorruptionMilliunits } from "@/features/accounts/lib/balance-reconciliation";
 import { requireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
 import { convertAmountFromMilliunits } from "@/lib/utils";
@@ -43,10 +44,10 @@ const app = new Hono<AppEnv>().get(
         return {
           accountId: account.id,
           accountName: account.name,
-          currentBalance: convertAmountFromMilliunits(currentBalance),
-          calculatedBalance: convertAmountFromMilliunits(calculatedBalance),
+          currentBalanceMilliunits: currentBalance,
+          calculatedBalanceMilliunits: calculatedBalance,
           isValid,
-          difference: convertAmountFromMilliunits(difference),
+          differenceMilliunits: difference,
         };
       }),
     );
@@ -56,9 +57,8 @@ const app = new Hono<AppEnv>().get(
     const corruptedAccounts = verificationResults.filter(
       (r) => !r.isValid,
     ).length;
-    const totalCorruption = verificationResults.reduce(
-      (sum, r) => sum + Math.abs(r.difference),
-      0,
+    const totalCorruptionMilliunits = calculateTotalCorruptionMilliunits(
+      verificationResults,
     );
 
     return c.json({
@@ -70,9 +70,23 @@ const app = new Hono<AppEnv>().get(
           totalAccounts > 0
             ? ((corruptedAccounts / totalAccounts) * 100).toFixed(1) + "%"
             : "0%",
-        totalCorruption: totalCorruption.toFixed(2),
+        totalCorruption: convertAmountFromMilliunits(totalCorruptionMilliunits),
       },
-      accounts: verificationResults,
+      accounts: verificationResults.map(
+        ({
+          currentBalanceMilliunits,
+          calculatedBalanceMilliunits,
+          differenceMilliunits,
+          ...account
+        }) => ({
+          ...account,
+          currentBalance: convertAmountFromMilliunits(currentBalanceMilliunits),
+          calculatedBalance: convertAmountFromMilliunits(
+            calculatedBalanceMilliunits,
+          ),
+          difference: convertAmountFromMilliunits(differenceMilliunits),
+        }),
+      ),
     });
   },
 );
