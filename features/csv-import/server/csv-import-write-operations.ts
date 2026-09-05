@@ -311,19 +311,20 @@ export const createCsvImportWriteOperations = (
       const values = normalizeImportTransactionValues(row);
       const signature = `${values.date.toISOString()}\u0000${values.amount}\u0000${values.payee.toLocaleLowerCase()}`;
 
-      try {
-        if (
-          importedSignatures.has(signature) ||
-          (await dependencies.findExistingTransaction(accountId, values))
-        ) {
-          outcomes.push({
-            csvRowIndex: row.csvRowIndex,
-            reason: "An identical transaction already exists in this account.",
-            status: "duplicate",
-          });
-          continue;
-        }
+      const existingTransaction =
+        importedSignatures.has(signature) ||
+        (await dependencies.findExistingTransaction(accountId, values));
 
+      if (existingTransaction) {
+        outcomes.push({
+          csvRowIndex: row.csvRowIndex,
+          reason: "An identical transaction already exists in this account.",
+          status: "duplicate",
+        });
+        continue;
+      }
+
+      try {
         await dependencies.insertTransaction(accountId, values);
         importedSignatures.add(signature);
         outcomes.push({ csvRowIndex: row.csvRowIndex, status: "imported" });

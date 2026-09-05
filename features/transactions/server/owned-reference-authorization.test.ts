@@ -438,3 +438,24 @@ test("CSV import returns one idempotent outcome per row and normalizes expense d
   });
   assert.deepEqual(insertedAmounts, [1_000]);
 });
+
+test("CSV import propagates unavailable duplicate detection", async () => {
+  const operations = createCsvImportWriteOperations({
+    authorizeReferences: ownedReferenceAuthorizer,
+    createTemplate: async (_userId, values) => templateResponse(values),
+    deleteTemplate: async () => undefined,
+    findExistingTransaction: async () => {
+      throw new Error("database unavailable");
+    },
+    findOwnedCategoryIds: async (_userId, ids) => ids,
+    insertTransaction: async () => {},
+    listTemplates: async () => [],
+    updateTemplate: async (_userId, _id, values) =>
+      templateResponse({ ...sameUserTemplate, ...values }),
+  });
+
+  await assert.rejects(
+    operations.importTransactions("user-1", "owned-account-1", sameUserImport),
+    /database unavailable/,
+  );
+});

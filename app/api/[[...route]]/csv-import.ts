@@ -119,6 +119,27 @@ const matchPayeesSchema = z.object({
     ),
 });
 
+const importTransactionsSchema = z.object({
+  accountId: z.string().min(1),
+  transactions: z
+    .array(
+      z.object({
+        categoryId: z.string().nullable(),
+        csvRowIndex: z.number().int().min(0),
+        date: isoDateSchema,
+        amount: z.number().int(), // Milliunits
+        notes: z.string().optional(),
+        payee: z.string().min(1),
+        transactionTypeId: supportedTransactionTypeIdSchema,
+      }),
+    )
+    .min(1)
+    .max(
+      CSV_IMPORT_CONFIG.BATCH_LIMITS.BULK_IMPORT,
+      `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.BULK_IMPORT} transactions per import`,
+    ),
+});
+
 const importTemplateFields = {
   amountFormat: z.object({
     decimalSeparator: z.enum([".", ","]),
@@ -490,32 +511,35 @@ export const createCsvImportApp = (
     requireAuth,
     zValidator(
       "json",
-      z.object({
-        accountId: z.string().min(1),
-        transactions: z
-          .array(
-            z.object({
-              categoryId: z.string().nullable(),
-              csvRowIndex: z.number().int().min(0),
-              date: isoDateSchema,
-              amount: z.number().int(), // Milliunits
-              notes: z.string().optional(),
-              payee: z.string().min(1),
-              transactionTypeId: supportedTransactionTypeIdSchema,
-            }),
-          )
-          .min(1)
-          .max(
-            CSV_IMPORT_CONFIG.BATCH_LIMITS.BULK_IMPORT,
-            `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.BULK_IMPORT} transactions per import`,
-          ),
-      }),
+      importTransactionsSchema,
       (result, c) => {
         if (!result.success) {
+          const hasBoundedTransactionsIssue = result.error.issues.some(
+            (issue) =>
+              issue.path.length === 1 &&
+              issue.path[0] === "transactions" &&
+              (issue.code === "too_big" || issue.code === "too_small"),
+          );
+
+          if (hasBoundedTransactionsIssue) {
+            return c.json(
+              {
+                error: `Imports accept between 1 and ${CSV_IMPORT_CONFIG.BATCH_LIMITS.BULK_IMPORT} transactions per request.`,
+              },
+              400,
+            );
+          }
+
+          const hasInvalidTransactionType = result.error.issues.some(
+            (issue) => issue.path.at(-1) === "transactionTypeId",
+          );
+
+          if (hasInvalidTransactionType) {
+            return c.json(API_ERRORS.INVALID_FOREIGN_KEY, 400);
+          }
+
           return c.json(
-            {
-              error: `Imports accept between 1 and ${CSV_IMPORT_CONFIG.BATCH_LIMITS.BULK_IMPORT} transactions per request.`,
-            },
+            API_ERRORS.BAD_REQUEST,
             400,
           );
         }
