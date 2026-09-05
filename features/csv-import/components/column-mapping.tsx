@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,22 +13,20 @@ import { ColumnPreview } from "@/features/csv-import/components/column-preview";
 import { FormatDetector } from "@/features/csv-import/components/format-detector";
 import { TemplateControls } from "@/features/csv-import/components/template-controls";
 import { ColumnType } from "@/features/csv-import/const/import-const";
-import type { ColumnDetectionResult } from "@/features/csv-import/types/import-types";
+import type {
+  AmountFormat,
+  ColumnDetectionResult,
+  DateFormat,
+  ParsedCSVRow,
+} from "@/features/csv-import/types/import-types";
 
 type ColumnMappingProps = {
   accountId?: string;
   headers: string[];
-  sampleRows: string[][];
+  rows: ParsedCSVRow[];
   detectionResult?: ColumnDetectionResult;
   onMappingChange: (mapping: Record<string, number>) => void;
-  onFormatChange: (
-    dateFormat: string,
-    amountFormat: {
-      decimalSeparator: "." | ",";
-      thousandsSeparator: "," | "." | " " | "";
-      isNegativeExpense: boolean;
-    },
-  ) => void;
+  onFormatChange: (dateFormat: DateFormat, amountFormat: AmountFormat) => void;
   onSaveTemplate?: (name: string) => void;
   onLoadTemplate?: (templateId: string) => void;
 };
@@ -36,7 +34,7 @@ type ColumnMappingProps = {
 export const ColumnMapping = ({
   accountId,
   headers,
-  sampleRows,
+  rows,
   detectionResult,
   onMappingChange,
   onFormatChange,
@@ -51,6 +49,20 @@ export const ColumnMapping = ({
 
     return initialMapping;
   });
+
+  useEffect(() => {
+    if (!detectionResult) return;
+
+    setMapping(
+      detectionResult.columns.reduce<Record<number, ColumnType>>(
+        (nextMapping, column) => {
+          nextMapping[column.index] = column.type;
+          return nextMapping;
+        },
+        {},
+      ),
+    );
+  }, [detectionResult?.columns]);
 
   const handleMappingChange = (columnIndex: number, type: ColumnType) => {
     const newMapping = { ...mapping, [columnIndex]: type };
@@ -100,11 +112,23 @@ export const ColumnMapping = ({
 
   return (
     <div className="space-y-6">
-      <ColumnPreview headers={headers} sampleRows={sampleRows} />
+      <ColumnPreview
+        headers={headers}
+        rows={rows}
+        mapping={reverseMapping}
+        dateFormat={detectionResult?.dateFormat ?? "unknown"}
+        amountFormat={
+          detectionResult?.amountFormat ?? {
+            decimalSeparator: ",",
+            thousandsSeparator: ".",
+            isNegativeExpense: true,
+          }
+        }
+      />
 
       <ColumnMappingList
         headers={headers}
-        sampleRows={sampleRows}
+        sampleRows={rows.slice(0, 5).map((row) => row.data)}
         detectionResult={detectionResult}
         mapping={mapping}
         onMappingChange={handleMappingChange}

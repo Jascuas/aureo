@@ -10,6 +10,7 @@ import { formatCurrency } from "@/lib/utils";
 
 type DuplicateComparisonProps = {
   csvRow: {
+    csvRowIndex: number;
     date: Date;
     payee: string;
     amount: number;
@@ -85,7 +86,9 @@ export const DuplicateComparison = ({
         <Card className="border-2 border-amber-500/20 bg-amber-500/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
-              <span className="text-amber-600">CSV Row (New)</span>
+              <span className="text-amber-600">
+                Fila CSV {csvRow.csvRowIndex + 2} (nueva)
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -101,7 +104,9 @@ export const DuplicateComparison = ({
             <Separator />
             <div>
               <p className="text-muted-foreground text-xs">Amount</p>
-              <p className="font-medium">{formatCurrency(csvRow.amount)}</p>
+              <p className="font-medium">
+                {formatCurrency(csvRow.amount / 1000)}
+              </p>
             </div>
             {csvRow.category && (
               <>
@@ -141,7 +146,7 @@ export const DuplicateComparison = ({
             <div>
               <p className="text-muted-foreground text-xs">Amount</p>
               <p className="font-medium">
-                {formatCurrency(existingTransaction.amount)}
+                {formatCurrency(existingTransaction.amount / 1000)}
               </p>
             </div>
           </CardContent>

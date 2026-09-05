@@ -6,6 +6,7 @@ import { useCategorizeRetry } from "@/features/csv-import/hooks/use-categorize-r
 import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
 import { useTransactionAnalyzer } from "@/features/csv-import/hooks/use-transaction-analyzer";
 import { useTransactionImport } from "@/features/csv-import/hooks/use-transaction-import";
+import { buildMappingPreview } from "@/features/csv-import/lib/transaction-mapper";
 import { validateColumnMapping } from "@/features/csv-import/lib/validators";
 import {
   useDuplicateResolutionActions,
@@ -163,9 +164,37 @@ export function useImportOrchestrator({
       setError("detection", error);
       return;
     }
+    const finalMapping = columnMapping.finalMapping;
+    if (!csvData || !columnMapping.detectionResult || !finalMapping) {
+      setError("detection", "CSV format detection is not ready yet.");
+      return;
+    }
+    const invalidRows = buildMappingPreview(
+      csvData.rows,
+      finalMapping,
+      columnMapping.detectionResult.dateFormat,
+      columnMapping.detectionResult.amountFormat,
+    ).filter((row) => row.errors.length > 0);
+    if (invalidRows.length > 0) {
+      const rowNumbers = invalidRows
+        .slice(0, 5)
+        .map((row) => row.csvRowIndex + 2)
+        .join(", ");
+      setError(
+        "detection",
+        `${invalidRows.length} CSV row(s) need correction before analysis (rows ${rowNumbers}${invalidRows.length > 5 ? ", …" : ""}).`,
+      );
+      return;
+    }
     setError("detection", null);
     nextStep();
-  }, [columnMapping.finalMapping, nextStep, setError]);
+  }, [
+    columnMapping.detectionResult,
+    columnMapping.finalMapping,
+    csvData,
+    nextStep,
+    setError,
+  ]);
 
   const handleRerunAnalyze = useCallback(async () => {
     const ok = await confirmRerun();

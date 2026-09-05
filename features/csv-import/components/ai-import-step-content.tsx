@@ -40,6 +40,7 @@ export const AiImportStepContent = memo(function AiImportStepContent({
     csvData,
     columnMapping,
     analyzedRows,
+    setDetectionResult,
     setFinalMapping,
   } = useImportSession();
   const { skipAllExact, getPendingCount } = useDuplicateResolutionActions();
@@ -57,9 +58,17 @@ export const AiImportStepContent = memo(function AiImportStepContent({
         <MappingStep
           accountId={accountId}
           headers={csvData.headers}
-          sampleRows={csvData.rows.slice(0, 5).map((r) => r.data)}
+          rows={csvData.rows}
           detectionResult={columnMapping.detectionResult || undefined}
           onMappingChange={setFinalMapping}
+          onFormatChange={(dateFormat, amountFormat) => {
+            if (!columnMapping.detectionResult) return;
+            setDetectionResult({
+              ...columnMapping.detectionResult,
+              dateFormat,
+              amountFormat,
+            });
+          }}
         />
       );
 

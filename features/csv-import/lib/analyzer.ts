@@ -22,6 +22,7 @@ export async function analyze(
     detectDuplicates(
       userId,
       transactions.map((t) => ({
+        csvRowIndex: t.csvRowIndex,
         date: new Date(t.date),
         amount: t.amount,
         payee: t.payee,

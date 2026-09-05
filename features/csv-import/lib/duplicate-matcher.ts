@@ -41,7 +41,7 @@ async function findExactMatches(
 
     if (results.length > 0) {
       matches.set(i, {
-        csvIndex: i,
+        csvIndex: input.csvRowIndex,
         existingTransaction: results[0],
         matchType: MatchType.Exact,
         score: 1.0,
@@ -75,13 +75,13 @@ async function findFuzzyMatches(
         CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.DATE_TOLERANCE_DAYS,
     );
 
+    const tolerance =
+      CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.AMOUNT_TOLERANCE_PERCENT;
     const amountMin = Math.floor(
-      input.amount *
-        (1 - CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.AMOUNT_TOLERANCE_PERCENT),
+      Math.min(input.amount * (1 - tolerance), input.amount * (1 + tolerance)),
     );
     const amountMax = Math.ceil(
-      input.amount *
-        (1 + CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.AMOUNT_TOLERANCE_PERCENT),
+      Math.max(input.amount * (1 - tolerance), input.amount * (1 + tolerance)),
     );
 
     const results = await db
@@ -111,7 +111,7 @@ async function findFuzzyMatches(
     if (results.length > 0) {
       const result = results[0];
       matches.set(i, {
-        csvIndex: i,
+        csvIndex: input.csvRowIndex,
         existingTransaction: {
           id: result.id,
           date: result.date,

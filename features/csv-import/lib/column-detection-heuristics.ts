@@ -33,13 +33,7 @@ export const HEADER_PATTERNS: Record<ColumnType, string[]> = {
     "merchant",
     "comercio",
     "beneficiario",
-    "description",
     "concepto",
-    "descripcion",
-    "descripción",
-    "details",
-    "detalle",
-    "detalles",
   ],
   [ColumnType.Description]: [
     "description",
@@ -107,26 +101,52 @@ export function detectAmountFormat(samples: string[]): AmountFormat {
 
   let commaAsDecimal = 0;
   let dotAsDecimal = 0;
+  let commaAsThousands = 0;
+  let dotAsThousands = 0;
+  let spaceAsThousands = 0;
   let hasNegative = false;
 
   for (const sample of cleanSamples) {
     if (sample.startsWith("-") || sample.startsWith("(")) {
       hasNegative = true;
     }
+    const numericSample = sample
+      .replace(/^\((.*)\)$/, "$1")
+      .replace(/^[+-]\s*/, "")
+      .replace(/^[€$£]\s*/, "")
+      .replace(/\s*[€$£]$/, "");
 
-    if (/\d+\.\d{3},\d{2}/.test(sample)) {
+    if (/\d{1,3}(?:\.\d{3})+,\d{1,2}$/.test(numericSample)) {
       commaAsDecimal++;
-    } else if (/\d+,\d{3}\.\d{2}/.test(sample)) {
+    } else if (/\d{1,3}(?:,\d{3})+\.\d{1,2}$/.test(numericSample)) {
       dotAsDecimal++;
-    } else if (/\d+,\d{1,2}$/.test(sample)) {
+    } else if (/\d{1,3}(?:\.\d{3})+$/.test(numericSample)) {
+      dotAsThousands++;
+    } else if (/\d{1,3}(?:,\d{3})+$/.test(numericSample)) {
+      commaAsThousands++;
+    } else if (/\d{1,3}(?: \d{3})+(?:[.,]\d{1,2})?$/.test(numericSample)) {
+      spaceAsThousands++;
+      if (/,\d{1,2}$/.test(numericSample)) {
+        commaAsDecimal++;
+      } else if (/\.\d{1,2}$/.test(numericSample)) {
+        dotAsDecimal++;
+      }
+    } else if (/\d+,\d{1,2}$/.test(numericSample)) {
       commaAsDecimal++;
-    } else if (/\d+\.\d{1,2}$/.test(sample)) {
+    } else if (/\d+\.\d{1,2}$/.test(numericSample)) {
       dotAsDecimal++;
     }
   }
 
-  const decimalSeparator = commaAsDecimal > dotAsDecimal ? "," : ".";
-  const thousandsSeparator = decimalSeparator === "," ? "." : ",";
+  const decimalSeparator =
+    commaAsDecimal + dotAsThousands > dotAsDecimal + commaAsThousands
+      ? ","
+      : ".";
+  const thousandsSeparator = spaceAsThousands > 0
+    ? " "
+    : decimalSeparator === ","
+      ? "."
+      : ",";
 
   return {
     decimalSeparator,

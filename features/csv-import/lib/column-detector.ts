@@ -8,7 +8,6 @@ import type {
   DetectedColumn,
   HeuristicConfig,
 } from "@/features/csv-import/types/import-types";
-import { getDefaultAIProvider } from "@/lib/ai";
 
 import {
   detectAmountFormat,
@@ -69,6 +68,7 @@ export async function detectColumns(
     );
 
     try {
+      const { getDefaultAIProvider } = await import("@/lib/ai");
       const ai = getDefaultAIProvider();
       const aiResult = await ai.detectColumns({
         headers,
@@ -112,7 +112,7 @@ export function createColumnMapping(
 
   for (const column of detectionResult.columns) {
     if (column.type !== ColumnType.Unknown && column.confidence >= 0.5) {
-      if (!mapping[column.type]) {
+      if (mapping[column.type] === undefined) {
         mapping[column.type] = column.index;
       }
     }

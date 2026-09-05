@@ -3,22 +3,29 @@ import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ColumnMapping } from "@/features/csv-import/components/column-mapping";
 import { useUIErrors } from "@/features/csv-import/store/import-ui-state";
-import type { ColumnDetectionResult } from "@/features/csv-import/types/import-types";
+import type {
+  AmountFormat,
+  ColumnDetectionResult,
+  DateFormat,
+  ParsedCSVRow,
+} from "@/features/csv-import/types/import-types";
 
-interface MappingStepProps {
+type MappingStepProps = {
   accountId?: string;
   headers: string[];
-  sampleRows: string[][];
+  rows: ParsedCSVRow[];
   detectionResult?: ColumnDetectionResult;
   onMappingChange: (mapping: Record<string, number>) => void;
-}
+  onFormatChange: (dateFormat: DateFormat, amountFormat: AmountFormat) => void;
+};
 
 export function MappingStep({
   accountId,
   headers,
-  sampleRows,
+  rows,
   detectionResult,
   onMappingChange,
+  onFormatChange,
 }: MappingStepProps) {
   const errors = useUIErrors();
 
@@ -33,10 +40,10 @@ export function MappingStep({
       <ColumnMapping
         accountId={accountId}
         headers={headers}
-        sampleRows={sampleRows}
+        rows={rows}
         detectionResult={detectionResult}
         onMappingChange={onMappingChange}
-        onFormatChange={() => {}}
+        onFormatChange={onFormatChange}
       />
     </>
   );

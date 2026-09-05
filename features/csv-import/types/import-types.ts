@@ -31,7 +31,8 @@ export type DateFormat =
 export type AmountFormat = {
   decimalSeparator: "." | ",";
   thousandsSeparator: "," | "." | " " | "";
-  isNegativeExpense: boolean; // True if expenses are negative numbers
+  /** Whether source expenses are negative; parsing normalizes to the selected convention exactly once. */
+  isNegativeExpense: boolean;
 };
 
 export type ColumnDetectionResult = {
@@ -43,8 +44,10 @@ export type ColumnDetectionResult = {
 };
 
 export type ParsedCSVRow = {
-  index: number; // Row number in CSV (0-based)
+  /** Zero-based source data-row index. This identity is retained through preview and duplicate results. */
+  index: number;
   data: string[]; // Raw cell values
+  errors: string[];
   mapped?: MappedTransaction; // After column mapping
 };
 
@@ -64,6 +67,17 @@ export type MappedTransaction = {
 export type ParsedCSV = {
   headers: string[];
   rows: ParsedCSVRow[];
+  encoding: "utf-8" | "windows-1252";
+};
+
+export type MappingPreviewRow = {
+  csvRowIndex: number;
+  rawDate: string;
+  rawAmount: string;
+  date: Date | null;
+  amount: number | null;
+  payee: string;
+  errors: string[];
 };
 
 export type ImportTemplate = {
@@ -187,6 +201,7 @@ export type DuplicateResolutionProps = {
 // ============================================================================
 
 export type DuplicateTxInput = {
+  csvRowIndex: number;
   date: Date;
   amount: number;
   payee: string;
