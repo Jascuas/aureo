@@ -13,6 +13,16 @@ const migration = [
     "utf8",
   ),
 ].join("\n");
+const summaryRouteSources = [
+  readFileSync(
+    new URL("../app/api/[[...route]]/summary/by-category.ts", import.meta.url),
+    "utf8",
+  ),
+  readFileSync(
+    new URL("../app/api/[[...route]]/summary/by-payee.ts", import.meta.url),
+    "utf8",
+  ),
+];
 
 const docker = (args: string[], input?: string) =>
   execFileSync("docker", args, {
@@ -118,6 +128,33 @@ try {
   assert.equal(
     runSql("SELECT balance FROM accounts WHERE id = 'account-1';"),
     "4000070000",
+  );
+
+  for (const source of summaryRouteSources) {
+    assert.equal(
+      source.includes("ROUND(SUM(${categoryAmountSql}) / 1000)"),
+      false,
+    );
+    assert.equal(
+      source.includes("valueMilliunits: sql`SUM(${categoryAmountSql})`"),
+      true,
+    );
+    assert.equal(source.includes("value: convertAmountFromMilliunits"), true);
+  }
+
+  runSql(`
+    INSERT INTO transactions (id, amount, account_id, transaction_type_id) VALUES
+      ('summary-cents', 12990, 'account-1', 'income');
+  `);
+  assert.equal(
+    runSql(`
+      SELECT
+        (SUM(CASE WHEN transaction_type_id = 'income' THEN ABS(amount) ELSE 0 END) = 12990)::text,
+        (SUM(CASE WHEN transaction_type_id = 'income' THEN ABS(amount) ELSE 0 END) / 1000.0 = 12.99)::text
+      FROM transactions
+      WHERE id = 'summary-cents';
+    `),
+    "true,true",
   );
 
   console.log("Transaction type SQL trigger checks passed.");
