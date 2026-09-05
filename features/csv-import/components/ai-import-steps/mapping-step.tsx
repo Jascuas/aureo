@@ -7,6 +7,7 @@ import type {
   AmountFormat,
   ColumnDetectionResult,
   DateFormat,
+  ImportTemplate,
   ParsedCSVRow,
 } from "@/features/csv-import/types/import-types";
 
@@ -17,6 +18,7 @@ type MappingStepProps = {
   detectionResult?: ColumnDetectionResult;
   onMappingChange: (mapping: Record<string, number>) => void;
   onFormatChange: (dateFormat: DateFormat, amountFormat: AmountFormat) => void;
+  onLoadTemplate: (template: ImportTemplate) => void;
 };
 
 export function MappingStep({
@@ -26,6 +28,7 @@ export function MappingStep({
   detectionResult,
   onMappingChange,
   onFormatChange,
+  onLoadTemplate,
 }: MappingStepProps) {
   const errors = useUIErrors();
 
@@ -44,6 +47,7 @@ export function MappingStep({
         detectionResult={detectionResult}
         onMappingChange={onMappingChange}
         onFormatChange={onFormatChange}
+        onLoadTemplate={onLoadTemplate}
       />
     </>
   );

@@ -121,7 +121,8 @@ export const ColumnMapping = ({
         Number.isInteger(columnIndex) &&
         columnIndex >= 0 &&
         columnIndex < headers.length &&
-        isColumnType(columnType)
+        isColumnType(columnType) &&
+        columnType !== ColumnType.Unknown
       ) {
         nextMapping[columnIndex] = columnType;
       }
@@ -135,9 +136,12 @@ export const ColumnMapping = ({
     }, {});
 
     setMapping(templateMapping);
+    if (onLoadTemplate) {
+      onLoadTemplate({ ...template, columnMapping: templateReverseMapping });
+      return;
+    }
     onMappingChange(templateReverseMapping);
     onFormatChange(template.dateFormat, template.amountFormat);
-    onLoadTemplate?.(template);
   };
 
   return (
