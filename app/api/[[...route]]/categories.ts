@@ -1,13 +1,16 @@
 import { zValidator } from "@hono/zod-validator";
-import { and, eq, inArray } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
 import { Hono } from "hono";
 import { z } from "zod";
 
-import { db } from "@/db/drizzle";
-import { categories, insertCategorySchema } from "@/db/schema";
+import { insertCategorySchema } from "@/db/schema";
+import {
+  getCategories,
+  getCategory,
+} from "@/features/categories/server/category-read-operations";
 import {
   createCategory,
+  deleteCategories,
+  deleteCategory,
   updateCategory,
 } from "@/features/categories/server/category-write-operations";
 import { API_ERRORS } from "@/lib/api-errors";
@@ -15,24 +18,16 @@ import { requireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
 import { requireId } from "@/lib/validation-middleware";
 
-const parentCategory = alias(categories, "parent");
-
 const app = new Hono<AppEnv>()
   .get("/", requireAuth, async (c) => {
     const userId = c.var.userId;
+    const result = await getCategories(userId);
 
-    const data = await db
-      .select({
-        id: categories.id,
-        name: categories.name,
-        parentId: categories.parentId,
-        parentName: parentCategory.name,
-      })
-      .from(categories)
-      .leftJoin(parentCategory, eq(categories.parentId, parentCategory.id))
-      .where(eq(categories.userId, userId));
+    if (!result.ok) {
+      return c.json(API_ERRORS.BAD_REQUEST, 400);
+    }
 
-    return c.json({ data });
+    return c.json({ data: result.data });
   })
   .get(
     "/:id",
@@ -48,16 +43,7 @@ const app = new Hono<AppEnv>()
       const userId = c.var.userId;
       const id = c.var.validatedId;
 
-      const [data] = await db
-        .select({
-          id: categories.id,
-          name: categories.name,
-          parentName: parentCategory.name,
-          parentId: categories.parentId,
-        })
-        .from(categories)
-        .leftJoin(parentCategory, eq(categories.parentId, parentCategory.id))
-        .where(and(eq(categories.userId, userId), eq(categories.id, id)));
+      const data = await getCategory(userId, id);
 
       if (!data) {
         return c.json(API_ERRORS.NOT_FOUND, 404);
@@ -83,7 +69,12 @@ const app = new Hono<AppEnv>()
       const result = await createCategory(userId, values);
 
       if (!result.ok) {
-        return c.json(API_ERRORS.NOT_FOUND, 404);
+        return c.json(
+          result.reason === "not_found"
+            ? API_ERRORS.NOT_FOUND
+            : API_ERRORS.BAD_REQUEST,
+          result.reason === "not_found" ? 404 : 400,
+        );
       }
 
       return c.json({ data: result.data });
@@ -95,26 +86,25 @@ const app = new Hono<AppEnv>()
     zValidator(
       "json",
       z.object({
-        ids: z.array(z.string()),
+        ids: z.array(z.string()).min(1),
       }),
     ),
     async (c) => {
       const userId = c.var.userId;
       const values = c.req.valid("json");
 
-      const data = await db
-        .delete(categories)
-        .where(
-          and(
-            eq(categories.userId, userId),
-            inArray(categories.id, values.ids),
-          ),
-        )
-        .returning({
-          id: categories.id,
-        });
+      const result = await deleteCategories(userId, values.ids);
 
-      return c.json({ data });
+      if (!result.ok) {
+        return c.json(
+          result.reason === "not_found"
+            ? API_ERRORS.NOT_FOUND
+            : API_ERRORS.BAD_REQUEST,
+          result.reason === "not_found" ? 404 : 400,
+        );
+      }
+
+      return c.json({ data: result.data });
     },
   )
   .patch(
@@ -142,7 +132,12 @@ const app = new Hono<AppEnv>()
       const result = await updateCategory(userId, id, values);
 
       if (!result.ok) {
-        return c.json(API_ERRORS.NOT_FOUND, 404);
+        return c.json(
+          result.reason === "not_found"
+            ? API_ERRORS.NOT_FOUND
+            : API_ERRORS.BAD_REQUEST,
+          result.reason === "not_found" ? 404 : 400,
+        );
       }
 
       return c.json({ data: result.data });
@@ -162,18 +157,18 @@ const app = new Hono<AppEnv>()
       const userId = c.var.userId;
       const id = c.var.validatedId;
 
-      const [data] = await db
-        .delete(categories)
-        .where(and(eq(categories.userId, userId), eq(categories.id, id)))
-        .returning({
-          id: categories.id,
-        });
+      const result = await deleteCategory(userId, id);
 
-      if (!data) {
-        return c.json(API_ERRORS.NOT_FOUND, 404);
+      if (!result.ok) {
+        return c.json(
+          result.reason === "not_found"
+            ? API_ERRORS.NOT_FOUND
+            : API_ERRORS.BAD_REQUEST,
+          result.reason === "not_found" ? 404 : 400,
+        );
       }
 
-      return c.json({ data });
+      return c.json({ data: result.data[0] });
     },
   );
 

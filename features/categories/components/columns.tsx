@@ -2,10 +2,8 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { InferResponseType } from "hono";
-import { ArrowUpDown } from "lucide-react";
 
 import { Actions } from "@/app/(dashboard)/categories/actions";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { client } from "@/lib/hono";
 
@@ -39,21 +37,15 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: "name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    header: "Name",
     cell: ({ row }) => {
-      const hasParent = !!row.original.parentName;
+      const hasParent = row.original.depth > 0;
       return (
-        <div className={hasParent ? "pl-8" : ""}>
+        <div
+          style={
+            hasParent ? { paddingLeft: `${row.original.depth * 2}rem` } : undefined
+          }
+        >
           {hasParent && <span className="text-muted-foreground mr-2">└─</span>}
           {row.original.name}
         </div>
@@ -62,17 +54,7 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: "parentName",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Parent Category
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    header: "Parent Category",
   },
   {
     id: "actions",

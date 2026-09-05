@@ -7,6 +7,7 @@ import { categoryQueryKeys } from "./query-keys";
 export const useGetCategories = () => {
   const query = useQuery({
     queryKey: categoryQueryKeys.all,
+    retry: false,
     queryFn: async () => {
       const response = await client.api.categories.$get();
 

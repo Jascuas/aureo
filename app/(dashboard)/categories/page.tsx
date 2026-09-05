@@ -37,6 +37,27 @@ const CategoriesPage = () => {
     );
   }
 
+  if (categoriesQuery.isError) {
+    return (
+      <div className="w-full pb-10">
+        <Card className="border-border border drop-shadow-sm">
+          <CardHeader>
+            <CardTitle className="line-clamp-1 text-xs">
+              <span className="text-crt-accent">▌</span> Categories Page
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            <p role="alert">
+              Unable to load the category hierarchy. Refresh to retry.
+            </p>
+            <Button onClick={() => categoriesQuery.refetch()}>Retry</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full pb-10">
       <Card className="border-border border drop-shadow-sm">

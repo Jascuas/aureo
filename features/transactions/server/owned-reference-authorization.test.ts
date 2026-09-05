@@ -228,6 +228,12 @@ test("category create and update reject foreign or empty parent references befor
   const writes = { create: 0, update: 0 };
   const operations = createCategoryWriteOperations({
     authorizeReferences: ownedReferenceAuthorizer,
+    findOwnedHierarchy: async () => [
+      { id: "category-1", parentId: null },
+      { id: "owned-category-1", parentId: null },
+    ],
+    findOwnedIds: async (_userId, ids) => [...ids],
+    findChildIds: async () => [],
     create: async (_userId, values) => {
       writes.create += 1;
       return categoryResponse(values);
@@ -236,6 +242,7 @@ test("category create and update reject foreign or empty parent references befor
       writes.update += 1;
       return categoryResponse(values);
     },
+    delete: async (_userId, ids) => ids.map((id) => ({ id })),
   });
 
   assert.equal((await operations.createCategory("user-1", sameUserCategory)).ok, true);
