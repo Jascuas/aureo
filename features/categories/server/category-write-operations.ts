@@ -50,6 +50,7 @@ export type CategoryWriteDependencies = {
   findOwnedHierarchy: (userId: string) => Promise<CategoryParentReference[]>;
   findOwnedIds: (userId: string, ids: readonly string[]) => Promise<string[]>;
   findChildIds: (
+    userId: string,
     parentIds: readonly string[],
     excludedIds: readonly string[],
   ) => Promise<string[]>;
@@ -82,12 +83,13 @@ const categoryWriteDependencies: CategoryWriteDependencies = {
 
     return rows.map((row) => row.id);
   },
-  findChildIds: async (parentIds, excludedIds) => {
+  findChildIds: async (userId, parentIds, excludedIds) => {
     const rows = await db
       .select(categoryIdProjection)
       .from(categories)
       .where(
         and(
+          eq(categories.userId, userId),
           inArray(categories.parentId, [...parentIds]),
           notInArray(categories.id, [...excludedIds]),
         ),
@@ -153,7 +155,7 @@ export const createCategoryWriteOperations = (
       return { ok: false, reason: "not_found" };
     }
 
-    const childIds = await dependencies.findChildIds(ids, ids);
+    const childIds = await dependencies.findChildIds(userId, ids, ids);
 
     if (childIds.length > 0) {
       return { ok: false, reason: "has_children" };

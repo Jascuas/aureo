@@ -95,3 +95,19 @@ test("rejects a parent deletion when it would orphan children", async () => {
     reason: "has_children",
   });
 });
+
+test("scopes the direct-child lookup to the deleting user", async () => {
+  const dependencies = createDependencies();
+  let childLookupUserId: string | undefined;
+  dependencies.findChildIds = async (userId) => {
+    childLookupUserId = userId;
+    return [];
+  };
+  const operations = createCategoryWriteOperations(dependencies);
+
+  assert.deepEqual(await operations.deleteCategory("user-1", "home"), {
+    ok: true,
+    data: [{ id: "home" }],
+  });
+  assert.equal(childLookupUserId, "user-1");
+});
