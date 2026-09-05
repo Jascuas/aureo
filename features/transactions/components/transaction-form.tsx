@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   transactionFormSchema,
   type TransactionFormValues,
+  transactionMutationSchema,
   type TransactionMutationValues,
 } from "@/features/transactions/lib/transaction-form-schema";
 import { convertAmountToMilliunits } from "@/lib/utils";
@@ -33,6 +34,7 @@ type TransactionFormProps = {
   accountOptions: { label: string; value: string }[];
   categoryOptions: { label: string; value: string }[];
   transactionTypeOptions: { label: string; value: string }[];
+  unsupportedTransactionTypeId?: string;
   onCreateAccount: (name: string) => void;
   onCreateCategory: (name: string) => void;
 };
@@ -46,6 +48,7 @@ export const TransactionForm = ({
   accountOptions,
   categoryOptions,
   transactionTypeOptions,
+  unsupportedTransactionTypeId,
   onCreateAccount,
   onCreateCategory,
 }: TransactionFormProps) => {
@@ -57,10 +60,7 @@ export const TransactionForm = ({
     const amount = parseFloat(values.amount);
     const amountInMilliunits = convertAmountToMilliunits(amount);
 
-    onSubmit({
-      ...values,
-      amount: amountInMilliunits,
-    });
+    onSubmit(transactionMutationSchema.parse({ ...values, amount: amountInMilliunits }));
   };
 
   const handleDelete = () => {
@@ -159,6 +159,12 @@ export const TransactionForm = ({
               </FormControl>
 
               <FormMessage />
+              {unsupportedTransactionTypeId && (
+                <p className="text-destructive text-sm" role="alert">
+                  Este tipo de transacción ya no es compatible. Selecciona un
+                  tipo admitido antes de guardar los cambios.
+                </p>
+              )}
             </FormItem>
           )}
         />

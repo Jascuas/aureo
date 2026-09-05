@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 
+import type { TransactionTypeName } from "@/features/transaction-types/lib/transaction-types";
 import { client } from "@/lib/hono";
 
 import { summaryQueryKeys } from "./query-keys";
 
-type PayeeSummaryType = "Income" | "Expense" | "Refund";
+type PayeeSummaryType = TransactionTypeName;
 
 type Options = {
   type?: PayeeSummaryType;

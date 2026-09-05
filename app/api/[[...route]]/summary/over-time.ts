@@ -4,8 +4,8 @@ import { Hono } from "hono";
 import { z } from "zod";
 
 import { db } from "@/db/drizzle";
-import { expenseOnlyAmountSql, incomeWithRefundAmountSql } from "@/db/helpers";
-import { accounts, transactions, transactionTypes } from "@/db/schema";
+import { expensesAmountSql, incomeAmountSql } from "@/db/helpers";
+import { accounts, transactions } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
 import { parseDateRange } from "@/lib/date-utils";
 import type { AppEnv } from "@/lib/hono-env";
@@ -48,14 +48,10 @@ const app = new Hono<AppEnv>().get(
     const financialData = await db
       .select({
         date: transactions.date,
-        income: incomeWithRefundAmountSql,
-        expenses: expenseOnlyAmountSql,
+        income: incomeAmountSql,
+        expenses: expensesAmountSql,
       })
       .from(transactions)
-      .innerJoin(
-        transactionTypes,
-        eq(transactions.transactionTypeId, transactionTypes.id),
-      )
       .innerJoin(accounts, eq(transactions.accountId, accounts.id))
       .where(
         and(

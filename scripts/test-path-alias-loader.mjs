@@ -1,18 +1,24 @@
-import { access } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import { resolve as resolvePath } from "node:path";
 import { fileURLToPath, pathToFileURL, URL } from "node:url";
+
+import typescript from "typescript";
 
 const extensions = [".ts", ".tsx"];
 
 const resolveTypeScriptPath = async (pathWithoutExtension) => {
-  for (const extension of extensions) {
-    const path = `${pathWithoutExtension}${extension}`;
+  const paths = extensions.flatMap((extension) => [
+    `${pathWithoutExtension}${extension}`,
+    resolvePath(pathWithoutExtension, `index${extension}`),
+  ]);
+
+  for (const path of paths) {
 
     try {
       await access(path);
       return pathToFileURL(path).href;
     } catch {
-      continue;
+      // Try the next TypeScript file or index path.
     }
   }
 
@@ -36,4 +42,22 @@ export const resolve = async (specifier, context, nextResolve) => {
   }
 
   return nextResolve(specifier, context);
+};
+
+export const load = async (url, context, nextLoad) => {
+  if (url.endsWith(".ts") || url.endsWith(".tsx")) {
+    const source = await readFile(fileURLToPath(url), "utf8");
+    const output = typescript.transpileModule(source, {
+      compilerOptions: {
+        jsx: typescript.JsxEmit.ReactJSX,
+        module: typescript.ModuleKind.ESNext,
+        target: typescript.ScriptTarget.ES2022,
+      },
+      fileName: fileURLToPath(url),
+    });
+
+    return { format: "module", shortCircuit: true, source: output.outputText };
+  }
+
+  return nextLoad(url, context);
 };

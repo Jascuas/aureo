@@ -12,6 +12,7 @@ import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
 import { useCreateCategory } from "@/features/categories/api/use-create-category";
 import { useGetCategories } from "@/features/categories/api/use-get-categories";
 import { useGetTransactionTypes } from "@/features/transaction-types/api/use-get-transaction-types";
+import { isSupportedTransactionTypeId } from "@/features/transaction-types/lib/transaction-types";
 import { useDeleteTransaction } from "@/features/transactions/api/use-delete-transaction";
 import { useEditTransaction } from "@/features/transactions/api/use-edit-transaction";
 import { useGetTransaction } from "@/features/transactions/api/use-get-transaction";
@@ -145,6 +146,14 @@ export const EditTransactionSheet = () => {
               accountOptions={accountOptions}
               onCreateAccount={onCreateAccount}
               transactionTypeOptions={transactionTypeOptions}
+              unsupportedTransactionTypeId={
+                transactionQuery.data &&
+                !isSupportedTransactionTypeId(
+                  transactionQuery.data.transactionTypeId,
+                )
+                  ? transactionQuery.data.transactionTypeId
+                  : undefined
+              }
               onDelete={onDelete}
             />
           )}

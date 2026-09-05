@@ -1,35 +1,11 @@
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
-import {
-  accounts,
-  categories,
-  transactions,
-  transactionTypes,
-} from "@/db/schema";
+import { accounts, categories, transactions } from "@/db/schema";
+import { getTransactionTypeForAmount } from "@/features/transaction-types/lib/transaction-types";
 import { normalizePayeeName } from "@/lib/utils";
 
-export async function detectTransactionType(amount: number): Promise<{
-  id: string;
-  name: string;
-}> {
-  const typeName = amount < 0 ? "expense" : "income";
-
-  const [type] = await db
-    .select({
-      id: transactionTypes.id,
-      name: transactionTypes.name,
-    })
-    .from(transactionTypes)
-    .where(sql`LOWER(${transactionTypes.name}) = ${typeName}`)
-    .limit(1);
-
-  if (!type) {
-    throw new Error(`Transaction type '${typeName}' not found in database`);
-  }
-
-  return type;
-}
+export const detectTransactionType = getTransactionTypeForAmount;
 
 export async function findSimilarTransactions(
   userId: string,

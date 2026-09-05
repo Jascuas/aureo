@@ -5,12 +5,14 @@ import { z } from "zod";
 
 import { db } from "@/db/drizzle";
 import { categoryAmountSql } from "@/db/helpers";
-import { accounts, transactions, transactionTypes } from "@/db/schema";
+import { accounts, transactions } from "@/db/schema";
+import {
+  getSummaryTransactionTypeIds,
+  TRANSACTION_TYPE_NAMES,
+} from "@/features/transaction-types/lib/transaction-types";
 import { requireAuth } from "@/lib/auth-middleware";
 import { parseDateRange } from "@/lib/date-utils";
 import type { AppEnv } from "@/lib/hono-env";
-
-type TxType = "Income" | "Expense" | "Refund";
 
 const app = new Hono<AppEnv>().get(
   "/by-payee",
@@ -18,7 +20,7 @@ const app = new Hono<AppEnv>().get(
   zValidator(
     "query",
     z.object({
-      type: z.enum(["Income", "Expense", "Refund"]).default("Expense"),
+      type: z.enum(TRANSACTION_TYPE_NAMES).default("Expense"),
       from: z.string().optional(),
       to: z.string().optional(),
       accountId: z.string().optional(),
@@ -30,27 +32,23 @@ const app = new Hono<AppEnv>().get(
     const { type, from, to, accountId, top } = c.req.valid("query");
     const { startDate, endDate } = parseDateRange(from, to);
 
-    const wanted: readonly TxType[] =
-      type === "Expense" ? ["Expense", "Refund"] : [type];
+    const wanted = getSummaryTransactionTypeIds(type);
 
     const rows = await db
       .select({
         name: transactions.payee,
-        value: sql`ROUND(SUM(ABS(${transactions.amount})) / 1000)`.mapWith(
+        value: sql`ROUND(SUM(${categoryAmountSql}) / 1000)`.mapWith(
           Number,
         ),
       })
       .from(transactions)
       .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-      .innerJoin(
-        transactionTypes,
-        eq(transactions.transactionTypeId, transactionTypes.id),
-      )
+
       .where(
         and(
           accountId ? eq(transactions.accountId, accountId) : undefined,
           eq(accounts.userId, userId),
-          inArray(transactionTypes.name, wanted),
+          inArray(transactions.transactionTypeId, wanted),
           gte(transactions.date, startDate),
           lte(transactions.date, endDate),
         ),

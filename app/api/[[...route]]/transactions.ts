@@ -1,8 +1,9 @@
 import { zValidator } from "@hono/zod-validator";
-import { Hono } from "hono";
+import { Hono, type MiddlewareHandler } from "hono";
 import { z } from "zod";
 
 import { insertTransactionSchema } from "@/db/schema";
+import { supportedTransactionTypeIdSchema } from "@/features/transaction-types/lib/transaction-types";
 import {
   TRANSACTION_BULK_LIMIT,
   transactionIdsSchema,
@@ -20,13 +21,21 @@ import {
   updateTransaction,
 } from "@/features/transactions/server/transaction-write-operations";
 import { API_ERRORS } from "@/lib/api-errors";
-import { requireAuth } from "@/lib/auth-middleware";
+import { requireAuth as defaultRequireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
 import { requireId } from "@/lib/validation-middleware";
 
 const transactionValuesSchema = insertTransactionSchema.omit({ id: true });
+const transactionWriteSchema = transactionValuesSchema.extend({
+  transactionTypeId: supportedTransactionTypeIdSchema,
+});
 
-const app = new Hono<AppEnv>()
+export const createTransactionsApp = (
+  authMiddleware: MiddlewareHandler<AppEnv> = defaultRequireAuth,
+) => {
+  const requireAuth = authMiddleware;
+
+  return new Hono<AppEnv>()
   .get(
     "/",
     zValidator("query", transactionListQuerySchema, (result, c) => {
@@ -64,7 +73,11 @@ const app = new Hono<AppEnv>()
   .post(
     "/",
     requireAuth,
-    zValidator("json", transactionValuesSchema),
+    zValidator("json", transactionWriteSchema, (result, c) => {
+      if (!result.success) {
+        return c.json(API_ERRORS.INVALID_FOREIGN_KEY, 400);
+      }
+    }),
     async (c) => {
       const result = await createTransaction(c.var.userId, c.req.valid("json"));
 
@@ -93,7 +106,15 @@ const app = new Hono<AppEnv>()
   .post(
     "/bulk-create",
     requireAuth,
-    zValidator("json", z.array(transactionValuesSchema).min(1).max(TRANSACTION_BULK_LIMIT)),
+    zValidator(
+      "json",
+      z.array(transactionWriteSchema).min(1).max(TRANSACTION_BULK_LIMIT),
+      (result, c) => {
+        if (!result.success) {
+          return c.json(API_ERRORS.INVALID_FOREIGN_KEY, 400);
+        }
+      },
+    ),
     async (c) => {
       const result = await createTransactions(c.var.userId, c.req.valid("json"));
 
@@ -114,7 +135,11 @@ const app = new Hono<AppEnv>()
     ),
     requireAuth,
     requireId,
-    zValidator("json", transactionValuesSchema),
+    zValidator("json", transactionWriteSchema, (result, c) => {
+      if (!result.success) {
+        return c.json(API_ERRORS.INVALID_FOREIGN_KEY, 400);
+      }
+    }),
     async (c) => {
       const result = await updateTransaction(
         c.var.userId,
@@ -149,5 +174,6 @@ const app = new Hono<AppEnv>()
       return c.json({ data: result.data });
     },
   );
+};
 
-export default app;
+export default createTransactionsApp();

@@ -8,6 +8,7 @@ import type {
   CategorizationResult,
   CategorizationTxInput,
 } from "@/features/csv-import/types/import-types";
+import { isSupportedTransactionTypeId } from "@/features/transaction-types/lib/transaction-types";
 import { getDefaultAIProvider } from "@/lib/ai";
 import { normalizePayeeName } from "@/lib/utils";
 
@@ -71,7 +72,7 @@ export async function categorizeTransactions(
         topCategoryId: hint.categoryId,
         confidence: hint.confidence,
         matchCount: hint.matchCount,
-        matchType: hint.matchType as "exact" | "fuzzy",
+        matchType: hint.matchType,
       });
     }
   }
@@ -101,7 +102,9 @@ export async function categorizeTransactions(
 
     const hint = input.historicalHint;
     const resolvedTypeId =
-      hint && hint.matchCount >= MIN_MATCH_COUNT
+      hint &&
+      hint.matchCount >= MIN_MATCH_COUNT &&
+      isSupportedTransactionTypeId(hint.transactionTypeId)
         ? hint.transactionTypeId
         : transactionType.id;
 

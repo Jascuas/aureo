@@ -5,17 +5,14 @@ import { z } from "zod";
 
 import { db } from "@/db/drizzle";
 import { categoryAmountSql } from "@/db/helpers";
+import { accounts, categories, transactions } from "@/db/schema";
 import {
-  accounts,
-  categories,
-  transactions,
-  transactionTypes,
-} from "@/db/schema";
+  getSummaryTransactionTypeIds,
+  TRANSACTION_TYPE_NAMES,
+} from "@/features/transaction-types/lib/transaction-types";
 import { requireAuth } from "@/lib/auth-middleware";
 import { parseDateRange } from "@/lib/date-utils";
 import type { AppEnv } from "@/lib/hono-env";
-
-type TxType = "Income" | "Expense" | "Refund";
 
 const app = new Hono<AppEnv>().get(
   "/by-category",
@@ -23,7 +20,7 @@ const app = new Hono<AppEnv>().get(
   zValidator(
     "query",
     z.object({
-      type: z.enum(["Income", "Expense", "Refund", "All"]).default("All"),
+      type: z.enum([...TRANSACTION_TYPE_NAMES, "All"]).default("All"),
       from: z.string().optional(),
       to: z.string().optional(),
       accountId: z.string().optional(),
@@ -35,32 +32,24 @@ const app = new Hono<AppEnv>().get(
     const { type, from, to, accountId, top } = c.req.valid("query");
     const { startDate, endDate } = parseDateRange(from, to);
 
-    const wanted: readonly TxType[] =
-      type === "All"
-        ? ["Income", "Expense", "Refund"]
-        : type === "Expense"
-          ? ["Expense", "Refund"]
-          : [type];
+    const wanted = getSummaryTransactionTypeIds(type);
 
     const rows = await db
       .select({
         name: categories.name,
-        value: sql`ROUND(SUM(ABS(${transactions.amount})) / 1000)`.mapWith(
+        value: sql`ROUND(SUM(${categoryAmountSql}) / 1000)`.mapWith(
           Number,
         ),
       })
       .from(transactions)
       .innerJoin(accounts, eq(transactions.accountId, accounts.id))
       .innerJoin(categories, eq(transactions.categoryId, categories.id))
-      .innerJoin(
-        transactionTypes,
-        eq(transactions.transactionTypeId, transactionTypes.id),
-      )
+
       .where(
         and(
           accountId ? eq(transactions.accountId, accountId) : undefined,
           eq(accounts.userId, userId),
-          inArray(transactionTypes.name, wanted),
+          inArray(transactions.transactionTypeId, wanted),
           gte(transactions.date, startDate),
           lte(transactions.date, endDate),
         ),
