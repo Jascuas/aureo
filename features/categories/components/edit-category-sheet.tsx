@@ -58,7 +58,8 @@ export const EditCategorySheet = () => {
 
   const isPending = editMutation.isPending || deleteMutation.isPending;
 
-  const isLoading = categoryQuery.isLoading;
+  const isLoading = categoryQuery.isLoading || categoriesQuery.isLoading;
+  const hasReferenceError = categoryQuery.isError || categoriesQuery.isError;
 
   const onSubmit = (values: CategoryFormValues) => {
     editMutation.mutate(values, {
@@ -110,9 +111,10 @@ export const EditCategorySheet = () => {
             <div className="absolute inset-0 flex items-center justify-center">
               <Loader2 className="text-muted-foreground size-4 animate-spin" />
             </div>
-          ) : categoryQuery.isError ? (
+          ) : hasReferenceError ? (
             <p className="text-sm text-destructive" role="alert">
-              No se pudo cargar la categoría. Cierra la ventana e inténtalo de nuevo.
+              No se pudieron cargar los datos de la categoría. Cierra la ventana e
+              inténtalo de nuevo.
             </p>
           ) : categoryQuery.data ? (
             <CategoryForm

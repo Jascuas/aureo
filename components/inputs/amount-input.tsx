@@ -54,9 +54,7 @@ export const AmountInput = ({
             </button>
           </TooltipTrigger>
 
-          <TooltipContent>
-            Usa [+] para ingresos y [-] para gastos.
-          </TooltipContent>
+          <TooltipContent>Cambia el signo del importe.</TooltipContent>
         </Tooltip>
       </TooltipProvider>
 
@@ -70,11 +68,6 @@ export const AmountInput = ({
         onValueChange={onChange}
         disabled={disabled}
       />
-
-      <p className="mt-2 text-xs text-muted-foreground">
-        {isIncome && "Se registrará como un ingreso."}
-        {isExpense && "Se registrará como un gasto."}
-      </p>
     </div>
   );
 };

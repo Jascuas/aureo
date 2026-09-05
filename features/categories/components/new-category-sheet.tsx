@@ -1,3 +1,5 @@
+import { Loader2 } from "lucide-react";
+
 import {
   Sheet,
   SheetContent,
@@ -47,7 +49,11 @@ export const NewCategorySheet = () => {
           </SheetDescription>
         </SheetHeader>
 
-        {categoriesQuery.isError ? (
+        {categoriesQuery.isLoading ? (
+          <div className="flex justify-center py-4">
+            <Loader2 className="text-muted-foreground size-4 animate-spin" />
+          </div>
+        ) : categoriesQuery.isError ? (
           <p className="text-sm text-destructive" role="alert">
             No se pudieron cargar las categorías principales. Cierra la ventana e
             inténtalo de nuevo.

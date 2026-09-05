@@ -17,8 +17,89 @@ import { useCreateAccount } from "@/features/accounts/api/use-create-account";
 import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
 import type { Account } from "@/lib/api-types";
 
+type AccountOption = {
+  label: string;
+  value: string;
+};
+
+type AccountSelectionDialogProps = {
+  accountOptions: AccountOption[];
+  isAccountCreationPending: boolean;
+  isAccountQueryError: boolean;
+  isAccountQueryLoading: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+  onCreateAccount: (name: string) => void;
+  onSelectAccount: (accountId?: string) => void;
+  open: boolean;
+  selectedAccountId: string;
+};
+
+const AccountSelectionDialog = ({
+  accountOptions,
+  isAccountCreationPending,
+  isAccountQueryError,
+  isAccountQueryLoading,
+  onCancel,
+  onConfirm,
+  onCreateAccount,
+  onSelectAccount,
+  open,
+  selectedAccountId,
+}: AccountSelectionDialogProps) => (
+  <Dialog
+    open={open}
+    onOpenChange={(isOpen) => {
+      if (!isOpen && !isAccountCreationPending) onCancel();
+    }}
+  >
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Selecciona una cuenta</DialogTitle>
+        <DialogDescription>Selecciona una cuenta para continuar.</DialogDescription>
+      </DialogHeader>
+
+      {isAccountQueryLoading ? (
+        <div className="flex justify-center py-4">
+          <Loader2 className="text-muted-foreground size-4 animate-spin" />
+        </div>
+      ) : isAccountQueryError ? (
+        <p className="text-sm text-destructive" role="alert">
+          No se pudieron cargar las cuentas. Cierra la ventana e inténtalo de nuevo.
+        </p>
+      ) : accountOptions.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Crea una cuenta para continuar.</p>
+      ) : (
+        <Select
+          placeholder="Selecciona una cuenta"
+          options={accountOptions}
+          onCreate={onCreateAccount}
+          onChange={onSelectAccount}
+          value={selectedAccountId}
+          disabled={isAccountCreationPending}
+        />
+      )}
+
+      <DialogFooter className="pt-2">
+        <Button disabled={isAccountCreationPending} onClick={onCancel} variant="outline">
+          Cancelar
+        </Button>
+        <Button
+          disabled={
+            isAccountCreationPending ||
+            !accountOptions.some((option) => option.value === selectedAccountId)
+          }
+          onClick={onConfirm}
+        >
+          Confirmar
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+);
+
 export const useSelectAccount = (): [
-  () => JSX.Element,
+  JSX.Element,
   () => Promise<string | undefined>,
 ] => {
   const accountQuery = useGetAccounts();
@@ -64,68 +145,20 @@ export const useSelectAccount = (): [
     handleClose();
   };
 
-  const ConfirmationDialog = () => (
-    <Dialog
+  const accountDialog = (
+    <AccountSelectionDialog
+      accountOptions={accountOptions}
+      isAccountCreationPending={accountMutation.isPending}
+      isAccountQueryError={accountQuery.isError}
+      isAccountQueryLoading={accountQuery.isLoading}
+      onCancel={handleCancel}
+      onConfirm={handleConfirm}
+      onCreateAccount={onCreateAccount}
+      onSelectAccount={(value) => setSelectedAccountId(value ?? "")}
       open={promise !== null}
-      onOpenChange={(open) => {
-        if (!open && !accountMutation.isPending) handleCancel();
-      }}
-    >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Selecciona una cuenta</DialogTitle>
-          <DialogDescription>
-            Selecciona una cuenta para continuar.
-          </DialogDescription>
-        </DialogHeader>
-
-        {accountQuery.isLoading ? (
-          <div className="flex justify-center py-4">
-            <Loader2 className="text-muted-foreground size-4 animate-spin" />
-          </div>
-        ) : accountQuery.isError ? (
-          <p className="text-sm text-destructive" role="alert">
-            No se pudieron cargar las cuentas. Cierra la ventana e inténtalo de
-            nuevo.
-          </p>
-        ) : accountOptions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Crea una cuenta para continuar.
-          </p>
-        ) : (
-          <Select
-            placeholder="Selecciona una cuenta"
-            options={accountOptions}
-            onCreate={onCreateAccount}
-            onChange={(value) => setSelectedAccountId(value ?? "")}
-            value={selectedAccountId}
-            disabled={accountMutation.isPending}
-          />
-        )}
-
-        <DialogFooter className="pt-2">
-          <Button
-            disabled={accountMutation.isPending}
-            onClick={handleCancel}
-            variant="outline"
-          >
-            Cancelar
-          </Button>
-          <Button
-            disabled={
-              accountMutation.isPending ||
-              !accountOptions.some(
-                (option) => option.value === selectedAccountId,
-              )
-            }
-            onClick={handleConfirm}
-          >
-            Confirmar
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      selectedAccountId={selectedAccountId}
+    />
   );
 
-  return [ConfirmationDialog, confirm];
+  return [accountDialog, confirm];
 };

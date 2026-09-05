@@ -50,6 +50,14 @@ const DEFAULT_TRANSACTION_FORM_VALUES: TransactionFormValues = {
   transactionTypeId: "",
 };
 
+const getTransactionTypeDescription = (transactionTypeId: string) => {
+  if (transactionTypeId === "income") return "Se registrará como un ingreso.";
+  if (transactionTypeId === "expense") return "Se registrará como un gasto.";
+  if (transactionTypeId === "refund") return "Se registrará como un reembolso.";
+
+  return "Selecciona un tipo de transacción para ver cómo se registrará el importe.";
+};
+
 export const TransactionForm = ({
   id,
   defaultValues,
@@ -67,6 +75,9 @@ export const TransactionForm = ({
     resolver: zodResolver(transactionFormSchema),
     defaultValues: defaultValues ?? DEFAULT_TRANSACTION_FORM_VALUES,
   });
+  const transactionTypeDescription = getTransactionTypeDescription(
+    form.watch("transactionTypeId"),
+  );
   const handleSubmit = (values: TransactionFormValues) => {
     if (!accountOptions.some((option) => option.value === values.accountId)) {
       form.setError("accountId", { message: "Selecciona una cuenta válida." });
@@ -248,6 +259,10 @@ export const TransactionForm = ({
                   placeholder="0.00"
                 />
               </FormControl>
+
+              <p className="text-xs text-muted-foreground">
+                {transactionTypeDescription}
+              </p>
 
               <FormMessage />
             </FormItem>
