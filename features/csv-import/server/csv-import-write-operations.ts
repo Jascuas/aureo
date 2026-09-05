@@ -18,9 +18,15 @@ export type ImportTemplateWriteValues = Omit<
 
 export type ImportTransactionValues = Omit<
   InferInsertModel<typeof transactions>,
-  "accountId" | "id" | "transactionTypeId"
+  "accountId" | "id" | "importKey" | "transactionTypeId"
 > & {
   transactionTypeId: SupportedTransactionTypeId;
+};
+
+export type ImportTransactionInput = ImportTransactionValues & {
+  csvRowIndex: number;
+  duplicateResolution?: "import";
+  idempotencyKey: string;
 };
 
 const importTemplateResponseSchema = z.object({
@@ -114,7 +120,8 @@ export type CsvImportWriteDependencies = {
   insertTransaction: (
     accountId: string,
     values: ImportTransactionValues,
-  ) => Promise<void>;
+    importKey: string,
+  ) => Promise<"already_imported" | "inserted">;
   listTemplates: (
     userId: string,
     accountId?: string,
@@ -174,12 +181,21 @@ const csvImportWriteDependencies: CsvImportWriteDependencies = {
 
     return rows.map((row) => row.id);
   },
-  insertTransaction: async (accountId, values) => {
-    await db.insert(transactions).values({
-      id: createId(),
-      accountId,
-      ...values,
-    });
+  insertTransaction: async (accountId, values, importKey) => {
+    const [insertedTransaction] = await db
+      .insert(transactions)
+      .values({
+        id: createId(),
+        accountId,
+        importKey,
+        ...values,
+      })
+      .onConflictDoNothing({
+        target: [transactions.accountId, transactions.importKey],
+      })
+      .returning({ id: transactions.id });
+
+    return insertedTransaction === undefined ? "already_imported" : "inserted";
   },
   listTemplates: async (userId, accountId) => {
     const templates = await db
@@ -272,7 +288,7 @@ export const createCsvImportWriteOperations = (
   importTransactions: async (
     userId: string,
     accountId: string,
-    rows: Array<ImportTransactionValues & { csvRowIndex: number }>,
+    rows: ImportTransactionInput[],
   ): Promise<ImportTransactionsResult> => {
     const authorization = await dependencies.authorizeReferences({
       userId,
@@ -298,26 +314,33 @@ export const createCsvImportWriteOperations = (
     const outcomes: ImportRowOutcome[] = [];
 
     for (const row of rows) {
-      const categoryId = row.categoryId ?? null;
+      const {
+        csvRowIndex,
+        duplicateResolution,
+        idempotencyKey,
+        ...transactionValues
+      } = row;
+      const categoryId = transactionValues.categoryId ?? null;
       if (categoryId !== null && !ownedCategoryIds.has(categoryId)) {
         outcomes.push({
-          csvRowIndex: row.csvRowIndex,
+          csvRowIndex,
           reason: "The selected category is unavailable.",
           status: "failed",
         });
         continue;
       }
 
-      const values = normalizeImportTransactionValues(row);
+      const values = normalizeImportTransactionValues(transactionValues);
       const signature = `${values.date.toISOString()}\u0000${values.amount}\u0000${values.payee.toLocaleLowerCase()}`;
 
       const existingTransaction =
-        importedSignatures.has(signature) ||
-        (await dependencies.findExistingTransaction(accountId, values));
+        duplicateResolution !== "import" &&
+        (importedSignatures.has(signature) ||
+          (await dependencies.findExistingTransaction(accountId, values)));
 
       if (existingTransaction) {
         outcomes.push({
-          csvRowIndex: row.csvRowIndex,
+          csvRowIndex,
           reason: "An identical transaction already exists in this account.",
           status: "duplicate",
         });
@@ -325,12 +348,26 @@ export const createCsvImportWriteOperations = (
       }
 
       try {
-        await dependencies.insertTransaction(accountId, values);
+        const writeResult = await dependencies.insertTransaction(
+          accountId,
+          values,
+          idempotencyKey,
+        );
+
+        if (writeResult === "already_imported") {
+          outcomes.push({
+            csvRowIndex,
+            reason: "This row was already imported by this import attempt.",
+            status: "duplicate",
+          });
+          continue;
+        }
+
         importedSignatures.add(signature);
-        outcomes.push({ csvRowIndex: row.csvRowIndex, status: "imported" });
+        outcomes.push({ csvRowIndex, status: "imported" });
       } catch {
         outcomes.push({
-          csvRowIndex: row.csvRowIndex,
+          csvRowIndex,
           reason: "This row could not be saved.",
           status: "failed",
         });

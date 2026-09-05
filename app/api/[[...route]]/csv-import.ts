@@ -127,6 +127,8 @@ const importTransactionsSchema = z.object({
         categoryId: z.string().nullable(),
         csvRowIndex: z.number().int().min(0),
         date: isoDateSchema,
+        duplicateResolution: z.literal("import").optional(),
+        idempotencyKey: z.string().min(1),
         amount: z.number().int(), // Milliunits
         notes: z.string().optional(),
         payee: z.string().min(1),

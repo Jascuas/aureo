@@ -10,7 +10,7 @@ import {
   createCsvImportWriteOperations,
   type ImportTemplateResponse,
   type ImportTemplateWriteValues,
-  type ImportTransactionValues,
+  type ImportTransactionInput,
 } from "@/features/csv-import/server/csv-import-write-operations";
 import { isSupportedTransactionTypeId } from "@/features/transaction-types/lib/transaction-types";
 
@@ -67,12 +67,13 @@ const sameUserTemplate: ImportTemplateWriteValues = {
   name: "Same user template",
 };
 
-const sameUserImport: Array<ImportTransactionValues & { csvRowIndex: number }> = [
+const sameUserImport: ImportTransactionInput[] = [
   {
     amount: 1_000,
     categoryId: "owned-category-1",
     csvRowIndex: 0,
     date: new Date("2026-09-02T00:00:00.000Z"),
+    idempotencyKey: "import-row-0",
     notes: null,
     payee: "Imported same user payee",
     transactionTypeId: "income",
@@ -288,7 +289,7 @@ test("template create and update reject foreign or empty account references befo
     findExistingTransaction: async () => false,
     findOwnedCategoryIds: async (_userId, ids) =>
       ids.filter((id) => id.startsWith("owned-category")),
-    insertTransaction: async () => {},
+    insertTransaction: async () => "inserted",
     listTemplates: async () => [],
     updateTemplate: async (_userId, _id, values) => {
       writes.update += 1;
@@ -336,6 +337,7 @@ test("CSV import rejects foreign accounts, categories, and transaction types bef
       ids.filter((id) => id.startsWith("owned-category")),
     insertTransaction: async () => {
       writes += 1;
+      return "inserted";
     },
     listTemplates: async () => [],
     updateTemplate: async (_userId, _id, values) =>
@@ -393,6 +395,7 @@ test("CSV import returns one idempotent outcome per row and normalizes expense d
     insertTransaction: async (_accountId, values) => {
       if (values.payee === "Fails") throw new Error("storage failure");
       insertedAmounts.push(values.amount);
+      return "inserted";
     },
     listTemplates: async () => [],
     updateTemplate: async (_userId, _id, values) =>
@@ -448,7 +451,7 @@ test("CSV import propagates unavailable duplicate detection", async () => {
       throw new Error("database unavailable");
     },
     findOwnedCategoryIds: async (_userId, ids) => ids,
-    insertTransaction: async () => {},
+    insertTransaction: async () => "inserted",
     listTemplates: async () => [],
     updateTemplate: async (_userId, _id, values) =>
       templateResponse({ ...sameUserTemplate, ...values }),
@@ -457,5 +460,86 @@ test("CSV import propagates unavailable duplicate detection", async () => {
   await assert.rejects(
     operations.importTransactions("user-1", "owned-account-1", sameUserImport),
     /database unavailable/,
+  );
+});
+
+test("CSV import uses an atomic row idempotency key for concurrent retries", async () => {
+  const insertedKeys = new Set<string>();
+  let writes = 0;
+  let checks = 0;
+  let releaseFindExisting: () => void = () => {};
+  const bothChecksComplete = new Promise<void>((resolve) => {
+    releaseFindExisting = resolve;
+  });
+  const operations = createCsvImportWriteOperations({
+    authorizeReferences: ownedReferenceAuthorizer,
+    createTemplate: async (_userId, values) => templateResponse(values),
+    deleteTemplate: async () => undefined,
+    findExistingTransaction: async () => {
+      checks += 1;
+      if (checks === 2) releaseFindExisting();
+      await bothChecksComplete;
+      return false;
+    },
+    findOwnedCategoryIds: async (_userId, ids) => ids,
+    insertTransaction: async (_accountId, _values, importKey) => {
+      if (insertedKeys.has(importKey)) return "already_imported";
+      insertedKeys.add(importKey);
+      writes += 1;
+      return "inserted";
+    },
+    listTemplates: async () => [],
+    updateTemplate: async (_userId, _id, values) =>
+      templateResponse({ ...sameUserTemplate, ...values }),
+  });
+  const retryRow = { ...sameUserImport[0], idempotencyKey: "concurrent-retry" };
+
+  const results = await Promise.all([
+    operations.importTransactions("user-1", "owned-account-1", [retryRow]),
+    operations.importTransactions("user-1", "owned-account-1", [retryRow]),
+  ]);
+
+  assert.equal(writes, 1);
+  assert.deepEqual(
+    results
+      .map((result) => (result.ok ? result.data.outcomes[0].status : "not_found"))
+      .sort(),
+    ["duplicate", "imported"],
+  );
+});
+
+test("CSV import honors an explicit duplicate import resolution", async () => {
+  let writes = 0;
+  const operations = createCsvImportWriteOperations({
+    authorizeReferences: ownedReferenceAuthorizer,
+    createTemplate: async (_userId, values) => templateResponse(values),
+    deleteTemplate: async () => undefined,
+    findExistingTransaction: async () => true,
+    findOwnedCategoryIds: async (_userId, ids) => ids,
+    insertTransaction: async () => {
+      writes += 1;
+      return "inserted";
+    },
+    listTemplates: async () => [],
+    updateTemplate: async (_userId, _id, values) =>
+      templateResponse({ ...sameUserTemplate, ...values }),
+  });
+
+  const result = await operations.importTransactions("user-1", "owned-account-1", [
+    sameUserImport[0],
+    {
+      ...sameUserImport[0],
+      csvRowIndex: 1,
+      duplicateResolution: "import",
+      idempotencyKey: "duplicate-import-override",
+    },
+  ]);
+
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.equal(writes, 1);
+  assert.deepEqual(
+    result.data.outcomes.map((outcome) => outcome.status),
+    ["duplicate", "imported"],
   );
 });

@@ -51,10 +51,16 @@ export const transactions = pgTable("transactions", {
   categoryId: text("category_id").references(() => categories.id, {
     onDelete: "set null",
   }),
+  importKey: text("import_key"),
   transactionTypeId: text("transaction_type_id")
     .references(() => transactionTypes.id)
     .notNull(),
-});
+}, (table) => ({
+  accountImportKeyUnique: unique("transactions_account_import_key_unique").on(
+    table.accountId,
+    table.importKey,
+  ),
+}));
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({
   account: one(accounts, {

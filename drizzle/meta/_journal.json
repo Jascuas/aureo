@@ -43,6 +43,13 @@
       "when": 1788626395257,
       "tag": "0005_narrow_chronomancer",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788640331574,
+      "tag": "0006_equal_kitty_pryde",
+      "breakpoints": true
     }
   ]
 }

@@ -13,6 +13,7 @@ import type {
 type UseTransactionImportOptions = {
   accountId: string | undefined;
   categorizations: EnrichedCategorization[];
+  importAttemptId: string;
   preImportFailedOutcomes: ImportRowOutcome[];
   resolutions: DuplicateResolution[];
   setImportResult: (result: ImportResult) => void;
@@ -27,6 +28,7 @@ type UseTransactionImportReturn = {
 export function useTransactionImport({
   accountId,
   categorizations,
+  importAttemptId,
   preImportFailedOutcomes,
   resolutions,
   setImportResult,
@@ -94,15 +96,26 @@ export function useTransactionImport({
         try {
           const result = await bulkImportMutation.mutateAsync({
             accountId,
-            transactions: batch.map((categorization) => ({
-              amount: categorization.amount,
-              categoryId: categorization.categoryId,
-              csvRowIndex: categorization.csvRowIndex,
-              date: categorization.date,
-              notes: categorization.notes || undefined,
-              payee: categorization.payee,
-              transactionTypeId: categorization.transactionTypeId,
-            })),
+            transactions: batch.map((categorization) => {
+              const resolution = resolutions.find(
+                (item) => item.csvIndex === categorization.csvRowIndex,
+              );
+
+              return {
+                amount: categorization.amount,
+                categoryId: categorization.categoryId,
+                csvRowIndex: categorization.csvRowIndex,
+                date: categorization.date,
+                duplicateResolution:
+                  resolution?.action === Resolution.Import
+                    ? ("import" as const)
+                    : undefined,
+                idempotencyKey: `${importAttemptId}:${categorization.csvRowIndex}`,
+                notes: categorization.notes || undefined,
+                payee: categorization.payee,
+                transactionTypeId: categorization.transactionTypeId,
+              };
+            }),
           });
           outcomes.push(...result.outcomes);
         } catch (error: unknown) {
@@ -127,6 +140,7 @@ export function useTransactionImport({
     accountId,
     bulkImportMutation,
     categorizations,
+    importAttemptId,
     onComplete,
     preImportFailedOutcomes,
     resolutions,

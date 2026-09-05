@@ -13,7 +13,7 @@ import { ensureOwnedReferences } from "./owned-references";
 
 export type TransactionWriteValues = Omit<
   InferInsertModel<typeof transactions>,
-  "id" | "transactionTypeId"
+  "id" | "importKey" | "transactionTypeId"
 > & {
   transactionTypeId: SupportedTransactionTypeId;
 };

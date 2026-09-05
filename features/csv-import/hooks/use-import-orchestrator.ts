@@ -44,6 +44,7 @@ export function useImportOrchestrator({
   const {
     currentStep,
     csvData,
+    importAttemptId,
     columnMapping,
     analyzedRows,
     setDuplicates,
@@ -166,6 +167,7 @@ export function useImportOrchestrator({
   const { importTransactions } = useTransactionImport({
     accountId,
     categorizations: analyzedRows.categorizations,
+    importAttemptId,
     preImportFailedOutcomes: mappingFailureOutcomes,
     resolutions,
     setImportResult,

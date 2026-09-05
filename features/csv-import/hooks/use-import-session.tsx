@@ -42,6 +42,7 @@ type AnalyzedRows = {
 type ImportSessionState = {
   currentStep: ImportStep;
   csvData: CsvData | null;
+  importAttemptId: string;
   columnMapping: ColumnMapping;
   analyzedRows: AnalyzedRows;
   importResult: ImportResult | null;
@@ -76,6 +77,7 @@ const STEP_ORDER: ImportStep[] = [
 const createInitialState = (): ImportSessionState => ({
   currentStep: ImportStep.UPLOAD,
   csvData: null,
+  importAttemptId: crypto.randomUUID(),
   columnMapping: {
     detectionResult: null,
     finalMapping: null,
