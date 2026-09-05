@@ -1,6 +1,8 @@
-import { access } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import { resolve as resolvePath } from "node:path";
 import { fileURLToPath, pathToFileURL, URL } from "node:url";
+
+import typescript from "typescript";
 
 const extensions = [".ts", ".tsx"];
 
@@ -40,4 +42,22 @@ export const resolve = async (specifier, context, nextResolve) => {
   }
 
   return nextResolve(specifier, context);
+};
+
+export const load = async (url, context, nextLoad) => {
+  if (url.endsWith(".ts") || url.endsWith(".tsx")) {
+    const source = await readFile(fileURLToPath(url), "utf8");
+    const output = typescript.transpileModule(source, {
+      compilerOptions: {
+        jsx: typescript.JsxEmit.ReactJSX,
+        module: typescript.ModuleKind.ESNext,
+        target: typescript.ScriptTarget.ES2022,
+      },
+      fileName: fileURLToPath(url),
+    });
+
+    return { format: "module", shortCircuit: true, source: output.outputText };
+  }
+
+  return nextLoad(url, context);
 };

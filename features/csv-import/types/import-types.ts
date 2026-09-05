@@ -277,7 +277,7 @@ export type HistoricalHint = {
   transactionTypeId: SupportedTransactionTypeId;
   confidence: number;
   matchCount: number;
-  matchType: MatchType;
+  matchType: "exact" | "fuzzy";
 };
 
 export type CategorizationTxInput = {
