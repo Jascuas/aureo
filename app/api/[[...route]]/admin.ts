@@ -70,7 +70,7 @@ const app = new Hono<AppEnv>().get(
           totalAccounts > 0
             ? ((corruptedAccounts / totalAccounts) * 100).toFixed(1) + "%"
             : "0%",
-        totalCorruption: totalCorruption.toFixed(2),
+        totalCorruption: convertAmountFromMilliunits(totalCorruption),
       },
       accounts: verificationResults,
     });

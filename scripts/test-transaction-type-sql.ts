@@ -3,10 +3,16 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
 const containerName = `aureo-aur6-${process.pid}`;
-const migration = readFileSync(
-  new URL("../drizzle/0005_canonical_transaction_type_semantics.sql", import.meta.url),
-  "utf8",
-);
+const migration = [
+  readFileSync(
+    new URL("../drizzle/0005_canonical_transaction_type_semantics.sql", import.meta.url),
+    "utf8",
+  ),
+  readFileSync(
+    new URL("../drizzle/0005_narrow_chronomancer.sql", import.meta.url),
+    "utf8",
+  ),
+].join("\n");
 
 const docker = (args: string[], input?: string) =>
   execFileSync("docker", args, {
@@ -46,7 +52,7 @@ try {
 
   for (let attempt = 0; attempt < 30; attempt += 1) {
     try {
-      docker(["exec", containerName, "pg_isready", "--username=postgres"]);
+      runSql("SELECT 1;");
       break;
     } catch {
       if (attempt === 29) throw new Error("Local PostgreSQL did not become ready");
@@ -76,6 +82,10 @@ try {
     "70000",
   );
   assert.equal(
+    runSql("SELECT pg_typeof(balance) FROM accounts WHERE id = 'account-1';"),
+    "bigint",
+  );
+  assert.equal(
     runSql(`
       SELECT
         COALESCE(SUM(CASE WHEN transaction_type_id = 'income' THEN ABS(amount) ELSE 0 END), 0),
@@ -98,6 +108,16 @@ try {
   assert.equal(
     runSql("SELECT balance FROM accounts WHERE id = 'account-1';"),
     "70000",
+  );
+
+  runSql(`
+    INSERT INTO transactions (id, amount, account_id, transaction_type_id) VALUES
+      ('large-income-1', 2000000000, 'account-1', 'income'),
+      ('large-income-2', 2000000000, 'account-1', 'income');
+  `);
+  assert.equal(
+    runSql("SELECT balance FROM accounts WHERE id = 'account-1';"),
+    "4000070000",
   );
 
   console.log("Transaction type SQL trigger checks passed.");

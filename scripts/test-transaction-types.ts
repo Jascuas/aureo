@@ -16,6 +16,10 @@ import {
   supportedTransactionTypeIdSchema,
 } from "../features/transaction-types/lib/transaction-types.ts";
 import type { AppEnv } from "../lib/hono-env.ts";
+import {
+  convertAmountFromMilliunits,
+  convertAmountToMilliunits,
+} from "../lib/utils.ts";
 
 const testAuthMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
   c.set("userId", "test-user");
@@ -115,6 +119,22 @@ test("Refund and Expense amounts reconcile across normalized balance and summary
   );
   assert.equal(normalizeTransactionAmount("expense", 50_000), -50_000);
   assert.equal(normalizeTransactionAmount("refund", -20_000), 20_000);
+});
+
+test("currency conversion preserves signed cents through milliunit round-trips", () => {
+  for (const [currency, milliunits] of [
+    ["12.99", 12_990],
+    ["-12.99", -12_990],
+    ["0.01", 10],
+    ["1000", 1_000_000],
+  ] as const) {
+    assert.equal(convertAmountToMilliunits(currency), milliunits);
+    assert.equal(convertAmountFromMilliunits(milliunits), Number(currency));
+    assert.equal(
+      convertAmountToMilliunits(convertAmountFromMilliunits(milliunits).toString()),
+      milliunits,
+    );
+  }
 });
 
 test("transaction write endpoints reject empty, unknown, and Transfer IDs before persistence", async () => {

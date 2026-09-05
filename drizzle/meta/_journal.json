@@ -36,6 +36,13 @@
       "when": 1788360730890,
       "tag": "0005_canonical_transaction_type_semantics",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788626395257,
+      "tag": "0005_narrow_chronomancer",
+      "breakpoints": true
     }
   ]
 }

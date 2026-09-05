@@ -15,11 +15,27 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function convertAmountFromMilliunits(amount: number) {
-  return Math.round(amount / 1000);
+  return amount / 1000;
 }
 
-export function convertAmountToMilliunits(amount: number) {
-  return Math.round(amount * 1000);
+export function convertAmountToMilliunits(amount: number | string) {
+  const value = typeof amount === "number" ? amount.toString() : amount.trim();
+  const match = /^([+-]?)(\d+)(?:\.(\d{1,3}))?$/.exec(value);
+
+  if (!match) {
+    throw new Error(`Invalid currency amount: "${amount}"`);
+  }
+
+  const [, sign, wholeUnits, fractionalUnits = ""] = match;
+  const milliunits = Number(
+    `${wholeUnits}${fractionalUnits.padEnd(3, "0")}`,
+  );
+
+  if (!Number.isSafeInteger(milliunits)) {
+    throw new Error(`Currency amount exceeds the supported range: "${amount}"`);
+  }
+
+  return sign === "-" ? -milliunits : milliunits;
 }
 
 export function parseAmount(
