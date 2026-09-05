@@ -168,6 +168,8 @@ test("transaction create, bulk-create, and update authorize references before wr
       writes.update += 1;
       return transactionResponse(values);
     },
+    delete: async (_userId, id) => ({ id }),
+    deleteMany: async (_userId, ids) => ids.map((id) => ({ id })),
   });
 
   assert.equal(

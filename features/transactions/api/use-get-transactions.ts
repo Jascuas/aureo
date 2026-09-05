@@ -11,15 +11,16 @@ export const useGetTransactions = () => {
   const from = searchParams.get("from") || "";
   const to = searchParams.get("to") || "";
   const accountId = searchParams.get("accountId") || "";
+  const filters = { accountId, from, to };
 
   const query = useInfiniteQuery({
-    queryKey: transactionQueryKeys.list({ from, to, accountId }),
+    queryKey: transactionQueryKeys.list(filters),
     queryFn: async ({ pageParam }) => {
       const response = await client.api.transactions.$get({
         query: {
-          from,
-          to,
-          accountId,
+          from: from || undefined,
+          to: to || undefined,
+          accountId: accountId || undefined,
           cursor: pageParam || undefined,
           limit: "50",
         },
@@ -42,5 +43,5 @@ export const useGetTransactions = () => {
     initialPageParam: undefined as string | undefined,
   });
 
-  return query;
+  return { ...query, filters };
 };

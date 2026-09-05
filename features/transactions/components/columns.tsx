@@ -1,15 +1,13 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { format, isValid } from "date-fns"; // Import isValid for date validation
+import { format, isValid } from "date-fns";
 import { InferResponseType } from "hono";
-import { ArrowUpDown } from "lucide-react";
 
 import { AccountColumn } from "@/app/(dashboard)/transactions/account-column";
 import { Actions } from "@/app/(dashboard)/transactions/actions";
 import { CategoryColumn } from "@/app/(dashboard)/transactions/category-column";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { client } from "@/lib/hono";
 import { formatCurrency } from "@/lib/utils";
@@ -44,41 +42,22 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: "date",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Date
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    enableSorting: false,
+    header: "Date",
     cell: ({ row }) => {
-      const dateValue = new Date(row.getValue("date")); // Parse the date
+      const dateValue = new Date(row.getValue("date"));
 
-      // Check if the date is valid
       if (!isValid(dateValue)) {
-        return <span>Invalid date</span>; // Handle invalid date
+        return <span>Invalid date</span>;
       }
 
-      return <span>{format(dateValue, "dd MMMM, yyyy")}</span>; // Format and return the date
+      return <span>{format(dateValue, "dd MMMM, yyyy")}</span>;
     },
   },
   {
     accessorKey: "category",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Category
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    enableSorting: false,
+    header: "Category",
     cell: ({ row }) => {
       return (
         <CategoryColumn
@@ -91,31 +70,13 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: "payee",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Payee
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    enableSorting: false,
+    header: "Payee",
   },
   {
     accessorKey: "amount",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Amount
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    enableSorting: false,
+    header: "Amount",
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue("amount"));
 
@@ -131,17 +92,8 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: "account",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Account
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    enableSorting: false,
+    header: "Account",
     cell: ({ row }) => {
       return (
         <AccountColumn

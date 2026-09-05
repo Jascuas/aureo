@@ -17,9 +17,9 @@ export const useGetRecentTransactions = () => {
     queryFn: async () => {
       const response = await client.api.transactions.$get({
         query: {
-          from,
-          to,
-          accountId,
+          from: from || undefined,
+          to: to || undefined,
+          accountId: accountId || undefined,
           limit: "10",
         },
       });
