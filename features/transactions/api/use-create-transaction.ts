@@ -4,7 +4,10 @@ import { toast } from "sonner";
 
 import { accountQueryKeys } from "@/features/accounts/api/query-keys";
 import { summaryQueryKeys } from "@/features/summary/api/query-keys";
-import { getMutationErrorMessage } from "@/lib/api-client-error";
+import {
+  getMutationErrorMessage,
+  MutationHttpError,
+} from "@/lib/api-client-error";
 import { client } from "@/lib/hono";
 
 import { transactionQueryKeys } from "./query-keys";
@@ -22,7 +25,7 @@ export const useCreateTransaction = () => {
       const response = await client.api.transactions.$post({ json });
 
       if (!response.ok) {
-        throw new Error(
+        throw new MutationHttpError(
           getMutationErrorMessage(
             response,
             "No se pudo crear la transacción. Revisa los datos e inténtalo de nuevo.",
@@ -39,7 +42,12 @@ export const useCreateTransaction = () => {
       queryClient.invalidateQueries({ queryKey: summaryQueryKeys.all });
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(
+        getMutationErrorMessage(
+          error,
+          "No se pudo crear la transacción. Revisa los datos e inténtalo de nuevo.",
+        ),
+      );
     },
   });
 

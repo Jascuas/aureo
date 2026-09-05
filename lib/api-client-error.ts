@@ -6,7 +6,19 @@ const ERROR_MESSAGES_BY_STATUS: Record<number, string> = {
   409: "No se pudo completar la acción porque el registro ha cambiado.",
 };
 
+export class MutationHttpError extends Error {}
+
 export const getMutationErrorMessage = (
-  response: Response,
+  source: unknown,
   fallback: string,
-) => ERROR_MESSAGES_BY_STATUS[response.status] ?? fallback;
+) => {
+  if (source instanceof Response) {
+    return ERROR_MESSAGES_BY_STATUS[source.status] ?? fallback;
+  }
+
+  if (source instanceof MutationHttpError) {
+    return source.message;
+  }
+
+  return fallback;
+};

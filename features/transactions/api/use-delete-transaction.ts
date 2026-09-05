@@ -4,7 +4,10 @@ import { toast } from "sonner";
 
 import { accountQueryKeys } from "@/features/accounts/api/query-keys";
 import { summaryQueryKeys } from "@/features/summary/api/query-keys";
-import { getMutationErrorMessage } from "@/lib/api-client-error";
+import {
+  getMutationErrorMessage,
+  MutationHttpError,
+} from "@/lib/api-client-error";
 import { client } from "@/lib/hono";
 
 import { transactionQueryKeys } from "./query-keys";
@@ -23,7 +26,7 @@ export const useDeleteTransaction = (id?: string) => {
       });
 
       if (!response.ok) {
-        throw new Error(
+        throw new MutationHttpError(
           getMutationErrorMessage(
             response,
             "No se pudo eliminar la transacción. Inténtalo de nuevo.",
@@ -40,7 +43,9 @@ export const useDeleteTransaction = (id?: string) => {
       queryClient.invalidateQueries({ queryKey: summaryQueryKeys.all });
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(
+        getMutationErrorMessage(error, "No se pudo eliminar la transacción. Inténtalo de nuevo."),
+      );
     },
   });
 

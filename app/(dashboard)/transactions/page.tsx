@@ -55,7 +55,7 @@ const TransactionsPage = () => {
 
   return (
     <>
-      <AccountDialog />
+      {AccountDialog}
 
       <div className="w-full pb-10">
         <Card className="border-border border drop-shadow-sm">

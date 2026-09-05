@@ -4,7 +4,10 @@ import { toast } from "sonner";
 
 import { summaryQueryKeys } from "@/features/summary/api/query-keys";
 import { transactionQueryKeys } from "@/features/transactions/api/query-keys";
-import { getMutationErrorMessage } from "@/lib/api-client-error";
+import {
+  getMutationErrorMessage,
+  MutationHttpError,
+} from "@/lib/api-client-error";
 import { client } from "@/lib/hono";
 
 import { accountQueryKeys } from "./query-keys";
@@ -27,7 +30,7 @@ export const useEditAccount = (id?: string) => {
       });
 
       if (!response.ok) {
-        throw new Error(
+        throw new MutationHttpError(
           getMutationErrorMessage(
             response,
             "No se pudo actualizar la cuenta. Inténtalo de nuevo.",
@@ -44,7 +47,9 @@ export const useEditAccount = (id?: string) => {
       queryClient.invalidateQueries({ queryKey: summaryQueryKeys.byAccount() });
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(
+        getMutationErrorMessage(error, "No se pudo actualizar la cuenta. Inténtalo de nuevo."),
+      );
     },
   });
 

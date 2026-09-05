@@ -37,7 +37,7 @@ const UploadPageContent = () => {
 
   return (
     <div className="mx-auto -mt-4 w-full max-w-screen-2xl pb-10 lg:-mt-20">
-      <AccountDialog />
+      {AccountDialog}
       <AiImportCard
         accountId={accountId}
         onComplete={handleComplete}

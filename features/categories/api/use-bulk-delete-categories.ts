@@ -4,7 +4,10 @@ import { toast } from "sonner";
 
 import { summaryQueryKeys } from "@/features/summary/api/query-keys";
 import { transactionQueryKeys } from "@/features/transactions/api/query-keys";
-import { getMutationErrorMessage } from "@/lib/api-client-error";
+import {
+  getMutationErrorMessage,
+  MutationHttpError,
+} from "@/lib/api-client-error";
 import { client } from "@/lib/hono";
 
 import { categoryQueryKeys } from "./query-keys";
@@ -26,7 +29,7 @@ export const useBulkDeleteCategories = () => {
       });
 
       if (!response.ok) {
-        throw new Error(
+        throw new MutationHttpError(
           getMutationErrorMessage(
             response,
             "No se pudieron eliminar las categorías. Inténtalo de nuevo.",
@@ -45,7 +48,12 @@ export const useBulkDeleteCategories = () => {
       });
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(
+        getMutationErrorMessage(
+          error,
+          "No se pudieron eliminar las categorías. Inténtalo de nuevo.",
+        ),
+      );
     },
   });
 
