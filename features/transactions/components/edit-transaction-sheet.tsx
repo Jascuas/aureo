@@ -30,8 +30,8 @@ export const EditTransactionSheet = () => {
   const { isOpen, onClose, id } = useOpenTransaction();
 
   const [ConfirmDialog, confirm] = useConfirm(
-    "Are you sure?",
-    "You are about to delete this transaction.",
+    "¿Quieres eliminar la transacción?",
+    "Esta acción eliminará la transacción seleccionada.",
   );
 
   const transactionQuery = useGetTransaction(id);
@@ -68,7 +68,6 @@ export const EditTransactionSheet = () => {
   const isPending =
     editMutation.isPending ||
     deleteMutation.isPending ||
-    transactionQuery.isLoading ||
     categoryMutation.isPending ||
     accountMutation.isPending;
 
@@ -77,6 +76,13 @@ export const EditTransactionSheet = () => {
     categoryQuery.isLoading ||
     accountQuery.isLoading ||
     transactionTypesQuery.isLoading;
+  const hasReferenceError =
+    transactionQuery.isError ||
+    categoryQuery.isError ||
+    accountQuery.isError ||
+    transactionTypesQuery.isError;
+  const hasRequiredOptions =
+    accountOptions.length > 0 && transactionTypeOptions.length > 0;
 
   const onSubmit = (values: TransactionMutationValues) => {
     editMutation.mutate(values, {
@@ -123,18 +129,33 @@ export const EditTransactionSheet = () => {
   return (
     <>
       <ConfirmDialog />
-      <Sheet open={isOpen || isPending} onOpenChange={onClose}>
+      <Sheet
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (!open && !isPending) onClose();
+        }}
+      >
         <SheetContent className="space-y-4">
           <SheetHeader>
-            <SheetTitle>Edit Transaction</SheetTitle>
+            <SheetTitle>Editar transacción</SheetTitle>
 
-            <SheetDescription>Edit an existing transaction.</SheetDescription>
+            <SheetDescription>Edita una transacción existente.</SheetDescription>
           </SheetHeader>
 
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <Loader2 className="text-muted-foreground size-4 animate-spin" />
             </div>
+          ) : hasReferenceError ? (
+            <p className="text-sm text-destructive" role="alert">
+              No se pudo cargar la transacción. Cierra la ventana e inténtalo de
+              nuevo.
+            </p>
+          ) : !hasRequiredOptions ? (
+            <p className="text-sm text-muted-foreground">
+              No hay cuentas o tipos de transacción disponibles para editar este
+              movimiento.
+            </p>
           ) : (
             <TransactionForm
               id={id}

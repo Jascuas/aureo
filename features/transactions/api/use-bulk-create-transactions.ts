@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { accountQueryKeys } from "@/features/accounts/api/query-keys";
 import { summaryQueryKeys } from "@/features/summary/api/query-keys";
+import { getMutationErrorMessage } from "@/lib/api-client-error";
 import { client } from "@/lib/hono";
 
 import { transactionQueryKeys } from "./query-keys";
@@ -24,18 +25,25 @@ export const useBulkCreateTransactions = () => {
         json,
       });
 
-      if (!response.ok) throw new Error("Failed to create transaction(s).");
+      if (!response.ok) {
+        throw new Error(
+          getMutationErrorMessage(
+            response,
+            "No se pudieron crear las transacciones. Revisa los datos e inténtalo de nuevo.",
+          ),
+        );
+      }
 
       return await response.json();
     },
     onSuccess: () => {
-      toast.success("Transaction(s) created.");
+      toast.success("Transacciones creadas.");
       queryClient.invalidateQueries({ queryKey: transactionQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: accountQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: summaryQueryKeys.all });
     },
-    onError: () => {
-      toast.error("Failed to create transaction(s).");
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 

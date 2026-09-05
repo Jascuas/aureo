@@ -22,8 +22,8 @@ export const EditCategorySheet = () => {
   const { isOpen, onClose, id } = useOpenCategory();
 
   const [ConfirmDialog, confirm] = useConfirm(
-    "Are you sure?",
-    "You are about to delete this category.",
+    "¿Quieres eliminar la categoría?",
+    "Esta acción eliminará la categoría seleccionada.",
   );
 
   const categoryQuery = useGetCategory(id);
@@ -93,19 +93,28 @@ export const EditCategorySheet = () => {
   return (
     <>
       <ConfirmDialog />
-      <Sheet open={isOpen || isPending} onOpenChange={onClose}>
+      <Sheet
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (!open && !isPending) onClose();
+        }}
+      >
         <SheetContent className="space-y-4">
           <SheetHeader>
-            <SheetTitle>Edit Category</SheetTitle>
+            <SheetTitle>Editar categoría</SheetTitle>
 
-            <SheetDescription>Edit an existing category.</SheetDescription>
+            <SheetDescription>Edita una categoría existente.</SheetDescription>
           </SheetHeader>
 
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <Loader2 className="text-muted-foreground size-4 animate-spin" />
             </div>
-          ) : (
+          ) : categoryQuery.isError ? (
+            <p className="text-sm text-destructive" role="alert">
+              No se pudo cargar la categoría. Cierra la ventana e inténtalo de nuevo.
+            </p>
+          ) : categoryQuery.data ? (
             <CategoryForm
               id={id}
               defaultValues={defaultValues}
@@ -114,7 +123,7 @@ export const EditCategorySheet = () => {
               onDelete={onDelete}
               categoryOptions={categoryOptions}
             />
-          )}
+          ) : null}
         </SheetContent>
       </Sheet>
     </>

@@ -41,6 +41,16 @@ export const CategoryForm = ({
   });
 
   const handleSubmit = (values: CategoryFormValues) => {
+    if (
+      values.parentId &&
+      !categoryOptions.some((option) => option.value === values.parentId)
+    ) {
+      form.setError("parentId", {
+        message: "Selecciona una categoría principal válida o déjala vacía.",
+      });
+      return;
+    }
+
     onSubmit(values);
   };
 
@@ -61,10 +71,14 @@ export const CategoryForm = ({
           disabled={disabled}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>Nombre</FormLabel>
 
               <FormControl>
-                <Input placeholder="e.g. Food, Travel, etc." {...field} />
+                <Input
+                  disabled={disabled}
+                  placeholder="p. ej., Alimentación o Viajes"
+                  {...field}
+                />
               </FormControl>
 
               <FormMessage />
@@ -78,11 +92,11 @@ export const CategoryForm = ({
           disabled={disabled}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Parent Category (optional)</FormLabel>
+              <FormLabel>Categoría principal (opcional)</FormLabel>
 
               <FormControl>
                 <Select
-                  placeholder="Select a parent category"
+                  placeholder="Selecciona una categoría principal"
                   options={categoryOptions}
                   value={field.value}
                   onChange={field.onChange}
@@ -98,7 +112,7 @@ export const CategoryForm = ({
 
         <Button className="w-full" disabled={disabled}>
           {disabled && <Loader2 className="mr-2 size-4 animate-spin" />}
-          {id ? "Save changes" : "Create category"}
+          {id ? "Guardar cambios" : "Crear categoría"}
         </Button>
 
         {!!id && (
@@ -110,7 +124,7 @@ export const CategoryForm = ({
             variant="outline"
           >
             <Trash className="mr-2 size-4" />
-            Delete category
+            Eliminar categoría
           </Button>
         )}
       </form>

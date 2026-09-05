@@ -5,7 +5,8 @@ import { Hono } from "hono";
 import { z } from "zod";
 
 import { db } from "@/db/drizzle";
-import { accounts, insertAccountSchema } from "@/db/schema";
+import { accounts } from "@/db/schema";
+import { accountFormSchema } from "@/features/accounts/lib/account-form-schema";
 import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
@@ -57,12 +58,7 @@ const app = new Hono<AppEnv>()
   .post(
     "/",
     requireAuth,
-    zValidator(
-      "json",
-      insertAccountSchema.pick({
-        name: true,
-      }),
-    ),
+    zValidator("json", accountFormSchema),
     async (c) => {
       const userId = c.var.userId;
       const values = c.req.valid("json");
@@ -118,12 +114,7 @@ const app = new Hono<AppEnv>()
     ),
     requireAuth,
     requireId,
-    zValidator(
-      "json",
-      insertAccountSchema.pick({
-        name: true,
-      }),
-    ),
+    zValidator("json", accountFormSchema),
     async (c) => {
       const userId = c.var.userId;
       const id = c.var.validatedId;

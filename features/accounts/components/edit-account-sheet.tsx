@@ -20,8 +20,8 @@ export const EditAccountSheet = () => {
   const { isOpen, onClose, id } = useOpenAccount();
 
   const [ConfirmDialog, confirm] = useConfirm(
-    "Are you sure?",
-    "You are about to delete this account.",
+    "¿Quieres eliminar la cuenta?",
+    "Esta acción eliminará la cuenta y sus transacciones.",
   );
 
   const accountQuery = useGetAccount(id);
@@ -63,19 +63,28 @@ export const EditAccountSheet = () => {
   return (
     <>
       <ConfirmDialog />
-      <Sheet open={isOpen || isPending} onOpenChange={onClose}>
+      <Sheet
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (!open && !isPending) onClose();
+        }}
+      >
         <SheetContent className="space-y-4">
           <SheetHeader>
-            <SheetTitle>Edit Account</SheetTitle>
+            <SheetTitle>Editar cuenta</SheetTitle>
 
-            <SheetDescription>Edit an existing account.</SheetDescription>
+            <SheetDescription>Edita una cuenta existente.</SheetDescription>
           </SheetHeader>
 
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <Loader2 className="text-muted-foreground size-4 animate-spin" />
             </div>
-          ) : (
+          ) : accountQuery.isError ? (
+            <p className="text-sm text-destructive" role="alert">
+              No se pudo cargar la cuenta. Cierra la ventana e inténtalo de nuevo.
+            </p>
+          ) : accountQuery.data ? (
             <AccountForm
               id={id}
               defaultValues={defaultValues}
@@ -83,7 +92,7 @@ export const EditAccountSheet = () => {
               disabled={isPending}
               onDelete={onDelete}
             />
-          )}
+          ) : null}
         </SheetContent>
       </Sheet>
     </>

@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
 import { Loader2, Trash } from "lucide-react";
 import { useForm } from "react-hook-form";
 
@@ -39,6 +40,16 @@ type TransactionFormProps = {
   onCreateCategory: (name: string) => void;
 };
 
+const DEFAULT_TRANSACTION_FORM_VALUES: TransactionFormValues = {
+  accountId: "",
+  amount: "",
+  categoryId: null,
+  date: new Date(),
+  notes: "",
+  payee: "",
+  transactionTypeId: "",
+};
+
 export const TransactionForm = ({
   id,
   defaultValues,
@@ -54,12 +65,44 @@ export const TransactionForm = ({
 }: TransactionFormProps) => {
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionFormSchema),
-    defaultValues,
+    defaultValues: defaultValues ?? DEFAULT_TRANSACTION_FORM_VALUES,
   });
   const handleSubmit = (values: TransactionFormValues) => {
+    if (!accountOptions.some((option) => option.value === values.accountId)) {
+      form.setError("accountId", { message: "Selecciona una cuenta válida." });
+      return;
+    }
+
+    if (
+      values.categoryId &&
+      !categoryOptions.some((option) => option.value === values.categoryId)
+    ) {
+      form.setError("categoryId", {
+        message: "Selecciona una categoría válida o déjala vacía.",
+      });
+      return;
+    }
+
+    if (
+      !transactionTypeOptions.some(
+        (option) => option.value === values.transactionTypeId,
+      )
+    ) {
+      form.setError("transactionTypeId", {
+        message: "Selecciona un tipo de transacción válido.",
+      });
+      return;
+    }
+
     const amountInMilliunits = convertAmountToMilliunits(values.amount);
 
-    onSubmit(transactionMutationSchema.parse({ ...values, amount: amountInMilliunits }));
+    onSubmit(
+      transactionMutationSchema.parse({
+        ...values,
+        amount: amountInMilliunits,
+        date: format(values.date, "yyyy-MM-dd"),
+      }),
+    );
   };
 
   const handleDelete = () => {
@@ -81,7 +124,7 @@ export const TransactionForm = ({
             <FormItem>
               <FormControl>
                 <DatePicker
-                  value={field.value as Date | undefined}
+                  value={field.value}
                   onChange={field.onChange}
                   disabled={disabled}
                 />
@@ -98,11 +141,11 @@ export const TransactionForm = ({
           disabled={disabled}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Account</FormLabel>
+              <FormLabel>Cuenta</FormLabel>
 
               <FormControl>
                 <Select
-                  placeholder="Select an account"
+                  placeholder="Selecciona una cuenta"
                   options={accountOptions}
                   onCreate={onCreateAccount}
                   value={field.value}
@@ -122,11 +165,11 @@ export const TransactionForm = ({
           disabled={disabled}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Category</FormLabel>
+              <FormLabel>Categoría</FormLabel>
 
               <FormControl>
                 <Select
-                  placeholder="Select a category"
+                  placeholder="Selecciona una categoría"
                   options={categoryOptions}
                   onCreate={onCreateCategory}
                   value={field.value}
@@ -146,14 +189,15 @@ export const TransactionForm = ({
           disabled={disabled}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Type</FormLabel>
+              <FormLabel>Tipo</FormLabel>
 
               <FormControl>
                 <GenericSelect
-                  placeholder="Select a type"
+                  placeholder="Selecciona un tipo"
                   options={transactionTypeOptions}
                   value={field.value}
                   onChange={field.onChange}
+                  disabled={disabled}
                 />
               </FormControl>
 
@@ -174,12 +218,12 @@ export const TransactionForm = ({
           disabled={disabled}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Payee</FormLabel>
+              <FormLabel>Beneficiario</FormLabel>
 
               <FormControl>
                 <Input
                   disabled={disabled}
-                  placeholder="Add a payee"
+                  placeholder="Añade un beneficiario"
                   {...field}
                 />
               </FormControl>
@@ -195,7 +239,7 @@ export const TransactionForm = ({
           disabled={disabled}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Amount</FormLabel>
+              <FormLabel>Importe</FormLabel>
 
               <FormControl>
                 <AmountInput
@@ -216,14 +260,14 @@ export const TransactionForm = ({
           disabled={disabled}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Notes</FormLabel>
+              <FormLabel>Notas</FormLabel>
 
               <FormControl>
                 <Textarea
                   {...field}
                   value={field.value || ""}
                   disabled={disabled}
-                  placeholder="Optional notes..."
+                  placeholder="Notas opcionales..."
                 />
               </FormControl>
 
@@ -234,7 +278,7 @@ export const TransactionForm = ({
 
         <Button className="w-full" disabled={disabled}>
           {disabled && <Loader2 className="mr-2 size-4 animate-spin" />}
-          {id ? "Save changes" : "Create transaction"}
+          {id ? "Guardar cambios" : "Crear transacción"}
         </Button>
 
         {!!id && (
@@ -246,7 +290,7 @@ export const TransactionForm = ({
             variant="outline"
           >
             <Trash className="mr-2 size-4" />
-            Delete transaction
+            Eliminar transacción
           </Button>
         )}
       </form>

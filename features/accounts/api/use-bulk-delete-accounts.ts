@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { summaryQueryKeys } from "@/features/summary/api/query-keys";
 import { transactionQueryKeys } from "@/features/transactions/api/query-keys";
+import { getMutationErrorMessage } from "@/lib/api-client-error";
 import { client } from "@/lib/hono";
 
 import { accountQueryKeys } from "./query-keys";
@@ -24,18 +25,25 @@ export const useBulkDeleteAccounts = () => {
         json,
       });
 
-      if (!response.ok) throw new Error("Failed to delete account(s).");
+      if (!response.ok) {
+        throw new Error(
+          getMutationErrorMessage(
+            response,
+            "No se pudieron eliminar las cuentas. Inténtalo de nuevo.",
+          ),
+        );
+      }
 
       return await response.json();
     },
     onSuccess: () => {
-      toast.success("Account(s) deleted.");
+      toast.success("Cuentas eliminadas.");
       queryClient.invalidateQueries({ queryKey: accountQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: transactionQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: summaryQueryKeys.all });
     },
-    onError: () => {
-      toast.error("Failed to delete account(s).");
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 

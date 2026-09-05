@@ -58,6 +58,12 @@ export const NewTransactionSheet = () => {
     categoryQuery.isLoading ||
     accountQuery.isLoading ||
     transactionTypesQuery.isLoading;
+  const hasReferenceError =
+    categoryQuery.isError ||
+    accountQuery.isError ||
+    transactionTypesQuery.isError;
+  const hasRequiredOptions =
+    accountOptions.length > 0 && transactionTypeOptions.length > 0;
 
   const onSubmit = (values: TransactionMutationValues) => {
     createMutation.mutate(values, {
@@ -68,18 +74,33 @@ export const NewTransactionSheet = () => {
   };
 
   return (
-    <Sheet open={isOpen || isPending} onOpenChange={onClose}>
+    <Sheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open && !isPending) onClose();
+      }}
+    >
       <SheetContent className="space-y-4">
         <SheetHeader>
-          <SheetTitle>New Transaction</SheetTitle>
+          <SheetTitle>Nueva transacción</SheetTitle>
 
-          <SheetDescription>Add a new transaction.</SheetDescription>
+          <SheetDescription>Añade una nueva transacción.</SheetDescription>
         </SheetHeader>
 
         {isLoading ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <Loader2 className="text-muted-foreground size-4 animate-spin" />
           </div>
+        ) : hasReferenceError ? (
+          <p className="text-sm text-destructive" role="alert">
+            No se pudieron cargar los datos necesarios. Cierra la ventana e
+            inténtalo de nuevo.
+          </p>
+        ) : !hasRequiredOptions ? (
+          <p className="text-sm text-muted-foreground">
+            Crea una cuenta y configura un tipo de transacción antes de añadir
+            movimientos.
+          </p>
         ) : (
           <TransactionForm
             onSubmit={onSubmit}
