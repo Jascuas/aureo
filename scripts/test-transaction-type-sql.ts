@@ -138,6 +138,42 @@ try {
     summaryOperationSource.includes("value: convertAmountFromMilliunits"),
     true,
   );
+  assert.equal(
+    summaryOperationSource.includes(
+      "to_char(${transactions.date} AT TIME ZONE 'UTC' AT TIME ZONE ${DATE_RANGE_TIME_ZONE}, 'YYYY-MM-DD')",
+    ),
+    true,
+  );
+  assert.equal(
+    summaryOperationSource.includes(
+      "to_char(${transactions.date} AT TIME ZONE ${DATE_RANGE_TIME_ZONE}, 'YYYY-MM-DD')",
+    ),
+    false,
+  );
+
+  runSql("SET TIME ZONE 'UTC';");
+  assert.equal(
+    runSql("SELECT to_char(timestamp '2026-03-29 00:00:00', 'YYYY-MM-DD');"),
+    "2026-03-29",
+  );
+  assert.equal(
+    runSql(
+      "SELECT to_char(timestamp '2026-03-29 00:00:00' AT TIME ZONE 'Europe/Madrid', 'YYYY-MM-DD');",
+    ),
+    "2026-03-28",
+  );
+  assert.equal(
+    runSql(
+      "SELECT to_char(timestamp '2026-03-29 00:00:00' AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Madrid', 'YYYY-MM-DD');",
+    ),
+    "2026-03-29",
+  );
+  assert.equal(
+    runSql(
+      "SELECT to_char(timestamp '2026-03-28 23:00:00' AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Madrid', 'YYYY-MM-DD');",
+    ),
+    "2026-03-29",
+  );
 
   runSql(`
     INSERT INTO transactions (id, amount, account_id, transaction_type_id) VALUES
