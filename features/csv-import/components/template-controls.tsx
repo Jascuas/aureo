@@ -21,6 +21,7 @@ import {
 import type {
   AmountFormat,
   ColumnDetectionResult,
+  ImportTemplate,
 } from "@/features/csv-import/types/import-types";
 
 type TemplateControlsProps = {
@@ -28,7 +29,7 @@ type TemplateControlsProps = {
   columnMapping: Record<string, number>;
   detectionResult?: ColumnDetectionResult;
   disableSave: boolean;
-  onLoadTemplate?: (templateId: string) => void;
+  onLoadTemplate?: (template: ImportTemplate) => void;
 };
 
 export const TemplateControls = ({
@@ -41,7 +42,7 @@ export const TemplateControls = ({
   const [templateName, setTemplateName] = useState("");
   const [showSaveInput, setShowSaveInput] = useState(false);
 
-  const { data: templates = [] } = useGetTemplates();
+  const { data: templates = [] } = useGetTemplates(accountId);
   const saveTemplateMutation = useSaveTemplate();
 
   const handleSaveTemplate = () => {
@@ -65,7 +66,12 @@ export const TemplateControls = ({
     <div className="flex items-center justify-between gap-4">
       <div className="flex items-center gap-2">
         {templates && templates.length > 0 && (
-          <Select onValueChange={(value) => onLoadTemplate?.(value)}>
+          <Select
+            onValueChange={(value) => {
+              const template = templates.find((item) => item.id === value);
+              if (template) onLoadTemplate?.(template);
+            }}
+          >
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Load template..." />
             </SelectTrigger>

@@ -62,8 +62,19 @@ export function useCategorizeRetry({
       amountFormat,
     );
 
-    const toCategorizeBatch =
-      aiTransactions.length > 0 ? aiTransactions : transactionsForAnalysis;
+    const toCategorizeBatch = aiTransactions;
+
+    if (toCategorizeBatch.length === 0) {
+      onCategorizationsReady(
+        mergeAutoResolvedAndAi(
+          analyzedRows.autoResolved,
+          [],
+          transactionsForAnalysis,
+        ),
+      );
+      setLoading("categorizing", false);
+      return;
+    }
 
     try {
       const batchCount = Math.ceil(

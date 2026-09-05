@@ -67,10 +67,11 @@ const sameUserTemplate: ImportTemplateWriteValues = {
   name: "Same user template",
 };
 
-const sameUserImport: ImportTransactionValues[] = [
+const sameUserImport: Array<ImportTransactionValues & { csvRowIndex: number }> = [
   {
     amount: 1_000,
     categoryId: "owned-category-1",
+    csvRowIndex: 0,
     date: new Date("2026-09-02T00:00:00.000Z"),
     notes: null,
     payee: "Imported same user payee",
@@ -120,10 +121,14 @@ const templateResponse = (
   values: ImportTemplateWriteValues,
 ): ImportTemplateResponse => ({
   accountId: values.accountId,
-  amountFormat: values.amountFormat,
-  columnMapping: values.columnMapping,
+  amountFormat: {
+    decimalSeparator: ".",
+    isNegativeExpense: true,
+    thousandsSeparator: ",",
+  },
+  columnMapping: { amount: 1, date: 0 },
   createdAt: new Date("2026-09-02T00:00:00.000Z"),
-  dateFormat: values.dateFormat,
+  dateFormat: "YYYY-MM-DD",
   id: "template-1",
   name: values.name,
   updatedAt: new Date("2026-09-02T00:00:00.000Z"),
@@ -279,7 +284,12 @@ test("template create and update reject foreign or empty account references befo
       writes.create += 1;
       return templateResponse(values);
     },
-    insertTransactions: async () => 1,
+    deleteTemplate: async () => undefined,
+    findExistingTransaction: async () => false,
+    findOwnedCategoryIds: async (_userId, ids) =>
+      ids.filter((id) => id.startsWith("owned-category")),
+    insertTransaction: async () => {},
+    listTemplates: async () => [],
     updateTemplate: async (_userId, _id, values) => {
       writes.update += 1;
       return templateResponse({ ...sameUserTemplate, ...values });
@@ -320,10 +330,14 @@ test("CSV import rejects foreign accounts, categories, and transaction types bef
   const operations = createCsvImportWriteOperations({
     authorizeReferences: ownedReferenceAuthorizer,
     createTemplate: async (_userId, values) => templateResponse(values),
-    insertTransactions: async () => {
+    deleteTemplate: async () => undefined,
+    findExistingTransaction: async () => false,
+    findOwnedCategoryIds: async (_userId, ids) =>
+      ids.filter((id) => id.startsWith("owned-category")),
+    insertTransaction: async () => {
       writes += 1;
-      return 1;
     },
+    listTemplates: async () => [],
     updateTemplate: async (_userId, _id, values) =>
       templateResponse({ ...sameUserTemplate, ...values }),
   });
@@ -343,7 +357,19 @@ test("CSV import rejects foreign accounts, categories, and transaction types bef
     await operations.importTransactions("user-1", "owned-account-1", [
       { ...sameUserImport[0], categoryId: "foreign-category-2" },
     ]),
-    notFound,
+    {
+      data: {
+        outcomes: [
+          {
+            csvRowIndex: 0,
+            reason: "The selected category is unavailable.",
+            status: "failed",
+          },
+        ],
+        summary: { duplicate: 0, failed: 1, imported: 0 },
+      },
+      ok: true,
+    },
   );
   assert.equal(
     (
@@ -354,4 +380,61 @@ test("CSV import rejects foreign accounts, categories, and transaction types bef
     true,
   );
   assert.equal(writes, 2);
+});
+
+test("CSV import returns one idempotent outcome per row and normalizes expense duplicates", async () => {
+  const insertedAmounts: number[] = [];
+  const operations = createCsvImportWriteOperations({
+    authorizeReferences: ownedReferenceAuthorizer,
+    createTemplate: async (_userId, values) => templateResponse(values),
+    deleteTemplate: async () => undefined,
+    findExistingTransaction: async (_accountId, values) => values.amount === -2_000,
+    findOwnedCategoryIds: async (_userId, ids) => ids,
+    insertTransaction: async (_accountId, values) => {
+      if (values.payee === "Fails") throw new Error("storage failure");
+      insertedAmounts.push(values.amount);
+    },
+    listTemplates: async () => [],
+    updateTemplate: async (_userId, _id, values) =>
+      templateResponse({ ...sameUserTemplate, ...values }),
+  });
+
+  const result = await operations.importTransactions("user-1", "owned-account-1", [
+    {
+      ...sameUserImport[0],
+      amount: 2_000,
+      csvRowIndex: 2,
+      payee: "Existing expense",
+      transactionTypeId: "expense",
+    },
+    { ...sameUserImport[0], csvRowIndex: 3, payee: "Inserted" },
+    { ...sameUserImport[0], csvRowIndex: 4, payee: "Inserted" },
+    { ...sameUserImport[0], csvRowIndex: 5, payee: "Fails" },
+  ]);
+
+  assert.deepEqual(result, {
+    data: {
+      outcomes: [
+        {
+          csvRowIndex: 2,
+          reason: "An identical transaction already exists in this account.",
+          status: "duplicate",
+        },
+        { csvRowIndex: 3, status: "imported" },
+        {
+          csvRowIndex: 4,
+          reason: "An identical transaction already exists in this account.",
+          status: "duplicate",
+        },
+        {
+          csvRowIndex: 5,
+          reason: "This row could not be saved.",
+          status: "failed",
+        },
+      ],
+      summary: { duplicate: 2, failed: 1, imported: 1 },
+    },
+    ok: true,
+  });
+  assert.deepEqual(insertedAmounts, [1_000]);
 });

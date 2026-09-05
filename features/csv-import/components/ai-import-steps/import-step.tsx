@@ -16,10 +16,7 @@ export function ImportStep({ onComplete, onImportAnother }: ImportStepProps) {
 
   return (
     <ImportSummary
-      importedCount={importResult.importedCount}
-      skippedCount={importResult.skippedCount}
-      errorCount={importResult.errorCount}
-      errors={importResult.errors}
+      outcomes={importResult.outcomes}
       onImportAnother={onImportAnother ?? reset}
       onViewTransactions={() => {
         reset();

@@ -82,14 +82,14 @@ export type MappingPreviewRow = {
 };
 
 export type ImportTemplate = {
-  id: string;
-  userId: string;
-  name: string;
-  columnMapping: Record<string, number>; // { "date": 0, "amount": 2, "payee": 1 }
-  dateFormat: string;
+  accountId: string;
   amountFormat: AmountFormat;
-  createdAt: Date;
-  updatedAt: Date;
+  columnMapping: Record<string, number>; // { "date": 0, "amount": 2, "payee": 1 }
+  createdAt: string;
+  dateFormat: DateFormat;
+  id: string;
+  name: string;
+  updatedAt: string;
 };
 
 export type ImportSessionState =
@@ -128,10 +128,16 @@ export type ImportSession = {
 };
 
 export type ImportResult = {
-  importedCount: number;
-  skippedCount: number;
   errorCount: number;
-  errors: Array<{ row: number; message: string }>;
+  importedCount: number;
+  outcomes: ImportRowOutcome[];
+  skippedCount: number;
+};
+
+export type ImportRowOutcome = {
+  csvRowIndex: number;
+  reason?: string;
+  status: "duplicate" | "failed" | "imported" | "skipped";
 };
 
 export type HeuristicConfig = {

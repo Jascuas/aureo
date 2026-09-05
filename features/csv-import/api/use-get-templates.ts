@@ -1,13 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { InferResponseType } from "hono";
 
+import type { ImportTemplate } from "@/features/csv-import/types/import-types";
 import { client } from "@/lib/hono";
 
-type SuccessResponse = InferResponseType<
-  (typeof client.api)["csv-import"]["templates"]["$get"],
-  200
->;
-type ResponseType = SuccessResponse["data"];
+type ResponseType = ImportTemplate[];
 
 export const useGetTemplates = (accountId?: string) => {
   const query = useQuery<ResponseType, Error>({

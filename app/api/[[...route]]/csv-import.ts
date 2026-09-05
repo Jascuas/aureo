@@ -1,13 +1,8 @@
 import { zValidator } from "@hono/zod-validator";
-import { and, eq } from "drizzle-orm";
 import { Hono, type MiddlewareHandler } from "hono";
 import { z } from "zod";
 
-import { db } from "@/db/drizzle";
-import {
-  importTemplates,
-  insertImportTemplateSchema,
-} from "@/db/schema";
+import { insertImportTemplateSchema } from "@/db/schema";
 import { analyze } from "@/features/csv-import/lib/analyzer";
 import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
 import { detectDuplicates } from "@/features/csv-import/lib/duplicate-matcher";
@@ -15,7 +10,9 @@ import { matchPayeesToCategories } from "@/features/csv-import/lib/payee-categor
 import { categorizeTransactions } from "@/features/csv-import/lib/transaction-categorizer";
 import {
   createImportTemplate,
+  deleteImportTemplate,
   importTransactions,
+  listImportTemplates,
   updateImportTemplate,
 } from "@/features/csv-import/server/csv-import-write-operations";
 import { supportedTransactionTypeIdSchema } from "@/features/transaction-types/lib/transaction-types";
@@ -29,8 +26,23 @@ import { requireId } from "@/lib/validation-middleware";
 // Validation Schemas
 // ============================================================================
 
+const isoDateSchema = z
+  .string()
+  .refine((value) => /^\d{4}-\d{2}-\d{2}$/.test(value), "Invalid date")
+  .refine(
+    (value) => {
+      const parsedDate = new Date(`${value}T00:00:00.000Z`);
+      return (
+        !Number.isNaN(parsedDate.getTime()) &&
+        parsedDate.toISOString().slice(0, 10) === value
+      );
+    },
+    "Invalid date",
+  )
+  .transform((value) => new Date(`${value}T00:00:00.000Z`));
+
 const transactionInputSchema = z.object({
-  date: z.string().transform((val) => new Date(val)),
+  date: isoDateSchema,
   amount: z.number().int(), // Milliunits
   payee: z.string().min(1),
 });
@@ -107,33 +119,52 @@ const matchPayeesSchema = z.object({
     ),
 });
 
+const importTemplateFields = {
+  amountFormat: z.object({
+    decimalSeparator: z.enum([".", ","]),
+    isNegativeExpense: z.boolean(),
+    thousandsSeparator: z.enum([".", ",", " ", ""]),
+  }),
+  columnMapping: z.record(z.string(), z.number()),
+  dateFormat: z.enum([
+    "DD/MM/YYYY",
+    "MM/DD/YYYY",
+    "YYYY-MM-DD",
+    "DD-MM-YYYY",
+    "DD/MM/YY",
+    "MM/DD/YY",
+    "DD-MMM-YYYY",
+    "DD-MMM-YY",
+    "YYYY/MM/DD",
+    "unknown",
+  ]),
+};
+
 const saveTemplateSchema = insertImportTemplateSchema.omit({
   id: true,
   userId: true,
   createdAt: true,
   updatedAt: true,
-});
+}).extend(importTemplateFields);
 
 const updateTemplateSchema = insertImportTemplateSchema.partial().omit({
   id: true,
   userId: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  amountFormat: importTemplateFields.amountFormat.optional(),
+  columnMapping: importTemplateFields.columnMapping.optional(),
+  dateFormat: importTemplateFields.dateFormat.optional(),
 });
 
-type DatabaseError = {
-  cause?: unknown;
-  code?: string;
-  constraint?: string;
-  detail?: string;
-  message?: string;
-  stack?: string;
-};
+const databaseErrorCode = (error: unknown): string | undefined => {
+  if (typeof error !== "object" || error === null || !("code" in error)) {
+    return undefined;
+  }
 
-const asDatabaseError = (error: unknown): DatabaseError =>
-  typeof error === "object" && error !== null
-    ? (error as DatabaseError)
-    : {};
+  return typeof error.code === "string" ? error.code : undefined;
+};
 
 type CsvImportOperation =
   | "analyze"
@@ -359,29 +390,10 @@ export const createCsvImportApp = (
     const accountId = c.req.query("accountId");
 
     try {
-      const whereConditions = accountId
-        ? and(
-            eq(importTemplates.userId, userId),
-            eq(importTemplates.accountId, accountId),
-          )
-        : eq(importTemplates.userId, userId);
+      const result = await listImportTemplates(userId, accountId);
 
-      const templates = await db
-        .select({
-          id: importTemplates.id,
-          accountId: importTemplates.accountId,
-          name: importTemplates.name,
-          columnMapping: importTemplates.columnMapping,
-          dateFormat: importTemplates.dateFormat,
-          amountFormat: importTemplates.amountFormat,
-          createdAt: importTemplates.createdAt,
-          updatedAt: importTemplates.updatedAt,
-        })
-        .from(importTemplates)
-        .where(whereConditions)
-        .orderBy(importTemplates.updatedAt);
-
-      return c.json({ data: templates });
+      if (!result.ok) return c.json(API_ERRORS.NOT_FOUND, 404);
+      return c.json({ data: result.data });
     } catch {
       logCsvImportFailure("get_templates", "unexpected");
       return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
@@ -404,24 +416,12 @@ export const createCsvImportApp = (
 
         return c.json({ data: result.data });
       } catch (error) {
-        const databaseError = asDatabaseError(error);
         logCsvImportFailure(
           "save_template",
-          databaseError.code === "23505" ? "duplicate_key" : "unexpected",
+          databaseErrorCode(error) === "23505" ? "duplicate_key" : "unexpected",
         );
 
-        if (databaseError.code === "23505") {
-          if (
-            databaseError.constraint === "import_templates_user_account_unique"
-          ) {
-            return c.json(
-              {
-                error:
-                  "A template already exists for this account. Only one template per account is allowed.",
-              },
-              409,
-            );
-          }
+        if (databaseErrorCode(error) === "23505") {
           return c.json(API_ERRORS.DUPLICATE_TEMPLATE_NAME, 409);
         }
 
@@ -449,13 +449,12 @@ export const createCsvImportApp = (
 
         return c.json({ data: result.data });
       } catch (error) {
-        const databaseError = asDatabaseError(error);
         logCsvImportFailure(
           "update_template",
-          databaseError.code === "23505" ? "duplicate_key" : "unexpected",
+          databaseErrorCode(error) === "23505" ? "duplicate_key" : "unexpected",
         );
 
-        if (databaseError.code === "23505") {
+        if (databaseErrorCode(error) === "23505") {
           return c.json(API_ERRORS.DUPLICATE_TEMPLATE_NAME, 409);
         }
 
@@ -473,18 +472,10 @@ export const createCsvImportApp = (
       const id = c.var.validatedId;
 
       try {
-        const [template] = await db
-          .delete(importTemplates)
-          .where(
-            and(eq(importTemplates.id, id), eq(importTemplates.userId, userId)),
-          )
-          .returning({ id: importTemplates.id });
+        const result = await deleteImportTemplate(userId, id);
+        if (!result.ok) return c.json(API_ERRORS.NOT_FOUND, 404);
 
-        if (!template) {
-          return c.json(API_ERRORS.NOT_FOUND, 404);
-        }
-
-        return c.json({ data: template });
+        return c.json({ data: result.data });
       } catch {
         logCsvImportFailure("delete_template", "unexpected");
         return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
@@ -504,11 +495,12 @@ export const createCsvImportApp = (
         transactions: z
           .array(
             z.object({
-              date: z.string().transform((val) => new Date(val)),
-              amount: z.number().int(), // Milliunits
-              payee: z.string().min(1),
-              notes: z.string().optional(),
               categoryId: z.string().nullable(),
+              csvRowIndex: z.number().int().min(0),
+              date: isoDateSchema,
+              amount: z.number().int(), // Milliunits
+              notes: z.string().optional(),
+              payee: z.string().min(1),
               transactionTypeId: supportedTransactionTypeIdSchema,
             }),
           )
@@ -520,7 +512,12 @@ export const createCsvImportApp = (
       }),
       (result, c) => {
         if (!result.success) {
-          return c.json(API_ERRORS.INVALID_FOREIGN_KEY, 400);
+          return c.json(
+            {
+              error: `Imports accept between 1 and ${CSV_IMPORT_CONFIG.BATCH_LIMITS.BULK_IMPORT} transactions per request.`,
+            },
+            400,
+          );
         }
       },
     ),
@@ -538,76 +535,9 @@ export const createCsvImportApp = (
         logCsvImportCount("bulk_import", txs.length);
 
         return c.json({ data: result.data });
-      } catch (error) {
-        // Drizzle/Neon wraps PostgreSQL errors - extract the real error
-        const databaseError = asDatabaseError(error);
-        const pgError = asDatabaseError(databaseError.cause ?? error);
-        const errorCode = pgError.code ?? databaseError.code;
-        const errorMessage = databaseError.message ?? "";
-        const errorDetail = pgError.detail ?? databaseError.detail;
-        const errorConstraint = pgError.constraint ?? databaseError.constraint;
-
-        const failureCategory =
-          errorCode === "23503" ||
-          errorMessage.includes("violates foreign key constraint") ||
-          errorMessage.includes("foreign key")
-            ? "foreign_key_violation"
-            : errorCode === "23505" ||
-                errorMessage.includes("duplicate key") ||
-                errorMessage.includes("already exists")
-              ? "duplicate_key"
-              : "unexpected";
-
-        logCsvImportFailure("bulk_import", failureCategory);
-
-        // Foreign key constraint violation (invalid category/transaction type)
-        if (
-          errorCode === "23503" ||
-          errorMessage.includes("violates foreign key constraint") ||
-          errorMessage.includes("foreign key")
-        ) {
-          // Extract which constraint failed
-          let fieldName = "category or transaction type";
-          if (errorConstraint?.includes("category")) fieldName = "category";
-          else if (errorConstraint?.includes("transaction_type"))
-            fieldName = "transaction type";
-          else if (errorConstraint?.includes("account")) fieldName = "account";
-
-          return c.json(
-            {
-              error: `Invalid ${fieldName} ID. Please verify the ID exists in the database.`,
-              detail: errorDetail || errorMessage,
-              constraint: errorConstraint,
-            },
-            400,
-          );
-        }
-
-        // Duplicate key violation
-        if (
-          errorCode === "23505" ||
-          errorMessage.includes("duplicate key") ||
-          errorMessage.includes("already exists")
-        ) {
-          return c.json(
-            {
-              error:
-                "One or more transactions already exist (duplicates detected).",
-              detail: errorDetail || errorMessage,
-            },
-            409,
-          );
-        }
-
-        // Generic error with full details for debugging
-        return c.json(
-          {
-            error: "Failed to import transactions",
-            detail: errorMessage,
-            code: errorCode,
-          },
-          500,
-        );
+      } catch {
+        logCsvImportFailure("bulk_import", "unexpected");
+        return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
       }
     },
   );
