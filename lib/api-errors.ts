@@ -5,7 +5,7 @@ export const API_ERRORS = {
   BAD_REQUEST: { error: "Bad request" },
   INTERNAL_SERVER_ERROR: { error: "Internal server error" },
   INVALID_FOREIGN_KEY: { error: "Invalid category or transaction type ID" },
-  DUPLICATE_TEMPLATE_NAME: { error: "A template with this name already exists" },
+  DUPLICATE_TEMPLATE_NAME: { error: "Ya existe una plantilla con este nombre." },
   INVALID_ACCOUNT: { error: "Account not found" },
 } as const;
 
