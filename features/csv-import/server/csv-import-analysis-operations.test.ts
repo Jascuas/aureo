@@ -28,6 +28,40 @@ test("preserves fuzzy duplicate amount bounds for negative and positive values",
   });
 });
 
+test("normalizes confidence when AI returns a category outside the user category set", async () => {
+  const dependencies: CsvImportAnalysisDependencies = {
+    categorizeWithAI: async ({ transactions }) =>
+      transactions.map((transaction) => ({
+        csvRowIndex: transaction.csvRowIndex,
+        topSuggestion: { categoryId: "other-users-category", confidence: 0.95 },
+      })),
+    findExactDuplicateRows: async () => [],
+    findExactPayeeRows: async () => [],
+    findFewShotRows: async () => [],
+    findFuzzyDuplicateRows: async () => [],
+    findFuzzyPayeeRows: async () => [],
+    getUserCategories: async () => [{ id: "category-food", name: "Food" }],
+    now: () => 0,
+    onComplete: () => {},
+  };
+  const { analyzeCsvImport } = createCsvImportAnalysisOperations(dependencies);
+
+  const result = await analyzeCsvImport("user-1", [{
+    amount: -10_000,
+    csvRowIndex: 0,
+    date: "2026-09-06",
+    payee: "Restaurant",
+  }]);
+
+  assert.deepEqual(result.categorizations, [{
+    categoryId: null,
+    confidence: 0,
+    csvRowIndex: 0,
+    normalizedPayee: "Restaurant",
+    transactionTypeId: "expense",
+  }]);
+});
+
 test("analyzes a maximum-size import with six persistence phases, not row queries", async () => {
   const calls = new Map<string, number>();
   const record = (name: string) => {

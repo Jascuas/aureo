@@ -488,10 +488,12 @@ const createAICategorizations = (
         ? hint.transactionTypeId
         : getTransactionTypeForAmount(input.amount).id;
     const categoryId = result?.topSuggestion.categoryId;
+    const hasInvalidCategoryId =
+      categoryId !== null &&
+      categoryId !== undefined &&
+      !categoriesById.has(categoryId);
     const validCategoryId =
-      categoryId !== null && categoryId !== undefined && categoriesById.has(categoryId)
-        ? categoryId
-        : null;
+      hasInvalidCategoryId ? null : categoryId ?? null;
 
     return {
       categoryId:
@@ -500,7 +502,7 @@ const createAICategorizations = (
           CSV_IMPORT_CONFIG.AI.MIN_CONFIDENCE_THRESHOLD
           ? validCategoryId
           : null,
-      confidence: result?.topSuggestion.confidence ?? 0,
+      confidence: hasInvalidCategoryId ? 0 : result?.topSuggestion.confidence ?? 0,
       csvRowIndex: input.csvRowIndex,
       normalizedPayee: normalizePayeeName(input.payee),
       transactionTypeId,
