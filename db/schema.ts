@@ -9,7 +9,9 @@ export const accounts = pgTable("accounts", {
   name: text("name").notNull(),
   userId: text("user_id").notNull(),
   balance: bigint("balance", { mode: "number" }),
-});
+}, (table) => ({
+  userIdIdx: index("accounts_user_id_idx").on(table.userId),
+}));
 
 export const accountsRelations = relations(accounts, ({ many }) => ({
   transactions: many(transactions),
@@ -59,6 +61,16 @@ export const transactions = pgTable("transactions", {
   accountImportKeyUnique: unique("transactions_account_import_key_unique").on(
     table.accountId,
     table.importKey,
+  ),
+  accountDateIdIdx: index("transactions_account_date_id_idx").on(
+    table.accountId,
+    table.date,
+    table.id,
+  ),
+  accountTransactionTypeDateIdx: index("transactions_account_transaction_type_date_idx").on(
+    table.accountId,
+    table.transactionTypeId,
+    table.date,
   ),
 }));
 

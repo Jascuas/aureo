@@ -129,9 +129,7 @@ try {
     false,
   );
   assert.equal(
-    summaryOperationSource.includes(
-      "valueMilliunits: sql<number>`SUM(${categoryAmountSql})`",
-    ),
+    summaryOperationSource.includes("SUM(${categoryAmountSql})"),
     true,
   );
   assert.equal(

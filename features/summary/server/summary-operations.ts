@@ -1,16 +1,14 @@
-import { and, eq, gte, inArray, lt, sql, sum } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
 import {
   categoryAmountSql,
   expensesAmountSql,
   incomeAmountSql,
-  transactionBalanceDeltaSql,
+  transactionBalanceDeltaCaseSql,
 } from "@/db/helpers";
 import { accounts, categories, transactions } from "@/db/schema";
 import {
-  buildCategorySummary,
-  buildPayeeSummary,
   calculateSummaryPercentageChange,
   type SummaryBreakdownRow,
 } from "@/features/summary/lib/summary-contract";
@@ -39,9 +37,11 @@ type SummaryOperationResult<T> =
   | { ok: true; data: T }
   | { ok: false; reason: "account_not_found" };
 
-type FinancialTotals = {
-  expensesMilliunits: number;
-  incomeMilliunits: number;
+type OverviewFinancialTotals = {
+  currentExpensesMilliunits: number;
+  currentIncomeMilliunits: number;
+  previousExpensesMilliunits: number;
+  previousIncomeMilliunits: number;
 };
 
 export type SummaryOverview = {
@@ -98,71 +98,119 @@ const isOwnedAccount = async (userId: string, accountId?: string) => {
   return Boolean(account);
 };
 
-const getFinancialTotals = async (
+const financialTotalsSql = ({ endDate, startDate }: SummaryDateRange) => ({
+  expensesMilliunits: sql<number>`
+    COALESCE(SUM(
+      CASE
+        WHEN ${transactions.date} >= ${startDate} AND ${transactions.date} < ${getExclusiveEndDate(endDate)}
+        THEN CASE
+          WHEN ${transactions.transactionTypeId} = 'expense' THEN ABS(${transactions.amount})
+          WHEN ${transactions.transactionTypeId} = 'refund' THEN -ABS(${transactions.amount})
+          ELSE 0
+        END
+        ELSE 0
+      END
+    ), 0)
+  `.mapWith(Number),
+  incomeMilliunits: sql<number>`
+    COALESCE(SUM(
+      CASE
+        WHEN ${transactions.date} >= ${startDate} AND ${transactions.date} < ${getExclusiveEndDate(endDate)}
+          AND ${transactions.transactionTypeId} = 'income'
+        THEN ABS(${transactions.amount})
+        ELSE 0
+      END
+    ), 0)
+  `.mapWith(Number),
+});
+
+const getOverviewFinancialTotals = async (
   userId: string,
-  range: SummaryDateRange,
+  currentRange: SummaryDateRange,
+  previousRange: SummaryDateRange,
   accountId?: string,
-): Promise<FinancialTotals> => {
+): Promise<OverviewFinancialTotals> => {
+  const currentTotals = financialTotalsSql(currentRange);
+  const previousTotals = financialTotalsSql(previousRange);
   const [row] = await db
     .select({
-      expensesMilliunits: expensesAmountSql,
-      incomeMilliunits: incomeAmountSql,
+      currentExpensesMilliunits: currentTotals.expensesMilliunits,
+      currentIncomeMilliunits: currentTotals.incomeMilliunits,
+      previousExpensesMilliunits: previousTotals.expensesMilliunits,
+      previousIncomeMilliunits: previousTotals.incomeMilliunits,
     })
     .from(transactions)
     .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-    .where(transactionScope(userId, range, accountId));
+    .where(
+      and(
+        accountScope(userId, accountId),
+        gte(transactions.date, previousRange.startDate),
+        lt(transactions.date, getExclusiveEndDate(currentRange.endDate)),
+      ),
+    );
 
   return {
-    expensesMilliunits: row?.expensesMilliunits ?? 0,
-    incomeMilliunits: row?.incomeMilliunits ?? 0,
+    currentExpensesMilliunits: row?.currentExpensesMilliunits ?? 0,
+    currentIncomeMilliunits: row?.currentIncomeMilliunits ?? 0,
+    previousExpensesMilliunits: row?.previousExpensesMilliunits ?? 0,
+    previousIncomeMilliunits: row?.previousIncomeMilliunits ?? 0,
   };
 };
+
+const transactionBalanceSinceSql = (startDate: Date) => sql<number>`
+  COALESCE(SUM(
+    CASE
+      WHEN ${transactions.date} >= ${startDate}
+      THEN ${transactionBalanceDeltaCaseSql}
+      ELSE 0
+    END
+  ), 0)
+`.mapWith(Number);
 
 const getBalanceWindow = async (
   userId: string,
   range: SummaryDateRange,
   accountId?: string,
 ) => {
-  const [balanceRow, afterEndRow, sinceStartRow] = await Promise.all([
-    db
-      .select({ currentBalanceMilliunits: sum(accounts.balance).mapWith(Number) })
-      .from(accounts)
-      .where(
-        and(
-          eq(accounts.userId, userId),
-          accountId ? eq(accounts.id, accountId) : undefined,
-        ),
-      )
-      .then(([row]) => row),
-    db
-      .select({ balanceDeltaMilliunits: transactionBalanceDeltaSql })
-      .from(transactions)
-      .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-      .where(
-        and(
-          accountScope(userId, accountId),
-          gte(transactions.date, getExclusiveEndDate(range.endDate)),
-        ),
-      )
-      .then(([row]) => row),
-    db
-      .select({ balanceDeltaMilliunits: transactionBalanceDeltaSql })
-      .from(transactions)
-      .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-      .where(
-        and(
-          accountScope(userId, accountId),
-          gte(transactions.date, range.startDate),
-        ),
-      )
-      .then(([row]) => row),
-  ]);
+  const balanceRows = await db
+    .select({
+      afterEndDeltaMilliunits: transactionBalanceSinceSql(
+        getExclusiveEndDate(range.endDate),
+      ),
+      currentBalanceMilliunits: sql<number>`COALESCE(${accounts.balance}, 0)`.mapWith(Number),
+      sinceStartDeltaMilliunits: transactionBalanceSinceSql(range.startDate),
+    })
+    .from(accounts)
+    .leftJoin(transactions, eq(transactions.accountId, accounts.id))
+    .where(
+      and(
+        eq(accounts.userId, userId),
+        accountId ? eq(accounts.id, accountId) : undefined,
+      ),
+    )
+    .groupBy(accounts.id, accounts.balance);
 
-  const currentBalanceMilliunits = balanceRow?.currentBalanceMilliunits ?? 0;
-  const balanceAtEndMilliunits =
-    currentBalanceMilliunits - (afterEndRow?.balanceDeltaMilliunits ?? 0);
-  const balanceAtStartMilliunits =
-    currentBalanceMilliunits - (sinceStartRow?.balanceDeltaMilliunits ?? 0);
+  const {
+    afterEndDeltaMilliunits,
+    currentBalanceMilliunits,
+    sinceStartDeltaMilliunits,
+  } = balanceRows.reduce(
+    (totals, row) => ({
+      afterEndDeltaMilliunits:
+        totals.afterEndDeltaMilliunits + row.afterEndDeltaMilliunits,
+      currentBalanceMilliunits:
+        totals.currentBalanceMilliunits + row.currentBalanceMilliunits,
+      sinceStartDeltaMilliunits:
+        totals.sinceStartDeltaMilliunits + row.sinceStartDeltaMilliunits,
+    }),
+    {
+      afterEndDeltaMilliunits: 0,
+      currentBalanceMilliunits: 0,
+      sinceStartDeltaMilliunits: 0,
+    },
+  );
+  const balanceAtEndMilliunits = currentBalanceMilliunits - afterEndDeltaMilliunits;
+  const balanceAtStartMilliunits = currentBalanceMilliunits - sinceStartDeltaMilliunits;
 
   return {
     balanceAtEndMilliunits,
@@ -205,9 +253,8 @@ export const getSummaryOverview = async (
 
   const currentRange = getSummaryDateRange(input);
   const previousRange = getPreviousSummaryDateRange(input);
-  const [currentTotals, previousTotals, balanceWindow] = await Promise.all([
-    getFinancialTotals(userId, currentRange, input.accountId),
-    getFinancialTotals(userId, previousRange, input.accountId),
+  const [financialTotals, balanceWindow] = await Promise.all([
+    getOverviewFinancialTotals(userId, currentRange, previousRange, input.accountId),
     getBalanceWindow(userId, currentRange, input.accountId),
   ]);
 
@@ -223,12 +270,12 @@ export const getSummaryOverview = async (
         ),
       },
       expenses: toExpenseSummaryMetric(
-        currentTotals.expensesMilliunits,
-        previousTotals.expensesMilliunits,
+        financialTotals.currentExpensesMilliunits,
+        financialTotals.previousExpensesMilliunits,
       ),
       income: toSummaryMetric(
-        currentTotals.incomeMilliunits,
-        previousTotals.incomeMilliunits,
+        financialTotals.currentIncomeMilliunits,
+        financialTotals.previousIncomeMilliunits,
       ),
     },
   };
@@ -308,35 +355,45 @@ export const getSummaryCategoryBreakdown = async (
     return { ok: false, reason: "account_not_found" };
   }
 
-  const rows = await db
-    .select({
-      categoryId: categories.id,
-      name: sql<string>`COALESCE(${categories.name}, 'Sin categoría')`,
-      valueMilliunits: sql<number>`SUM(${categoryAmountSql})`.mapWith(Number),
-    })
-    .from(transactions)
-    .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-    .leftJoin(categories, eq(transactions.categoryId, categories.id))
-    .where(
-      and(
-        transactionScope(userId, getSummaryDateRange(input), input.accountId),
-        inArray(transactions.transactionTypeId, getSummaryTransactionTypeIds(input.type)),
-      ),
+  const rows = await db.execute<SummaryBreakdownRow>(sql`
+    WITH category_totals AS (
+      SELECT
+        ${transactions.categoryId} AS "categoryId",
+        COALESCE(${categories.name}, 'Sin categoría') AS name,
+        COALESCE(SUM(${categoryAmountSql}), 0)::double precision AS "valueMilliunits"
+      FROM ${transactions}
+      INNER JOIN ${accounts} ON ${transactions.accountId} = ${accounts.id}
+      LEFT JOIN ${categories} ON ${transactions.categoryId} = ${categories.id}
+      WHERE ${transactionScope(userId, getSummaryDateRange(input), input.accountId)}
+        AND ${inArray(
+          transactions.transactionTypeId,
+          getSummaryTransactionTypeIds(input.type),
+        )}
+      GROUP BY ${transactions.categoryId}, ${categories.name}
+    ), ranked_categories AS (
+      SELECT
+        name,
+        "valueMilliunits",
+        ROW_NUMBER() OVER (ORDER BY "valueMilliunits" DESC, name ASC) AS category_rank
+      FROM category_totals
+      WHERE "categoryId" IS NOT NULL
+    ), summary_rows AS (
+      SELECT name, "valueMilliunits" FROM ranked_categories WHERE category_rank <= ${input.top}
+      UNION ALL
+      SELECT 'Otros', SUM("valueMilliunits")
+      FROM ranked_categories
+      WHERE category_rank > ${input.top}
+      HAVING COUNT(*) > 0
+      UNION ALL
+      SELECT name, "valueMilliunits" FROM category_totals WHERE "categoryId" IS NULL
     )
-    .groupBy(categories.id, categories.name);
+    SELECT name, "valueMilliunits" FROM summary_rows
+    ORDER BY "valueMilliunits" DESC, name ASC
+  `);
 
   return {
     ok: true,
-    data: toSummaryBreakdown(
-      buildCategorySummary(
-        rows.map(({ categoryId, name, valueMilliunits }) => ({
-          isUncategorized: categoryId === null,
-          name,
-          valueMilliunits,
-        })),
-        input.top,
-      ),
-    ),
+    data: toSummaryBreakdown(rows.rows),
   };
 };
 
@@ -348,10 +405,11 @@ export const getSummaryPayeeBreakdown = async (
     return { ok: false, reason: "account_not_found" };
   }
 
+  const valueMilliunits = sql<number>`SUM(${categoryAmountSql})`.mapWith(Number);
   const rows = await db
     .select({
       name: transactions.payee,
-      valueMilliunits: sql<number>`SUM(${categoryAmountSql})`.mapWith(Number),
+      valueMilliunits,
     })
     .from(transactions)
     .innerJoin(accounts, eq(transactions.accountId, accounts.id))
@@ -361,10 +419,12 @@ export const getSummaryPayeeBreakdown = async (
         inArray(transactions.transactionTypeId, getSummaryTransactionTypeIds(input.type)),
       ),
     )
-    .groupBy(transactions.payee);
+    .groupBy(transactions.payee)
+    .orderBy(desc(valueMilliunits), transactions.payee)
+    .limit(input.top);
 
   return {
     ok: true,
-    data: toSummaryBreakdown(buildPayeeSummary(rows, input.top)),
+    data: toSummaryBreakdown(rows),
   };
 };

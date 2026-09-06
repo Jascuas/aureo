@@ -1,93 +1,14 @@
-import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 
-import { db } from "@/db/drizzle";
-import { transactionBalanceDeltaSql } from "@/db/helpers";
-import { accounts, transactions } from "@/db/schema";
-import { calculateTotalCorruptionMilliunits } from "@/features/accounts/lib/balance-reconciliation";
+import { verifyBalances } from "@/features/accounts/server/balance-verification-operations";
 import { requireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
-import { convertAmountFromMilliunits } from "@/lib/utils";
 
 const app = new Hono<AppEnv>().get(
   "/verify-balances",
   requireAuth,
   async (c) => {
-    const userId = c.var.userId;
-
-    // Get all user accounts with their current balances
-    const userAccounts = await db
-      .select({
-        id: accounts.id,
-        name: accounts.name,
-        currentBalance: accounts.balance,
-      })
-      .from(accounts)
-      .where(eq(accounts.userId, userId));
-
-    // Calculate expected balance for each account from transaction history
-    const verificationResults = await Promise.all(
-      userAccounts.map(async (account) => {
-        const result = await db
-          .select({
-            calculatedBalance: transactionBalanceDeltaSql,
-          })
-          .from(transactions)
-
-          .where(eq(transactions.accountId, account.id));
-
-        const calculatedBalance = result[0]?.calculatedBalance ?? 0;
-        const currentBalance = account.currentBalance ?? 0;
-        const isValid = currentBalance === calculatedBalance;
-        const difference = currentBalance - calculatedBalance;
-
-        return {
-          accountId: account.id,
-          accountName: account.name,
-          currentBalanceMilliunits: currentBalance,
-          calculatedBalanceMilliunits: calculatedBalance,
-          isValid,
-          differenceMilliunits: difference,
-        };
-      }),
-    );
-
-    // Summary statistics
-    const totalAccounts = verificationResults.length;
-    const corruptedAccounts = verificationResults.filter(
-      (r) => !r.isValid,
-    ).length;
-    const totalCorruptionMilliunits = calculateTotalCorruptionMilliunits(
-      verificationResults,
-    );
-
-    return c.json({
-      summary: {
-        totalAccounts,
-        corruptedAccounts,
-        healthyAccounts: totalAccounts - corruptedAccounts,
-        corruptionRate:
-          totalAccounts > 0
-            ? ((corruptedAccounts / totalAccounts) * 100).toFixed(1) + "%"
-            : "0%",
-        totalCorruption: convertAmountFromMilliunits(totalCorruptionMilliunits),
-      },
-      accounts: verificationResults.map(
-        ({
-          currentBalanceMilliunits,
-          calculatedBalanceMilliunits,
-          differenceMilliunits,
-          ...account
-        }) => ({
-          ...account,
-          currentBalance: convertAmountFromMilliunits(currentBalanceMilliunits),
-          calculatedBalance: convertAmountFromMilliunits(
-            calculatedBalanceMilliunits,
-          ),
-          difference: convertAmountFromMilliunits(differenceMilliunits),
-        }),
-      ),
-    });
+    return c.json(await verifyBalances(c.var.userId));
   },
 );
 
