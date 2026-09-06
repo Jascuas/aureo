@@ -1,12 +1,15 @@
 import { ClerkAuthForm } from "@/app/(auth)/_components/clerk-auth-form";
 import { HeaderLogo } from "@/components/layout/header-logo";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 export default function Page() {
   return (
     <main className="bg-grid flex min-h-screen items-start justify-center px-4 py-8 sm:py-12 lg:items-center">
       <section className="w-full max-w-md">
-        <div className="mb-8 flex justify-center">
+        <div className="mb-8 flex items-center justify-between">
+          <div className="size-11" aria-hidden="true" />
           <HeaderLogo />
+          <ThemeToggle />
         </div>
 
         <div className="border-border bg-card border p-4 sm:p-6">

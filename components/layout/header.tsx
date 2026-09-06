@@ -2,6 +2,7 @@ import { Filters } from "@/components/filters/filters";
 import { ClerkUserButton } from "@/components/layout/clerk-user-button";
 import { HeaderLogo } from "@/components/layout/header-logo";
 import { Navigation } from "@/components/layout/navigation";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 type HeaderProps = {
   showFilters?: boolean;
@@ -18,6 +19,7 @@ export const Header = ({ showFilters = true }: HeaderProps) => {
           </div>
 
           <div className="flex items-center gap-x-2">
+            <ThemeToggle />
             <ClerkUserButton />
           </div>
         </div>
