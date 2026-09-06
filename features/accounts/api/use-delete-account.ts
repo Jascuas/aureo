@@ -4,6 +4,10 @@ import { toast } from "sonner";
 
 import { summaryQueryKeys } from "@/features/summary/api/query-keys";
 import { transactionQueryKeys } from "@/features/transactions/api/query-keys";
+import {
+  getMutationErrorMessage,
+  MutationHttpError,
+} from "@/lib/api-client-error";
 import { client } from "@/lib/hono";
 
 import { accountQueryKeys } from "./query-keys";
@@ -21,18 +25,27 @@ export const useDeleteAccount = (id?: string) => {
         param: { id },
       });
 
-      if (!response.ok) throw new Error("Failed to delete account.");
+      if (!response.ok) {
+        throw new MutationHttpError(
+          getMutationErrorMessage(
+            response,
+            "No se pudo eliminar la cuenta. Comprueba que ya no la necesites.",
+          ),
+        );
+      }
 
       return await response.json();
     },
     onSuccess: () => {
-      toast.success("Account deleted.");
+      toast.success("Cuenta eliminada.");
       queryClient.invalidateQueries({ queryKey: accountQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: transactionQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: summaryQueryKeys.all });
     },
-    onError: () => {
-      toast.error("Failed to delete account.");
+    onError: (error) => {
+      toast.error(
+        getMutationErrorMessage(error, "No se pudo eliminar la cuenta. Inténtalo de nuevo."),
+      );
     },
   });
 

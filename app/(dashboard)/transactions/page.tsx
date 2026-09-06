@@ -27,7 +27,7 @@ const TransactionsPage = () => {
     const accountId = await confirm();
 
     if (!accountId) {
-      return toast.error("Please select an account to continue.");
+      return toast.error("Selecciona una cuenta para continuar.");
     }
 
     router.push(`/transactions/upload?accountId=${accountId}`);
@@ -55,7 +55,7 @@ const TransactionsPage = () => {
 
   return (
     <>
-      <AccountDialog />
+      {AccountDialog}
 
       <div className="w-full pb-10">
         <Card className="border-border border drop-shadow-sm">

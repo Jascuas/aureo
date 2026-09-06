@@ -4,6 +4,10 @@ import { toast } from "sonner";
 
 import { summaryQueryKeys } from "@/features/summary/api/query-keys";
 import { transactionQueryKeys } from "@/features/transactions/api/query-keys";
+import {
+  getMutationErrorMessage,
+  MutationHttpError,
+} from "@/lib/api-client-error";
 import { client } from "@/lib/hono";
 
 import { categoryQueryKeys } from "./query-keys";
@@ -25,20 +29,29 @@ export const useEditCategory = (id?: string) => {
         param: { id },
       });
 
-      if (!response.ok) throw new Error("Failed to edit category.");
+      if (!response.ok) {
+        throw new MutationHttpError(
+          getMutationErrorMessage(
+            response,
+            "No se pudo actualizar la categoría. Inténtalo de nuevo.",
+          ),
+        );
+      }
 
       return await response.json();
     },
     onSuccess: () => {
-      toast.success("Category updated.");
+      toast.success("Categoría actualizada.");
       queryClient.invalidateQueries({ queryKey: categoryQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: transactionQueryKeys.all });
       queryClient.invalidateQueries({
         queryKey: summaryQueryKeys.byCategoryRoot(),
       });
     },
-    onError: () => {
-      toast.error("Failed to edit category.");
+    onError: (error) => {
+      toast.error(
+        getMutationErrorMessage(error, "No se pudo actualizar la categoría. Inténtalo de nuevo."),
+      );
     },
   });
 

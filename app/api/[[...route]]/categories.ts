@@ -2,7 +2,7 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 
-import { insertCategorySchema } from "@/db/schema";
+import { categoryFormSchema } from "@/features/categories/lib/category-form-schema";
 import {
   getCategories,
   getCategory,
@@ -55,13 +55,7 @@ const app = new Hono<AppEnv>()
   .post(
     "/",
     requireAuth,
-    zValidator(
-      "json",
-      insertCategorySchema.pick({
-        name: true,
-        parentId: true,
-      }),
-    ),
+    zValidator("json", categoryFormSchema),
     async (c) => {
       const userId = c.var.userId;
       const values = c.req.valid("json");
@@ -117,13 +111,7 @@ const app = new Hono<AppEnv>()
     ),
     requireAuth,
     requireId,
-    zValidator(
-      "json",
-      insertCategorySchema.pick({
-        name: true,
-        parentId: true,
-      }),
-    ),
+    zValidator("json", categoryFormSchema),
     async (c) => {
       const userId = c.var.userId;
       const id = c.var.validatedId;

@@ -28,6 +28,8 @@ import { requireId } from "@/lib/validation-middleware";
 const transactionValuesSchema = insertTransactionSchema.omit({
   id: true,
   importKey: true,
+}).extend({
+  date: z.string().date().transform((value) => new Date(value)),
 });
 const transactionWriteSchema = transactionValuesSchema.extend({
   transactionTypeId: supportedTransactionTypeIdSchema,

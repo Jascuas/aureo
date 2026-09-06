@@ -1,5 +1,7 @@
 "use client";
-import { JSX, useRef, useState } from "react";
+
+import { Loader2 } from "lucide-react";
+import { type JSX, useState } from "react";
 
 import { Select } from "@/components/inputs/select";
 import { Button } from "@/components/ui/button";
@@ -15,17 +17,95 @@ import { useCreateAccount } from "@/features/accounts/api/use-create-account";
 import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
 import type { Account } from "@/lib/api-types";
 
+type AccountOption = {
+  label: string;
+  value: string;
+};
+
+type AccountSelectionDialogProps = {
+  accountOptions: AccountOption[];
+  isAccountCreationPending: boolean;
+  isAccountQueryError: boolean;
+  isAccountQueryLoading: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+  onCreateAccount: (name: string) => void;
+  onSelectAccount: (accountId?: string) => void;
+  open: boolean;
+  selectedAccountId: string;
+};
+
+const AccountSelectionDialog = ({
+  accountOptions,
+  isAccountCreationPending,
+  isAccountQueryError,
+  isAccountQueryLoading,
+  onCancel,
+  onConfirm,
+  onCreateAccount,
+  onSelectAccount,
+  open,
+  selectedAccountId,
+}: AccountSelectionDialogProps) => (
+  <Dialog
+    open={open}
+    onOpenChange={(isOpen) => {
+      if (!isOpen && !isAccountCreationPending) onCancel();
+    }}
+  >
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Selecciona una cuenta</DialogTitle>
+        <DialogDescription>Selecciona una cuenta para continuar.</DialogDescription>
+      </DialogHeader>
+
+      {isAccountQueryLoading ? (
+        <div className="flex justify-center py-4">
+          <Loader2 className="text-muted-foreground size-4 animate-spin" />
+        </div>
+      ) : isAccountQueryError ? (
+        <p className="text-sm text-destructive" role="alert">
+          No se pudieron cargar las cuentas. Cierra la ventana e inténtalo de nuevo.
+        </p>
+      ) : accountOptions.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Crea una cuenta para continuar.</p>
+      ) : (
+        <Select
+          placeholder="Selecciona una cuenta"
+          options={accountOptions}
+          onCreate={onCreateAccount}
+          onChange={onSelectAccount}
+          value={selectedAccountId}
+          disabled={isAccountCreationPending}
+        />
+      )}
+
+      <DialogFooter className="pt-2">
+        <Button disabled={isAccountCreationPending} onClick={onCancel} variant="outline">
+          Cancelar
+        </Button>
+        <Button
+          disabled={
+            isAccountCreationPending ||
+            !accountOptions.some((option) => option.value === selectedAccountId)
+          }
+          onClick={onConfirm}
+        >
+          Confirmar
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+);
+
 export const useSelectAccount = (): [
-  () => JSX.Element,
-  () => Promise<unknown>,
+  JSX.Element,
+  () => Promise<string | undefined>,
 ] => {
   const accountQuery = useGetAccounts();
   const accountMutation = useCreateAccount();
 
-  const onCreateAccount = (name: string) =>
-    accountMutation.mutate({
-      name,
-    });
+  const onCreateAccount = (name: string) => accountMutation.mutate({ name });
 
   const accountOptions = (accountQuery.data ?? []).map((account: Account) => ({
     label: account.name,
@@ -36,17 +116,27 @@ export const useSelectAccount = (): [
     resolve: (value: string | undefined) => void;
   } | null>(null);
 
-  const selectValue = useRef<string>("");
+  const [selectedAccountId, setSelectedAccountId] = useState("");
 
-  const confirm = () =>
-    new Promise((resolve) => {
+  const confirm = () => {
+    setSelectedAccountId("");
+
+    return new Promise<string | undefined>((resolve) => {
       setPromise({ resolve });
     });
+  };
 
-  const handleClose = () => setPromise(null);
+  const handleClose = () => {
+    setSelectedAccountId("");
+    setPromise(null);
+  };
 
   const handleConfirm = () => {
-    promise?.resolve(selectValue.current);
+    if (!accountOptions.some((option) => option.value === selectedAccountId)) {
+      return;
+    }
+
+    promise?.resolve(selectedAccountId);
     handleClose();
   };
 
@@ -55,33 +145,20 @@ export const useSelectAccount = (): [
     handleClose();
   };
 
-  const ConfirmationDialog = () => (
-    <Dialog open={promise !== null} onOpenChange={handleCancel}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Select Account</DialogTitle>
-          <DialogDescription>
-            Please select an account to continue.
-          </DialogDescription>
-        </DialogHeader>
-
-        <Select
-          placeholder="Select an account"
-          options={accountOptions}
-          onCreate={onCreateAccount}
-          onChange={(value) => (selectValue.current = value ?? "")}
-          disabled={accountQuery.isLoading || accountMutation.isPending}
-        />
-
-        <DialogFooter className="pt-2">
-          <Button onClick={handleCancel} variant="outline">
-            Cancel
-          </Button>
-          <Button onClick={handleConfirm}>Confirm</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+  const accountDialog = (
+    <AccountSelectionDialog
+      accountOptions={accountOptions}
+      isAccountCreationPending={accountMutation.isPending}
+      isAccountQueryError={accountQuery.isError}
+      isAccountQueryLoading={accountQuery.isLoading}
+      onCancel={handleCancel}
+      onConfirm={handleConfirm}
+      onCreateAccount={onCreateAccount}
+      onSelectAccount={(value) => setSelectedAccountId(value ?? "")}
+      open={promise !== null}
+      selectedAccountId={selectedAccountId}
+    />
   );
 
-  return [ConfirmationDialog, confirm];
+  return [accountDialog, confirm];
 };
