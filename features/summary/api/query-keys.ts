@@ -1,7 +1,7 @@
 type DateRange = {
-  from: string;
-  to: string;
-  accountId: string;
+  from?: string;
+  to?: string;
+  accountId?: string;
 };
 
 type TypeSummaryParams = DateRange & {
@@ -15,8 +15,8 @@ export const summaryQueryKeys = {
   all: summaryKey,
   byAccount: () => [...summaryKey, "by-account"] as const,
   byCategoryRoot: () => [...summaryKey, "by-category"] as const,
-  overTime: ({ from, accountId }: Omit<DateRange, "to">) =>
-    [...summaryKey, "over-time", { from, accountId }] as const,
+  overTime: ({ from, to, accountId }: DateRange) =>
+    [...summaryKey, "over-time", { from, to, accountId }] as const,
   overview: ({ from, to, accountId }: DateRange) =>
     [...summaryKey, "overview", { from, to, accountId }] as const,
   byPayee: ({ type, from, to, accountId, top }: TypeSummaryParams) =>

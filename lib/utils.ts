@@ -44,23 +44,23 @@ export function parseAmount(
   thousandsSeparator: ',' | '.' | ' ' | '' = ','
 ): number {
   if (!value || value.trim() === '') return 0;
-  
+
   let cleaned = value.trim();
-  
+
   if (thousandsSeparator) {
     cleaned = cleaned.replace(new RegExp(`\\${thousandsSeparator}`, 'g'), '');
   }
-  
+
   if (decimalSeparator === ',') {
     cleaned = cleaned.replace(',', '.');
   }
-  
+
   const parsed = parseFloat(cleaned);
-  
+
   if (isNaN(parsed)) {
     throw new Error(`Invalid amount format: "${value}"`);
   }
-  
+
   return parsed;
 }
 
@@ -70,14 +70,6 @@ export function formatCurrency(value: number) {
     currency: "EUR",
     minimumFractionDigits: 2,
   }).format(value);
-}
-
-export function calculatePercentageChange(current: number, previous: number) {
-  if (previous === 0) {
-    return previous === current ? 0 : 100;
-  }
-
-  return ((current - previous) / previous) * 100;
 }
 
 export function normalizePayeeName(payee: string): string {

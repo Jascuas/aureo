@@ -1,6 +1,4 @@
-import { parseISO } from "date-fns";
 import { FileSearch } from "lucide-react";
-import { useSearchParams } from "next/navigation";
 
 import { GenericSelect } from "@/components/inputs/generic-select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +13,6 @@ type ChartProps = {
 };
 
 export const TimeSeriesChart = ({ data = [] }: ChartProps) => {
-  const searchParams = useSearchParams();
   const {
     groupBy,
     dataType,
@@ -26,21 +23,8 @@ export const TimeSeriesChart = ({ data = [] }: ChartProps) => {
     onDataTypeChange,
   } = useChartControls();
 
-  // Filter data based on chart type:
-  // - For transactions (tx): only show data up to the requested 'to' date
-  // - For balance: show all data (includes extension to today)
-  const filteredData = (() => {
-    if (dataType === "balance") return data;
-
-    const toParam = searchParams.get("to");
-    if (!toParam) return data;
-
-    const toDate = parseISO(toParam);
-    return data.filter((item) => parseISO(item.date) <= toDate);
-  })();
-
   const groupedData = groupByPeriod(
-    filteredData ?? [],
+    data,
     groupBy,
     overtimeReducers,
   );
@@ -69,7 +53,7 @@ export const TimeSeriesChart = ({ data = [] }: ChartProps) => {
       </CardHeader>
 
       <CardContent className="p-4 pt-0 lg:p-6">
-        {filteredData.length === 0 ? (
+        {data.length === 0 ? (
           <div className="flex h-[350px] w-full flex-col items-center justify-center gap-y-4">
             <FileSearch className="text-muted-foreground size-6" />
             <p className="text-muted-foreground text-sm">
