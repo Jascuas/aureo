@@ -33,41 +33,42 @@ export const Select = ({
 
   const selectProps = {
     placeholder,
-    className: "h-10 text-sm",
+    className: "min-h-11 text-sm",
     styles: {
       control: (base: object) => ({
         ...base,
-        backgroundColor: "hsl(var(--background))",
-        borderColor: "hsl(var(--border))",
+        minHeight: 44,
+        backgroundColor: "var(--crt-bg)",
+        borderColor: "var(--crt-border)",
         ":hover": {
-          borderColor: "hsl(var(--border))",
+          borderColor: "var(--crt-accent)",
         },
       }),
       menu: (base: object) => ({
         ...base,
-        backgroundColor: "hsl(var(--popover))",
+        backgroundColor: "var(--crt-surface)",
       }),
       option: (base: object, state: { isFocused: boolean }) => ({
         ...base,
         backgroundColor: state.isFocused
-          ? "hsl(var(--accent))"
-          : "hsl(var(--popover))",
-        color: "hsl(var(--popover-foreground))",
+          ? "var(--crt-accent)"
+          : "var(--crt-surface)",
+        color: "var(--crt-fg)",
         ":active": {
-          backgroundColor: "hsl(var(--accent))",
+          backgroundColor: "var(--crt-accent)",
         },
       }),
       input: (base: object) => ({
         ...base,
-        color: "hsl(var(--foreground))",
+        color: "var(--crt-fg)",
       }),
       singleValue: (base: object) => ({
         ...base,
-        color: "hsl(var(--foreground))",
+        color: "var(--crt-fg)",
       }),
       placeholder: (base: object) => ({
         ...base,
-        color: "hsl(var(--muted-foreground))",
+        color: "var(--crt-muted)",
       }),
       indicatorSeparator: () => ({
         display: "none",

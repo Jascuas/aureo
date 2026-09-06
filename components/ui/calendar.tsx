@@ -107,7 +107,7 @@ function Calendar({
   const buttonNavClassName = buttonVariants({
     variant: "outline",
     className:
-      "absolute h-7 min-w-11 w-7 bg-transparent p-0 opacity-50 after:absolute after:-inset-1 hover:opacity-100",
+      "absolute h-11 w-11 bg-transparent p-0 opacity-50 after:absolute after:-inset-1 hover:opacity-100",
   });
   const _buttonNextClassName = cn(
     buttonNavClassName,
@@ -343,7 +343,7 @@ function Nav({
     <nav className={cn("flex items-center", className)}>
       <Button
         variant="outline"
-        className="absolute left-0 h-7 w-7 bg-transparent p-0 opacity-80 hover:opacity-100"
+        className="absolute left-0 h-11 w-11 bg-transparent p-0 opacity-80 hover:opacity-100"
         type="button"
         tabIndex={isPreviousDisabled ? undefined : -1}
         disabled={isPreviousDisabled}
@@ -361,7 +361,7 @@ function Nav({
 
       <Button
         variant="outline"
-        className="absolute right-0 h-7 w-7 bg-transparent p-0 opacity-80 hover:opacity-100"
+        className="absolute right-0 h-11 w-11 bg-transparent p-0 opacity-80 hover:opacity-100"
         type="button"
         tabIndex={isNextDisabled ? undefined : -1}
         disabled={isNextDisabled}
