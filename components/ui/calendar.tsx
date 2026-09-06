@@ -6,8 +6,6 @@ import * as React from "react";
 import {
   DayPicker,
   type DayPickerProps,
-  labelNext,
-  labelPrevious,
   useDayPicker,
 } from "react-day-picker";
 
@@ -349,10 +347,8 @@ function Nav({
         disabled={isPreviousDisabled}
         aria-label={
           navView === "years"
-            ? `Go to the previous ${
-                displayYears.to - displayYears.from + 1
-              } years`
-            : labelPrevious(previousMonth)
+            ? `Ir a los ${displayYears.to - displayYears.from + 1} años anteriores`
+            : "Ir al mes anterior"
         }
         onClick={handlePreviousClick}
       >
@@ -367,8 +363,8 @@ function Nav({
         disabled={isNextDisabled}
         aria-label={
           navView === "years"
-            ? `Go to the next ${displayYears.to - displayYears.from + 1} years`
-            : labelNext(nextMonth)
+            ? `Ir a los ${displayYears.to - displayYears.from + 1} años siguientes`
+            : "Ir al mes siguiente"
         }
         onClick={handleNextClick}
       >

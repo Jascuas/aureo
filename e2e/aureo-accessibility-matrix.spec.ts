@@ -38,6 +38,13 @@ test.describe("AUR-18 authenticated accessibility matrix", () => {
     await page.goto("/");
     await expect((await overTimeResponse).ok()).toBe(true);
 
+    const categoryFilters = page.getByRole("button", { name: "Filtros" });
+    await expect(categoryFilters).toBeVisible();
+    await categoryFilters.click();
+    const categoryDialog = page.getByRole("dialog");
+    await expect(categoryDialog.getByRole("button", { name: "Cerrar" })).toBeVisible();
+    await page.keyboard.press("Escape");
+
     const themeToggle = page.getByRole("button", { name: /Cambiar a tema/ });
     await expect(themeToggle).toBeVisible();
 
@@ -73,6 +80,7 @@ test.describe("AUR-18 authenticated accessibility matrix", () => {
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
     await expect(dialog.getByText("Nueva cuenta", { exact: true })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Cerrar" })).toBeVisible();
 
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
@@ -94,6 +102,18 @@ test.describe("AUR-18 authenticated accessibility matrix", () => {
     await nameSortButton.focus();
     await nameSortButton.press("Enter");
     await expect(nameHeader).toHaveAttribute("aria-sort", "ascending");
+
+    await page.goto("/transactions");
+    const dateFilter = page.getByRole("button").filter({ hasText: / - / }).first();
+    await expect(dateFilter).toBeVisible();
+    await dateFilter.click();
+    await expect(
+      page.getByRole("button", { name: "Ir al mes anterior" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Ir al mes siguiente" }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
 
     await page.goto("/transactions/upload?accountId=e2e-dashboard-positive");
     const csvInput = page.getByLabel("Subir archivo CSV");
