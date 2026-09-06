@@ -165,31 +165,7 @@ test("transaction write endpoints reject empty, unknown, and Transfer IDs before
   );
 });
 
-test("CSV categorization and import endpoints reject unsupported historical hints and writes", async () => {
-  await expectInvalidForeignKey(
-    await csvImportApp.request("/categorize", {
-      body: JSON.stringify({
-        transactions: [
-          {
-            amount: -50_000,
-            csvRowIndex: 0,
-            date: "2026-09-02T00:00:00.000Z",
-            historicalHint: {
-              categoryId: "category-1",
-              confidence: 1,
-              matchCount: 3,
-              matchType: "exact",
-              transactionTypeId: "Transfer",
-            },
-            payee: "Example payee",
-          },
-        ],
-      }),
-      headers: { "content-type": "application/json" },
-      method: "POST",
-    }),
-  );
-
+test("CSV import endpoint rejects unsupported transaction type writes", async () => {
   for (const transactionTypeId of ["", "unknown", "transfer", "Transfer"]) {
     await expectInvalidForeignKey(
       await csvImportApp.request("/import", {

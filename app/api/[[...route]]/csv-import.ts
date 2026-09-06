@@ -3,11 +3,8 @@ import { Hono, type MiddlewareHandler } from "hono";
 import { z } from "zod";
 
 import { insertImportTemplateSchema } from "@/db/schema";
-import { analyze } from "@/features/csv-import/lib/analyzer";
 import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
-import { detectDuplicates } from "@/features/csv-import/lib/duplicate-matcher";
-import { matchPayeesToCategories } from "@/features/csv-import/lib/payee-category-matcher";
-import { categorizeTransactions } from "@/features/csv-import/lib/transaction-categorizer";
+import { analyzeCsvImport } from "@/features/csv-import/server/csv-import-analysis-operations";
 import {
   createImportTemplate,
   deleteImportTemplate,
@@ -41,12 +38,6 @@ const isoDateSchema = z
   )
   .transform((value) => new Date(`${value}T00:00:00.000Z`));
 
-const transactionInputSchema = z.object({
-  date: isoDateSchema,
-  amount: z.number().int(), // Milliunits
-  payee: z.string().min(1),
-});
-
 const analyzeTransactionSchema = z.object({
   csvRowIndex: z.number().int().min(0),
   date: z.string(),
@@ -66,58 +57,7 @@ const analyzeSchema = z.object({
     ),
 });
 
-const detectDuplicatesSchema = z.object({
-  transactions: z
-    .array(transactionInputSchema)
-    .min(1, "At least one transaction required")
-    .max(
-      CSV_IMPORT_CONFIG.BATCH_LIMITS.DUPLICATE_CHECK,
-      `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.DUPLICATE_CHECK} transactions per batch`,
-    ),
-});
 
-const categorizeTransactionSchema = z.object({
-  csvRowIndex: z.number().int().min(0),
-  date: z.string(), // ISO date string
-  amount: z.number().int(), // Milliunits
-  payee: z.string().min(1),
-  description: z.string().optional(),
-  notes: z.string().optional(),
-  historicalHint: z
-    .object({
-      categoryId: z.string(),
-      transactionTypeId: supportedTransactionTypeIdSchema,
-      confidence: z.number(),
-      matchCount: z.number().int(),
-      matchType: z.enum(["exact", "fuzzy"]),
-    })
-    .optional(),
-});
-
-const categorizeTransactionsSchema = z.object({
-  transactions: z
-    .array(categorizeTransactionSchema)
-    .min(1, "At least one transaction required")
-    .max(
-      CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION,
-      `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION} transactions per batch`,
-    ),
-});
-
-const matchPayeesSchema = z.object({
-  transactions: z
-    .array(
-      z.object({
-        csvRowIndex: z.number().int().min(0),
-        payee: z.string().min(1),
-      }),
-    )
-    .min(1, "At least one transaction required")
-    .max(
-      CSV_IMPORT_CONFIG.BATCH_LIMITS.PAYEE_MATCH,
-      `Maximum ${CSV_IMPORT_CONFIG.BATCH_LIMITS.PAYEE_MATCH} transactions per batch`,
-    ),
-});
 
 const importTransactionsSchema = z.object({
   accountId: z.string().min(1),
@@ -191,9 +131,6 @@ const databaseErrorCode = (error: unknown): string | undefined => {
 
 type CsvImportOperation =
   | "analyze"
-  | "detect_duplicates"
-  | "categorize"
-  | "match_payees"
   | "get_templates"
   | "save_template"
   | "update_template"
@@ -236,175 +173,28 @@ export const createCsvImportApp = (
       const { transactions } = c.req.valid("json");
 
       try {
-        const result = await analyze(userId, transactions);
+        const result = await analyzeCsvImport(userId, transactions);
 
-        return c.json({
-          data: {
-            duplicates: result.duplicates.map((dup) => ({
-              csvIndex: dup.csvIndex,
-              existingTransaction: {
-                id: dup.existingTransaction.id,
-                date: dup.existingTransaction.date.toISOString().split("T")[0],
-                amount: dup.existingTransaction.amount,
-                payee: dup.existingTransaction.payee,
-                accountId: dup.existingTransaction.accountId,
-              },
-              matchType: dup.matchType,
-              score: Math.round(dup.score * 100) / 100,
-            })),
-            duplicateSummary: result.duplicateSummary,
-            payeeMatches: result.payeeMatches.map((r) => ({
-              csvRowIndex: r.csvRowIndex,
-              matches: r.matches.map((m) => ({
-                categoryId: m.categoryId,
-                transactionTypeId: m.transactionTypeId,
-                matchCount: m.matchCount,
-                totalMatches: m.totalMatches,
-                confidence: Math.round(m.confidence * 100) / 100,
-                matchType: m.matchType,
-              })),
-            })),
-            autoResolved: result.autoResolved,
-            aiTransactions: result.aiTransactions,
-          },
-        });
-      } catch {
-        logCsvImportFailure("analyze", "unexpected");
-        return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
-      }
-    },
-  )
-  .post(
-    "/detect-duplicates",
-    requireAuth,
-    zValidator("json", detectDuplicatesSchema),
-    async (c) => {
-      const userId = c.var.userId;
-      const { transactions } = c.req.valid("json");
-
-      try {
-        const result = await detectDuplicates(
-          userId,
-          transactions.map((transaction, csvRowIndex) => ({
-            ...transaction,
-            csvRowIndex,
-          })),
-        );
-
-        return c.json({
-          data: {
-            duplicates: result.duplicates.map((dup) => ({
-              csvIndex: dup.csvIndex,
-              existingTransaction: {
-                id: dup.existingTransaction.id,
-                date: dup.existingTransaction.date.toISOString().split("T")[0],
-                amount: dup.existingTransaction.amount,
-                payee: dup.existingTransaction.payee,
-                accountId: dup.existingTransaction.accountId,
-              },
-              matchType: dup.matchType,
-              score: Math.round(dup.score * 100) / 100, // Round to 2 decimals
-            })),
-            summary: {
-              totalChecked: result.totalChecked,
-              exactMatches: result.exactMatches,
-              fuzzyMatches: result.fuzzyMatches,
-              totalDuplicates: result.duplicates.length,
-            },
-          },
-        });
-      } catch {
-        logCsvImportFailure("detect_duplicates", "unexpected");
-        return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
-      }
-    },
-  )
-  .post(
-    "/categorize",
-    requireAuth,
-    zValidator("json", categorizeTransactionsSchema, (result, c) => {
-      if (!result.success) {
-        return c.json(API_ERRORS.INVALID_FOREIGN_KEY, 400);
-      }
-    }),
-    async (c) => {
-      const userId = c.var.userId;
-      const { transactions } = c.req.valid("json");
-
-      logCsvImportCount("categorize", transactions.length);
-
-      try {
-        const results = await categorizeTransactions(
-          userId,
-          transactions,
-        );
-
-        return c.json({
-          data: {
-            results: results.map((result) => ({
-              csvRowIndex: result.csvRowIndex,
-              categoryId: result.suggestion.categoryId,
-              transactionTypeId: result.suggestion.transactionTypeId,
-              confidence: Math.round(result.suggestion.confidence * 100) / 100,
-              normalizedPayee: result.suggestion.normalizedPayee,
-            })),
-          },
-        });
+        return c.json({ data: result });
       } catch (error) {
-        logCsvImportFailure(
-          "categorize",
-          isRateLimitError(error) ? "rate_limit" : "unexpected",
-        );
-
-        // Handle rate limit errors specifically
         if (isRateLimitError(error)) {
+          logCsvImportFailure("analyze", "rate_limit");
           return c.json(
             {
               error: error.message,
-              retryAfter: error.retryAfter,
               provider: error.provider,
+              retryAfter: error.retryAfter,
             },
             429,
           );
         }
 
+        logCsvImportFailure("analyze", "unexpected");
         return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
       }
     },
   )
-  .post(
-    "/match-payees",
-    requireAuth,
-    zValidator("json", matchPayeesSchema),
-    async (c) => {
-      const userId = c.var.userId;
-      const { transactions } = c.req.valid("json");
 
-      try {
-        const result = await matchPayeesToCategories(userId, transactions);
-
-        return c.json({
-          data: {
-            results: result.results.map((r) => ({
-              csvRowIndex: r.csvRowIndex,
-              matches: r.matches.map((m) => ({
-                categoryId: m.categoryId,
-                transactionTypeId: m.transactionTypeId,
-                matchCount: m.matchCount,
-                totalMatches: m.totalMatches,
-                confidence: Math.round(m.confidence * 100) / 100,
-                matchType: m.matchType,
-              })),
-            })),
-            summary: result.summary,
-          },
-        });
-      } catch {
-        logCsvImportFailure("match_payees", "unexpected");
-        return c.json(API_ERRORS.INTERNAL_SERVER_ERROR, 500);
-      }
-    },
-  )
   // ============================================================================
   // Template Management
   // ============================================================================

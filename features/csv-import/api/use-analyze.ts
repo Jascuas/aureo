@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { InferRequestType, InferResponseType } from "hono";
 
+import { RateLimitError } from "@/lib/errors";
 import { client } from "@/lib/hono";
 
 type SuccessResponse = InferResponseType<
@@ -20,6 +21,20 @@ export const useAnalyze = () => {
       });
 
       if (!response.ok) {
+        const errorData = (await response.json()) as {
+          error?: string;
+          provider?: string;
+          retryAfter?: number;
+        };
+
+        if (response.status === 429 && typeof errorData.error === "string") {
+          throw new RateLimitError(
+            errorData.error,
+            errorData.retryAfter,
+            errorData.provider,
+          );
+        }
+
         throw new Error("Failed to analyze transactions");
       }
 

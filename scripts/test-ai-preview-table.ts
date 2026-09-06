@@ -6,7 +6,7 @@
  * Run: npx tsx scripts/test-ai-preview-table.ts
  */
 
-import type { DuplicateMatch } from '../features/csv-import/lib/duplicate-matcher';
+import type { DuplicateMatch } from '../features/csv-import/types/import-types';
 
 console.log('🧪 Testing AI Preview Table Component\n');
 

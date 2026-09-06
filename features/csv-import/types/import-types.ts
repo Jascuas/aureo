@@ -207,13 +207,6 @@ export type DuplicateResolutionProps = {
 // Domain types — duplicate detection
 // ============================================================================
 
-export type DuplicateTxInput = {
-  csvRowIndex: number;
-  date: Date;
-  amount: number;
-  payee: string;
-};
-
 export type DuplicateMatch = {
   csvIndex: number;
   existingTransaction: {
@@ -225,13 +218,6 @@ export type DuplicateMatch = {
   };
   matchType: MatchType;
   score: number;
-};
-
-export type DuplicateDetectionResult = {
-  duplicates: DuplicateMatch[];
-  totalChecked: number;
-  exactMatches: number;
-  fuzzyMatches: number;
 };
 
 export type DuplicateResolution = {
@@ -257,58 +243,7 @@ export type PayeeMatchResult = {
   matches: PayeeCategoryMatch[];
 };
 
-export type PayeeMatchInput = {
-  csvRowIndex: number;
-  payee: string;
-};
-
-export type PayeeMatchSummary = {
-  totalChecked: number;
-  autoResolved: number;
-  partialMatches: number;
-  unmatched: number;
-};
-
-export type PayeeMatchDetectionResult = {
-  results: PayeeMatchResult[];
-  summary: PayeeMatchSummary;
-};
-
-// ============================================================================
-// Domain types — categorization
-// ============================================================================
-
-export type HistoricalHint = {
-  categoryId: string;
-  transactionTypeId: SupportedTransactionTypeId;
-  confidence: number;
-  matchCount: number;
-  matchType: "exact" | "fuzzy";
-};
-
-export type CategorizationTxInput = {
-  csvRowIndex: number;
-  date: string;
-  amount: number;
-  payee: string;
-  description?: string;
-  notes?: string;
-  historicalHint?: HistoricalHint;
-};
-
-export type CategorizationSuggestion = {
-  categoryId: string | null;
-  transactionTypeId: SupportedTransactionTypeId;
-  confidence: number;
-  normalizedPayee: string;
-};
-
-export type CategorizationResult = {
-  csvRowIndex: number;
-  suggestion: CategorizationSuggestion;
-};
-
-// AI-categorized transaction (from /categorize endpoint output)
+// Analysis result consumed by the client after the server-owned import operation.
 export type AICategorization = {
   csvRowIndex: number;
   categoryId: string | null;
@@ -317,38 +252,6 @@ export type AICategorization = {
   normalizedPayee: string;
 };
 
-// Auto-resolved transaction (from /analyze endpoint, high-confidence payee match)
-// Same shape as AICategorization but categoryId is guaranteed non-null.
-export type AutoResolvedTransaction = {
-  csvRowIndex: number;
-  categoryId: string;
-  transactionTypeId: SupportedTransactionTypeId;
-  confidence: number;
-  normalizedPayee: string;
-};
-
-// ============================================================================
-// Domain types — /analyze endpoint
-// ============================================================================
-
-export type AITransaction = TransactionForAnalysis & {
-  historicalHint?: HistoricalHint;
-};
-
-export type DuplicateSummary = {
-  totalChecked: number;
-  exactMatches: number;
-  fuzzyMatches: number;
-  totalDuplicates: number;
-};
-
-export type AnalyzeResult = {
-  duplicates: DuplicateMatch[];
-  duplicateSummary: DuplicateSummary;
-  payeeMatches: PayeeMatchResult[];
-  autoResolved: AutoResolvedTransaction[];
-  aiTransactions: AITransaction[];
-};
 
 // ============================================================================
 // View models
@@ -383,7 +286,5 @@ export type ImportOrchestrator = {
   ) => void;
   analyze: () => Promise<void>;
   handleRerunAnalyze: () => Promise<void>;
-  cancelAnalysis: () => void;
   retryAnalyze: () => Promise<void>;
-  retryCategorize: () => Promise<void>;
 };
