@@ -142,8 +142,8 @@ try {
   console.log("  3. ✅ Created corrected trigger function");
   console.log("  4. ✅ Created new trigger");
   console.log("\n📋 Next Steps:");
-  console.log("  - Run: node scripts/diagnose-balance-corruption.mjs");
-  console.log("  - Expected: 0 corrupted accounts\n");
+  console.log("  - Follow docs/operations/balance-verification.md to run the bounded operator check");
+  console.log("  - Expected: 0 accounts with discrepancies\n");
 
   process.exit(0);
 } catch (error) {
