@@ -35,12 +35,12 @@ export const useAnalyze = () => {
           );
         }
 
-        throw new Error("Failed to analyze transactions");
+        throw new Error("No se han podido analizar las transacciones.");
       }
 
       const result = await response.json();
       if (!("data" in result)) {
-        throw new Error("Unexpected response shape");
+        throw new Error("La respuesta del servidor no tiene un formato válido.");
       }
       return result.data;
     },

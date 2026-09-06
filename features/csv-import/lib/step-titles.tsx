@@ -6,19 +6,19 @@ export function getStepTitle(
   step: ImportStep,
   accountName: string | undefined,
 ): ReactNode {
-  const accountSpan = <span className="text-brand-green">{accountName}</span>;
+  const accountSpan = <span className="text-crt-accent">{accountName}</span>;
 
   switch (step) {
     case ImportStep.UPLOAD:
-      return <>Uploading data to {accountSpan}</>;
+      return <>Subiendo datos a {accountSpan}</>;
     case ImportStep.MAPPING:
-      return <>Mapping columns for {accountSpan}</>;
+      return <>Mapeando columnas para {accountSpan}</>;
     case ImportStep.ANALYSIS:
-      return <>Analyzing {accountSpan} transactions</>;
+      return <>Analizando transacciones de {accountSpan}</>;
     case ImportStep.REVIEW:
-      return <>Reviewing {accountSpan} import</>;
+      return <>Revisando la importación de {accountSpan}</>;
     case ImportStep.IMPORT:
-      return <>Importing data to {accountSpan}</>;
+      return <>Importando datos a {accountSpan}</>;
     default:
       return null;
   }

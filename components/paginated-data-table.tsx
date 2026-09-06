@@ -41,8 +41,8 @@ export function PaginatedDataTable<TData, TValue>({
         <div className="flex items-center space-x-6 lg:space-x-8">
           {/* Page info */}
           <div className="text-muted-foreground text-sm">
-            Page {paginationInfo.currentPage} •{" "}
-            {paginationInfo.totalItemsLoaded} items loaded
+            Página {paginationInfo.currentPage} •{" "}
+            {paginationInfo.totalItemsLoaded} elementos cargados
           </div>
         </div>
 
@@ -56,7 +56,7 @@ export function PaginatedDataTable<TData, TValue>({
               !paginationInfo.hasPreviousPage || paginationInfo.isLoading
             }
           >
-            Previous
+            Anterior
           </Button>
           <Button
             variant="outline"
@@ -68,7 +68,7 @@ export function PaginatedDataTable<TData, TValue>({
               paginationInfo.isLoading
             }
           >
-            {paginationInfo.isFetchingNextPage ? "Loading..." : "Next"}
+            {paginationInfo.isFetchingNextPage ? "Cargando..." : "Siguiente"}
           </Button>
         </div>
       </div>

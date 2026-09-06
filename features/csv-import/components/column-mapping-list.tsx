@@ -17,14 +17,14 @@ export const COLUMN_TYPES: {
   label: string;
   required: boolean;
 }[] = [
-  { value: ColumnType.Date, label: "Date", required: true },
-  { value: ColumnType.Amount, label: "Amount", required: true },
-  { value: ColumnType.Payee, label: "Payee", required: true },
-  { value: ColumnType.Description, label: "Description", required: false },
-  { value: ColumnType.Notes, label: "Notes", required: false },
-  { value: ColumnType.Category, label: "Category", required: false },
-  { value: ColumnType.Balance, label: "Balance", required: false },
-  { value: ColumnType.Unknown, label: "Ignore", required: false },
+  { value: ColumnType.Date, label: "Fecha", required: true },
+  { value: ColumnType.Amount, label: "Importe", required: true },
+  { value: ColumnType.Payee, label: "Beneficiario", required: true },
+  { value: ColumnType.Description, label: "Descripción", required: false },
+  { value: ColumnType.Notes, label: "Notas", required: false },
+  { value: ColumnType.Category, label: "Categoría", required: false },
+  { value: ColumnType.Balance, label: "Saldo", required: false },
+  { value: ColumnType.Unknown, label: "Ignorar", required: false },
 ];
 
 type ColumnMappingListProps = {
@@ -45,7 +45,7 @@ export const ColumnMappingList = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Column Mapping</CardTitle>
+        <CardTitle className="text-base">Mapeo de columnas</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {headers.map((header, idx) => {
@@ -55,13 +55,13 @@ export const ColumnMappingList = ({
           const currentType = mapping[idx] || ColumnType.Unknown;
 
           return (
-            <div key={idx} className="flex items-center gap-4">
+            <div key={idx} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
               <div className="flex-1">
                 <p className="text-sm font-medium">
-                  {header || `Column ${idx + 1}`}
+                  {header || `Columna ${idx + 1}`}
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  Sample: {sampleRows[0]?.[idx] || "-"}
+                  Ejemplo: {sampleRows[0]?.[idx] || "-"}
                 </p>
               </div>
 
@@ -76,7 +76,7 @@ export const ColumnMappingList = ({
                     onMappingChange(idx, value as ColumnType)
                   }
                 >
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -85,7 +85,7 @@ export const ColumnMappingList = ({
                         <div className="flex items-center gap-2">
                           <span>{type.label}</span>
                           {type.required && (
-                            <span className="text-xs text-rose-500">*</span>
+                            <span className="text-destructive text-xs">*</span>
                           )}
                         </div>
                       </SelectItem>

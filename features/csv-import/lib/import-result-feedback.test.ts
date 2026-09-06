@@ -6,20 +6,22 @@ import { getImportResultFeedback } from "./import-result-feedback.ts";
 test("CSV import feedback reports failed rows as a partial failure", () => {
   assert.deepEqual(getImportResultFeedback(1, 1), {
     kind: "error",
-    message: "Some transactions could not be imported. Review the row outcomes.",
+    message:
+      "Algunas transacciones no se han podido importar. Revisa el resultado de cada fila.",
   });
 });
 
 test("CSV import feedback reports successful imports only with no failed rows", () => {
   assert.deepEqual(getImportResultFeedback(0, 1), {
     kind: "success",
-    message: "Transactions imported successfully",
+    message: "Transacciones importadas correctamente",
   });
 });
 
 test("CSV import feedback does not report an all-skipped import as successful", () => {
   assert.deepEqual(getImportResultFeedback(0, 0), {
     kind: "info",
-    message: "No new transactions were imported. Review the row outcomes.",
+    message:
+      "No se han importado transacciones nuevas. Revisa el resultado de cada fila.",
   });
 });

@@ -34,11 +34,11 @@ export const DuplicateIndicator = ({
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 gap-1 px-2 text-amber-500 hover:text-amber-600"
+            className="text-crt-amber hover:text-crt-amber h-8 gap-1 px-2"
             onClick={onResolve}
           >
             <span className="text-xs font-medium">
-              {matchType === MatchType.Exact ? "Duplicate" : "Possible"}
+              {matchType === MatchType.Exact ? "Duplicada" : "Posible duplicado"}
             </span>
             <AlertCircle className="size-4" />
           </Button>

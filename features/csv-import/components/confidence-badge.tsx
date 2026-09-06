@@ -10,22 +10,22 @@ type ConfidenceBadgeProps = {
 export const ConfidenceBadge = ({ confidence }: ConfidenceBadgeProps) => {
   const percentage = Math.round(confidence * 100);
   
-  const variant = confidence >= 0.9 
-    ? 'success' 
-    : confidence >= 0.7 
-    ? 'warning' 
-    : 'danger';
-  
+  const variant = confidence >= 0.9
+    ? "positive"
+    : confidence >= 0.7
+      ? "warning"
+      : "negative";
+
   const colorClasses = {
-    success: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
-    warning: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-    danger: 'bg-rose-500/10 text-rose-500 border-rose-500/20',
+    positive: "bg-crt-pos/10 text-crt-pos border-crt-pos/40",
+    warning: "bg-crt-amber/10 text-crt-amber border-crt-amber/40",
+    negative: "bg-destructive/10 text-destructive border-destructive/40",
   };
-  
+
   return (
-    <Badge 
-      className={cn('border', colorClasses[variant])}
-      aria-label={`Confidence: ${percentage}%`}
+    <Badge
+      className={cn("border", colorClasses[variant])}
+      aria-label={`Confianza: ${percentage}%`}
     >
       {percentage}%
     </Badge>

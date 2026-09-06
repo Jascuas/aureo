@@ -29,7 +29,7 @@ const CategoriesPage = () => {
 
           <CardContent>
             <div className="flex h-[500px] w-full items-center justify-center">
-              <Loader2 className="size-6 animate-spin text-slate-300" />
+              <Loader2 className="text-muted-foreground size-6 animate-spin" />
             </div>
           </CardContent>
         </Card>
@@ -43,15 +43,15 @@ const CategoriesPage = () => {
         <Card className="border-border border drop-shadow-sm">
           <CardHeader>
             <CardTitle className="line-clamp-1 text-xs">
-              <span className="text-crt-accent">▌</span> Categories Page
+              <span className="text-crt-accent">▌</span> Página de categorías
             </CardTitle>
           </CardHeader>
 
           <CardContent className="space-y-4">
             <p role="alert">
-              Unable to load the category hierarchy. Refresh to retry.
+              No se ha podido cargar la jerarquía de categorías. Actualiza para reintentarlo.
             </p>
-            <Button onClick={() => categoriesQuery.refetch()}>Retry</Button>
+            <Button onClick={() => categoriesQuery.refetch()}>Reintentar</Button>
           </CardContent>
         </Card>
       </div>
@@ -63,11 +63,11 @@ const CategoriesPage = () => {
       <Card className="border-border border drop-shadow-sm">
         <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
           <CardTitle className="line-clamp-1 text-xs">
-            <span className="text-crt-accent">▌</span> Categories Page
+            <span className="text-crt-accent">▌</span> Página de categorías
           </CardTitle>
 
           <Button size="sm" onClick={newCategory.onOpen}>
-            <Plus className="mr-2 size-4" /> Add new
+            <Plus className="mr-2 size-4" /> Añadir categoría
           </Button>
         </CardHeader>
 

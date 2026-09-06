@@ -27,14 +27,14 @@ export const columns: ColumnDef<ResponseType>[] = [
           (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label="Seleccionar todo"
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label="Seleccionar fila"
       />
     ),
     enableSorting: false,
@@ -43,12 +43,12 @@ export const columns: ColumnDef<ResponseType>[] = [
   {
     accessorKey: "date",
     enableSorting: false,
-    header: "Date",
+    header: "Fecha",
     cell: ({ row }) => {
       const dateValue = new Date(row.getValue("date"));
 
       if (!isValid(dateValue)) {
-        return <span>Invalid date</span>;
+        return <span>Fecha no válida</span>;
       }
 
       return <span>{format(dateValue, "dd MMMM, yyyy")}</span>;
@@ -57,7 +57,7 @@ export const columns: ColumnDef<ResponseType>[] = [
   {
     accessorKey: "category",
     enableSorting: false,
-    header: "Category",
+    header: "Categoría",
     cell: ({ row }) => {
       return (
         <CategoryColumn
@@ -71,12 +71,12 @@ export const columns: ColumnDef<ResponseType>[] = [
   {
     accessorKey: "payee",
     enableSorting: false,
-    header: "Payee",
+    header: "Beneficiario",
   },
   {
     accessorKey: "amount",
     enableSorting: false,
-    header: "Amount",
+    header: "Importe",
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue("amount"));
 
@@ -93,7 +93,7 @@ export const columns: ColumnDef<ResponseType>[] = [
   {
     accessorKey: "account",
     enableSorting: false,
-    header: "Account",
+    header: "Cuenta",
     cell: ({ row }) => {
       return (
         <AccountColumn

@@ -25,12 +25,12 @@ export const TimeSeriesToolTip = ({
   return (
     <TooltipBase title={date}>
       <TooltipBase.Item
-        label="Income"
+        label="Ingresos"
         value={formatCurrency(income)}
         color="bg-success"
       />
       <TooltipBase.Item
-        label="Expenses"
+        label="Gastos"
         value={formatCurrency(expenses * -1)}
         color="bg-success"
       />

@@ -38,7 +38,9 @@ export async function parseCSVFile(file: File): Promise<ParsedCSV> {
       skipEmptyLines: false,
       complete: (results) => {
         if (!results.data || results.data.length < 2) {
-          reject(new CSVParseError("CSV file is empty or has no data rows"));
+          reject(
+            new CSVParseError("El archivo CSV está vacío o no contiene filas de datos"),
+          );
           return;
         }
 
@@ -46,7 +48,7 @@ export async function parseCSVFile(file: File): Promise<ParsedCSV> {
           index === 0 ? header.replace(/^\uFEFF/, "") : header,
         );
         if (!headers.some((header) => header.trim())) {
-          reject(new CSVParseError("CSV header row is empty"));
+          reject(new CSVParseError("La fila de encabezados del CSV está vacía"));
           return;
         }
 
@@ -62,7 +64,7 @@ export async function parseCSVFile(file: File): Promise<ParsedCSV> {
               row.length === headers.length
                 ? []
                 : [
-                    `CSV row has ${row.length} cells; expected ${headers.length}.`,
+                    `La fila del CSV tiene ${row.length} celdas; se esperaban ${headers.length}.`,
                   ];
 
             return {
@@ -73,7 +75,11 @@ export async function parseCSVFile(file: File): Promise<ParsedCSV> {
           });
 
         if (rows.length === 0) {
-          reject(new CSVParseError("CSV contains only headers, no data rows"));
+          reject(
+            new CSVParseError(
+              "El CSV solo contiene encabezados; no contiene filas de datos",
+            ),
+          );
           return;
         }
 
@@ -83,7 +89,7 @@ export async function parseCSVFile(file: File): Promise<ParsedCSV> {
         if (fileErrors.length > 0) {
           reject(
             new CSVParseError(
-              `Failed to parse CSV: ${fileErrors.map((error) => error.message).join("; ")}`,
+              `No se ha podido analizar el CSV: ${fileErrors.map((error) => error.message).join("; ")}`,
             ),
           );
           return;
@@ -92,7 +98,7 @@ export async function parseCSVFile(file: File): Promise<ParsedCSV> {
         resolve({ headers, rows, encoding });
       },
       error: (error: Error) => {
-        reject(new CSVParseError(`Failed to parse CSV: ${error.message}`));
+        reject(new CSVParseError(`No se ha podido analizar el CSV: ${error.message}`));
       },
     });
   });

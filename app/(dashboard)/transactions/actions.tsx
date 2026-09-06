@@ -22,8 +22,8 @@ export const Actions = ({ id }: ActionsProps) => {
   const { onOpen } = useOpenTransaction();
 
   const [ConfirmDialog, confirm] = useConfirm(
-    "Are you sure?",
-    "You are about to delete this transaction."
+    "¿Estás seguro?",
+    "Vas a eliminar esta transacción."
   );
 
   const handleDelete = async () => {
@@ -50,7 +50,7 @@ export const Actions = ({ id }: ActionsProps) => {
             onClick={() => onOpen(id)}
           >
             <Edit className="mr-2 size-4" />
-            Edit
+            Editar
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -58,7 +58,7 @@ export const Actions = ({ id }: ActionsProps) => {
             onClick={handleDelete}
           >
             <Trash className="mr-2 size-4" />
-            Delete
+            Eliminar
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

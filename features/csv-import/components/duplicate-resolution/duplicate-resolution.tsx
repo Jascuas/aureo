@@ -56,14 +56,14 @@ export const DuplicateResolution = ({
       <DialogContent className="!flex max-h-[calc(100dvh-2rem)] !w-[calc(100%-2rem)] max-w-3xl !flex-col gap-4 overflow-hidden !p-4 sm:max-h-[calc(100dvh-4rem)] sm:!w-full sm:!p-6">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle>Duplicate Transaction Detected</DialogTitle>
+            <DialogTitle>Se ha detectado una transacción duplicada</DialogTitle>
             {pendingCount > 1 && (
-              <Badge variant="secondary">{pendingCount} pending</Badge>
+              <Badge variant="secondary">{pendingCount} pendientes</Badge>
             )}
           </div>
           <DialogDescription>
-            This transaction might already exist in your account. Compare both
-            versions and choose how to proceed.
+            Esta transacción podría existir ya en tu cuenta. Compara ambas
+            versiones y elige cómo continuar.
           </DialogDescription>
         </DialogHeader>
 

@@ -23,7 +23,7 @@ import { useGetRecentTransactions } from "@/features/transactions/api/use-get-re
 import { formatCurrency } from "@/lib/utils";
 
 const DASHBOARD_TIME_ZONE = "Europe/Madrid";
-const dashboardDateFormatter = new Intl.DateTimeFormat("en-US", {
+const dashboardDateFormatter = new Intl.DateTimeFormat("es-ES", {
   day: "2-digit",
   month: "short",
   timeZone: DASHBOARD_TIME_ZONE,
@@ -72,14 +72,14 @@ function formatDashboardDate(value: unknown): string {
   const month = parts.find(({ type }) => type === "month")?.value;
   const year = parts.find(({ type }) => type === "year")?.value;
 
-  return day && month && year ? `${month} ${day}, ${year}` : "—";
+  return day && month && year ? `${day} ${month} ${year}` : "—";
 }
 
 const RecentTransactionsLoading = () => (
   <Card className="border-border border drop-shadow-sm">
     <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
       <CardTitle className="text-xs">
-        <span className="text-crt-accent">▌</span> RECENT TRANSACTIONS
+        <span className="text-crt-accent">▌</span> TRANSACCIONES RECIENTES
       </CardTitle>
       <Skeleton className="h-8 w-20" />
     </CardHeader>
@@ -87,11 +87,11 @@ const RecentTransactionsLoading = () => (
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-3xs uppercase tracking-widest">Payee</TableHead>
-            <TableHead className="text-3xs uppercase tracking-widest">Category</TableHead>
-            <TableHead className="text-3xs uppercase tracking-widest">Date</TableHead>
-            <TableHead className="text-3xs uppercase tracking-widest">Amount</TableHead>
-            <TableHead className="text-3xs uppercase tracking-widest">Account</TableHead>
+            <TableHead className="text-3xs uppercase tracking-widest">Beneficiario</TableHead>
+            <TableHead className="text-3xs uppercase tracking-widest">Categoría</TableHead>
+            <TableHead className="text-3xs uppercase tracking-widest">Fecha</TableHead>
+            <TableHead className="text-3xs uppercase tracking-widest">Importe</TableHead>
+            <TableHead className="text-3xs uppercase tracking-widest">Cuenta</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -125,10 +125,10 @@ export const RecentTransactionsCard = () => {
     <Card className="border-border border drop-shadow-sm">
       <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
         <CardTitle className="text-xs">
-          <span className="text-crt-accent">▌</span> RECENT TRANSACTIONS
+          <span className="text-crt-accent">▌</span> TRANSACCIONES RECIENTES
         </CardTitle>
         <Button asChild size="sm" variant="outline">
-          <Link href="/transactions">VIEW ALL</Link>
+          <Link href="/transactions">VER TODAS</Link>
         </Button>
       </CardHeader>
       <CardContent>
@@ -144,11 +144,11 @@ export const RecentTransactionsCard = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-3xs uppercase tracking-widest">Payee</TableHead>
-                <TableHead className="text-3xs uppercase tracking-widest">Category</TableHead>
-                <TableHead className="text-3xs uppercase tracking-widest">Date</TableHead>
-                <TableHead className="text-3xs uppercase tracking-widest">Amount</TableHead>
-                <TableHead className="text-3xs uppercase tracking-widest">Account</TableHead>
+                <TableHead className="text-3xs uppercase tracking-widest">Beneficiario</TableHead>
+                <TableHead className="text-3xs uppercase tracking-widest">Categoría</TableHead>
+                <TableHead className="text-3xs uppercase tracking-widest">Fecha</TableHead>
+                <TableHead className="text-3xs uppercase tracking-widest">Importe</TableHead>
+                <TableHead className="text-3xs uppercase tracking-widest">Cuenta</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

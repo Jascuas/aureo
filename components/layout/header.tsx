@@ -1,9 +1,8 @@
-import { ClerkLoaded, ClerkLoading, UserButton } from "@clerk/nextjs";
-import { Loader2 } from "lucide-react";
-
 import { Filters } from "@/components/filters/filters";
+import { ClerkUserButton } from "@/components/layout/clerk-user-button";
 import { HeaderLogo } from "@/components/layout/header-logo";
 import { Navigation } from "@/components/layout/navigation";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 type HeaderProps = {
   showFilters?: boolean;
@@ -11,7 +10,7 @@ type HeaderProps = {
 
 export const Header = ({ showFilters = true }: HeaderProps) => {
   return (
-    <header className="dark:to-background bg-linear-to-b from-teal-700 to-teal-500 px-4 pt-4 pb-8 lg:px-14 lg:pb-32 dark:from-[hsl(210_60%_10%)]">
+    <header className="border-border bg-background border-b px-4 py-4 lg:px-14">
       <div className="mx-auto max-w-screen-2xl">
         <div className="mb-4 flex w-full items-center justify-between lg:mb-14">
           <div className="flex items-center lg:gap-x-16">
@@ -20,13 +19,8 @@ export const Header = ({ showFilters = true }: HeaderProps) => {
           </div>
 
           <div className="flex items-center gap-x-2">
-            <ClerkLoaded>
-              <UserButton />
-            </ClerkLoaded>
-
-            <ClerkLoading>
-              <Loader2 className="size-8 animate-spin text-slate-400" />
-            </ClerkLoading>
+            <ThemeToggle />
+            <ClerkUserButton />
           </div>
         </div>
 

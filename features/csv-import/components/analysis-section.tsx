@@ -23,12 +23,12 @@ export const AnalysisSection = ({
   onRetryAnalyze,
 }: AnalysisSectionProps) => {
   const title = isAnalyzing
-    ? "Analyzing transactions..."
+    ? "Analizando transacciones…"
     : isAnalyzeComplete
-      ? "Analysis complete"
+      ? "Análisis completado"
       : analyzeError
-        ? "Analysis failed"
-        : "Preparing analysis...";
+        ? "Análisis fallido"
+        : "Preparando el análisis…";
   const progressValue = batchProgress
     ? (batchProgress.current / batchProgress.total) * 100
     : isAnalyzeComplete
@@ -37,20 +37,20 @@ export const AnalysisSection = ({
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-medium">{title}</h3>
-      <Progress value={progressValue} className="[&>div]:bg-brand-green h-2" />
-      <div className="border p-4">
+      <h3 className="text-foreground text-lg font-medium">{title}</h3>
+      <Progress value={progressValue} className="h-2 [&>div]:bg-crt-accent" />
+      <div className="border-border bg-card border p-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium">Analysis and categorization</p>
+            <p className="text-sm font-medium">Análisis y categorización</p>
             <p className="text-muted-foreground text-xs">
-              Duplicate detection, payee matching, and category suggestions
+              Detección de duplicados, coincidencias de beneficiarios y sugerencias de categorías
             </p>
           </div>
           {isAnalyzing ? (
-            <Loader2 className="text-primary size-4 animate-spin" />
+            <Loader2 className="text-crt-accent size-4 animate-spin" />
           ) : isAnalyzeComplete && !analyzeError ? (
-            <CheckCircle2 className="size-4 text-emerald-500" />
+            <CheckCircle2 className="text-crt-pos size-4" />
           ) : analyzeError ? (
             <AlertCircle className="text-destructive size-4" />
           ) : null}
@@ -61,7 +61,7 @@ export const AnalysisSection = ({
             <AlertDescription className="flex items-center justify-between">
               <span className="text-xs">{analyzeError}</span>
               <Button size="sm" variant="outline" onClick={onRetryAnalyze}>
-                Retry
+                Reintentar
               </Button>
             </AlertDescription>
           </Alert>

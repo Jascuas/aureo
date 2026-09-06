@@ -17,10 +17,10 @@ import {
 } from "@/components/ui/sheet";
 
 const routes = [
-  { href: "/", label: "Overview" },
-  { href: "/transactions", label: "Transactions" },
-  { href: "/accounts", label: "Accounts" },
-  { href: "/categories", label: "Categories" },
+  { href: "/", label: "Resumen" },
+  { href: "/transactions", label: "Transacciones" },
+  { href: "/accounts", label: "Cuentas" },
+  { href: "/categories", label: "Categorías" },
 ];
 
 export const Navigation = () => {
@@ -46,9 +46,9 @@ export const Navigation = () => {
 
         <SheetContent side="left" className="px-2">
           <VisuallyHidden.Root>
-            <SheetTitle>Navigation Menu</SheetTitle>
+            <SheetTitle>Menú de navegación</SheetTitle>
             <SheetDescription>
-              Navigate between different sections of the application
+              Navega entre las distintas secciones de la aplicación
             </SheetDescription>
           </VisuallyHidden.Root>
 

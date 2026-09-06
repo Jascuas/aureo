@@ -69,10 +69,14 @@ const STEP_ORDER: ImportStep[] = [
   ImportStep.IMPORT,
 ];
 
-const createInitialState = (): ImportSessionState => ({
+const INITIAL_IMPORT_ATTEMPT_ID = "initial-import-attempt";
+
+const createInitialState = (
+  importAttemptId = INITIAL_IMPORT_ATTEMPT_ID,
+): ImportSessionState => ({
   currentStep: ImportStep.UPLOAD,
   csvData: null,
-  importAttemptId: crypto.randomUUID(),
+  importAttemptId,
   columnMapping: {
     detectionResult: null,
     finalMapping: null,
@@ -97,7 +101,7 @@ export function ImportSessionProvider({ children }: { children: ReactNode }) {
       ...state,
       setCSVData: (fileName, headers, rows) => {
         setState({
-          ...createInitialState(),
+          ...createInitialState(crypto.randomUUID()),
           currentStep: ImportStep.MAPPING,
           csvData: { fileName, headers, rows },
         });
@@ -164,7 +168,7 @@ export function ImportSessionProvider({ children }: { children: ReactNode }) {
         setState((current) => ({ ...current, currentStep }));
       },
       reset: () => {
-        setState(createInitialState());
+        setState(createInitialState(crypto.randomUUID()));
       },
     }),
     [state],

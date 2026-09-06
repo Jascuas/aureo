@@ -39,7 +39,7 @@ export const CategoryChart = () => {
     <Card className="border-border flex h-full flex-col border drop-shadow-sm">
       <CardHeader className="mb-4 flex justify-between space-y-2 p-4 pb-0 lg:mb-6 lg:flex-row lg:items-start lg:space-y-0 lg:p-6 lg:pb-0">
         <CardTitle className="line-clamp-1 text-xs">
-          <span className="text-crt-accent">▌</span> Categories
+          <span className="text-crt-accent">▌</span> Categorías
         </CardTitle>
 
         <CategoryChartFilterDialog value={filter} onChange={setFilter} />

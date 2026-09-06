@@ -62,22 +62,22 @@ export const AiPreviewTable = ({
       <div className="flex items-center justify-between">
         <div className="text-muted-foreground flex items-center gap-4 text-sm">
           <span>
-            {totalCount} transaction{totalCount === 1 ? "" : "s"}
+            {totalCount} transacción{totalCount === 1 ? "" : "es"}
           </span>
           <span>•</span>
-          <span>{highConfidenceCount} high confidence</span>
+          <span>{highConfidenceCount} de confianza alta</span>
           {lowConfidenceCount > 0 && (
             <>
               <span>•</span>
-              <span className="text-amber-600">
-                {lowConfidenceCount} need review
+              <span className="text-crt-amber">
+                {lowConfidenceCount} requieren revisión
               </span>
             </>
           )}
         </div>
       </div>
 
-      <div className="rounded-md border">
+      <div className="border-border border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -118,7 +118,7 @@ export const AiPreviewTable = ({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No transactions to preview.
+                  No hay transacciones para previsualizar.
                 </TableCell>
               </TableRow>
             )}

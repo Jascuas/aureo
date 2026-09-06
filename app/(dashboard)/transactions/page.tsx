@@ -45,7 +45,7 @@ const TransactionsPage = () => {
 
           <CardContent>
             <div className="flex h-125 w-full items-center justify-center">
-              <Loader2 className="size-6 animate-spin text-slate-300" />
+              <Loader2 className="text-muted-foreground size-6 animate-spin" />
             </div>
           </CardContent>
         </Card>
@@ -61,7 +61,7 @@ const TransactionsPage = () => {
         <Card className="border-border border drop-shadow-sm">
           <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
             <CardTitle className="line-clamp-1 text-xs">
-              <span className="text-crt-accent">▌</span> Transaction History
+              <span className="text-crt-accent">▌</span> Historial de transacciones
             </CardTitle>
 
             <div className="flex flex-col items-center gap-x-2 gap-y-2 lg:flex-row">
@@ -70,7 +70,7 @@ const TransactionsPage = () => {
                 onClick={newTransaction.onOpen}
                 className="w-full lg:w-auto"
               >
-                <Plus className="mr-2 size-4" /> Add new
+                <Plus className="mr-2 size-4" /> Añadir transacción
               </Button>
 
               <Button
@@ -79,7 +79,7 @@ const TransactionsPage = () => {
                 onClick={() => void onUpload()}
                 className="w-full lg:w-auto"
               >
-                <Plus className="mr-2 size-4" /> Import CSV
+                <Plus className="mr-2 size-4" /> Importar CSV
               </Button>
             </div>
           </CardHeader>

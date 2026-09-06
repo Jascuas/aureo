@@ -27,37 +27,37 @@ const DATE_FORMATS: { value: DateFormat; label: string; example: string }[] = [
 const AMOUNT_FORMATS = [
   {
     value: "us",
-    label: "US Format (1,234.56)",
+    label: "Formato EE. UU. (1,234.56)",
     decimal: "." as const,
     thousands: "," as const,
   },
   {
     value: "eu",
-    label: "EU Format (1.234,56)",
+    label: "Formato europeo (1.234,56)",
     decimal: "," as const,
     thousands: "." as const,
   },
   {
     value: "space-dot",
-    label: "Space Format (1 234.56)",
+    label: "Formato con espacio (1 234.56)",
     decimal: "." as const,
     thousands: " " as const,
   },
   {
     value: "space-comma",
-    label: "Space Format (1 234,56)",
+    label: "Formato con espacio (1 234,56)",
     decimal: "," as const,
     thousands: " " as const,
   },
   {
     value: "plain-dot",
-    label: "Decimal point (1234.56)",
+    label: "Punto decimal (1234.56)",
     decimal: "." as const,
     thousands: "" as const,
   },
   {
     value: "plain-comma",
-    label: "Decimal comma (1234,56)",
+    label: "Coma decimal (1234,56)",
     decimal: "," as const,
     thousands: "" as const,
   },
@@ -81,19 +81,19 @@ export const FormatDetector = ({
   isAutoDetected = false,
 }: FormatDetectorProps) => {
   const selectedAmountFormat = AMOUNT_FORMATS.find(
-    (f) =>
-      f.decimal === amountFormat.decimalSeparator &&
-      f.thousands === amountFormat.thousandsSeparator,
+    (format) =>
+      format.decimal === amountFormat.decimalSeparator &&
+      format.thousands === amountFormat.thousandsSeparator,
   );
 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <label className="text-sm font-medium">
-          Date Format
+        <label className="text-sm font-medium" htmlFor="date-format">
+          Formato de fecha
           {isAutoDetected && (
             <span className="text-muted-foreground ml-2 text-xs">
-              (auto-detected)
+              (detectado automáticamente)
             </span>
           )}
         </label>
@@ -101,7 +101,7 @@ export const FormatDetector = ({
           value={dateFormat}
           onValueChange={(value) => onDateFormatChange(value as DateFormat)}
         >
-          <SelectTrigger>
+          <SelectTrigger id="date-format">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -120,18 +120,18 @@ export const FormatDetector = ({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">
-          Amount Format
+        <label className="text-sm font-medium" htmlFor="amount-format">
+          Formato del importe
           {isAutoDetected && (
             <span className="text-muted-foreground ml-2 text-xs">
-              (auto-detected)
+              (detectado automáticamente)
             </span>
           )}
         </label>
         <Select
           value={selectedAmountFormat?.value || "plain-dot"}
           onValueChange={(value) => {
-            const format = AMOUNT_FORMATS.find((f) => f.value === value);
+            const format = AMOUNT_FORMATS.find((item) => item.value === value);
             if (format) {
               onAmountFormatChange({
                 ...amountFormat,
@@ -141,7 +141,7 @@ export const FormatDetector = ({
             }
           }}
         >
-          <SelectTrigger>
+          <SelectTrigger id="amount-format">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -157,7 +157,7 @@ export const FormatDetector = ({
       <div className="flex items-center gap-2">
         <input
           checked={amountFormat.isNegativeExpense}
-          className="size-4 border-border"
+          className="border-border accent-crt-accent size-4 focus-visible:ring-2 focus-visible:ring-crt-accent focus-visible:outline-none"
           id="negative-expense"
           onChange={(event) =>
             onAmountFormatChange({
@@ -168,7 +168,7 @@ export const FormatDetector = ({
           type="checkbox"
         />
         <label className="text-sm" htmlFor="negative-expense">
-          Expenses are negative numbers
+          Los gastos son números negativos
         </label>
       </div>
     </div>

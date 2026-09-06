@@ -14,14 +14,14 @@ export function useChartControls(
   const series: AreaSeries[] = SERIES_MAP[dataType];
 
   const groupOptions: Option<GroupType>[] = [
-    { value: "day", label: "Day" },
-    { value: "week", label: "Week" },
-    { value: "month", label: "Month" },
+    { value: "day", label: "Día" },
+    { value: "week", label: "Semana" },
+    { value: "month", label: "Mes" },
   ];
 
   const dataTypeOptions: Option<DataType>[] = [
-    { value: "tx", label: "Transactions" },
-    { value: "balance", label: "Balance" },
+    { value: "tx", label: "Transacciones" },
+    { value: "balance", label: "Saldo" },
   ];
 
   return {

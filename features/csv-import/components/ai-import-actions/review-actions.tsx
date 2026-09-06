@@ -16,14 +16,14 @@ export function ReviewActions({
   const allSkipped = transactionsToImport === 0;
 
   return (
-    <div className="flex gap-2">
-      <Button variant="outline" onClick={onCancel}>
-        Cancel
+    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+      <Button className="w-full sm:w-auto" variant="outline" onClick={onCancel}>
+        Cancelar
       </Button>
-      <Button onClick={onImport} disabled={hasUnresolvedDuplicates}>
+      <Button className="w-full sm:w-auto" onClick={onImport} disabled={hasUnresolvedDuplicates}>
         {allSkipped
-          ? "Finish"
-          : `Import ${transactionsToImport} ${transactionsToImport === 1 ? "Transaction" : "Transactions"}`}
+          ? "Finalizar"
+          : `Importar ${transactionsToImport} ${transactionsToImport === 1 ? "transacción" : "transacciones"}`}
       </Button>
     </div>
   );

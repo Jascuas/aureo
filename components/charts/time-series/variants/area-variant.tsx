@@ -14,12 +14,12 @@ import { formatCurrency } from "@/lib/utils";
 
 const DASHBOARD_TIME_ZONE = "Europe/Madrid";
 const dashboardDateFormatters = {
-  axis: new Intl.DateTimeFormat("en-US", {
+  axis: new Intl.DateTimeFormat("es-ES", {
     day: "2-digit",
     month: "short",
     timeZone: DASHBOARD_TIME_ZONE,
   }),
-  full: new Intl.DateTimeFormat("en-US", {
+  full: new Intl.DateTimeFormat("es-ES", {
     day: "2-digit",
     month: "short",
     timeZone: DASHBOARD_TIME_ZONE,
@@ -73,7 +73,7 @@ function formatDashboardDate(
   const year = parts.find(({ type }) => type === "year")?.value;
 
   if (!day || !month || (style === "full" && !year)) return "—";
-  return style === "axis" ? `${day} ${month}` : `${month} ${day}, ${year}`;
+  return style === "axis" ? `${day} ${month}` : `${day} ${month} ${year}`;
 }
 
 type AreaVariantProps = {

@@ -93,7 +93,7 @@ export function useCSVUpload({
         const message =
           err instanceof CSVParseError
             ? err.message
-            : "Failed to parse CSV file";
+            : "No se ha podido procesar el archivo CSV";
         setError("upload", message);
       } finally {
         setLoading("parsingCSV", false);

@@ -7,11 +7,11 @@ interface MappingActionsProps {
 
 export function MappingActions({ onCancel, onContinue }: MappingActionsProps) {
   return (
-    <div className="flex gap-2">
-      <Button variant="outline" onClick={onCancel}>
-        Cancel
+    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+      <Button className="w-full sm:w-auto" variant="outline" onClick={onCancel}>
+        Cancelar
       </Button>
-      <Button onClick={onContinue}>Continue</Button>
+      <Button className="w-full sm:w-auto" onClick={onContinue}>Continuar</Button>
     </div>
   );
 }

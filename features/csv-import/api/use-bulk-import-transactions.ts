@@ -24,11 +24,11 @@ export const useBulkImportTransactions = () => {
     mutationFn: async (json) => {
       const response = await client.api["csv-import"]["import"].$post({ json });
       if (!response.ok) {
-        throw new Error("Failed to import transactions");
+        throw new Error("No se han podido importar las transacciones.");
       }
       const result = await response.json();
       if (!("data" in result)) {
-        throw new Error("Unexpected response shape");
+        throw new Error("La respuesta del servidor no tiene un formato válido.");
       }
       return result.data;
     },
@@ -43,7 +43,7 @@ export const useBulkImportTransactions = () => {
       queryClient.invalidateQueries({ queryKey: summaryQueryKeys.all });
     },
     onError: () => {
-      toast.error("Failed to import transactions");
+      toast.error("No se han podido importar las transacciones.");
     },
   });
 };

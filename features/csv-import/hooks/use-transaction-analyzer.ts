@@ -66,7 +66,7 @@ export function useTransactionAnalyzer({
   const analyze = useCallback(async () => {
     if (isAnalyzingRef.current) return;
     if (!csvData || !columnMapping) {
-      callbacks.onError("Missing CSV data or column mapping");
+      callbacks.onError("Faltan los datos del CSV o el mapeo de columnas.");
       return;
     }
 
@@ -107,7 +107,7 @@ export function useTransactionAnalyzer({
       });
 
       if (abortController.signal.aborted) {
-        callbacks.onError("Analysis cancelled by user");
+        callbacks.onError("El análisis fue cancelado por el usuario.");
         return;
       }
 
@@ -128,9 +128,13 @@ export function useTransactionAnalyzer({
       callbacks.onComplete();
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : "Failed to analyze transactions";
+        error instanceof Error
+          ? error.message
+          : "No se han podido analizar las transacciones.";
       callbacks.onError(
-        message === "Cancelled" ? "Analysis cancelled by user" : message,
+        message === "Cancelled"
+          ? "El análisis fue cancelado por el usuario."
+          : message,
       );
     } finally {
       abortControllerRef.current = null;
@@ -153,7 +157,7 @@ export function useTransactionAnalyzer({
   const cancel = useCallback(() => {
     abortControllerRef.current?.abort();
     setBatchProgress(null);
-    setError("analyze", "Analysis cancelled by user");
+    setError("analyze", "El análisis fue cancelado por el usuario.");
     setLoading("analyzing", false);
   }, [setBatchProgress, setError, setLoading]);
 
