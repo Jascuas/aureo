@@ -6,6 +6,7 @@ import {
   createCsvImportAnalysisOperations,
   type CsvImportAnalysisDependencies,
   type CsvImportAnalysisMetrics,
+  getFuzzyAmountBounds,
 } from "@/features/csv-import/server/csv-import-analysis-operations";
 import type { TransactionForAnalysis } from "@/features/csv-import/types/import-types";
 
@@ -15,6 +16,17 @@ const maximumImport = Array.from({ length: 1_000 }, (_, csvRowIndex) => ({
   date: "2026-09-06",
   payee: `Payee ${csvRowIndex}`,
 }));
+
+test("preserves fuzzy duplicate amount bounds for negative and positive values", () => {
+  assert.deepEqual(getFuzzyAmountBounds(-10_001), {
+    amountMax: -9_900,
+    amountMin: -10_102,
+  });
+  assert.deepEqual(getFuzzyAmountBounds(10_001), {
+    amountMax: 10_102,
+    amountMin: 9_900,
+  });
+});
 
 test("analyzes a maximum-size import with six persistence phases, not row queries", async () => {
   const calls = new Map<string, number>();

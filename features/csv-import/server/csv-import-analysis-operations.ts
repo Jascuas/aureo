@@ -167,6 +167,24 @@ const transactionInputPayload = (inputs: TransactionForAnalysis[]) =>
     payee: input.payee,
   }));
 
+export const getFuzzyAmountBounds = (
+  amount: number,
+  tolerance: number = CSV_IMPORT_CONFIG.DUPLICATE_DETECTION.AMOUNT_TOLERANCE_PERCENT,
+) => ({
+  amountMax: Math.ceil(
+    Math.max(amount * (1 - tolerance), amount * (1 + tolerance)),
+  ),
+  amountMin: Math.floor(
+    Math.min(amount * (1 - tolerance), amount * (1 + tolerance)),
+  ),
+});
+
+const fuzzyDuplicateInputPayload = (inputs: TransactionForAnalysis[]) =>
+  inputs.map((input) => ({
+    ...input,
+    ...getFuzzyAmountBounds(input.amount),
+  }));
+
 const findExactDuplicateRows = (userId: string, inputs: TransactionForAnalysis[]) =>
   executeRows(
     matchedTransactionRowSchema,
@@ -197,7 +215,7 @@ const findExactDuplicateRows = (userId: string, inputs: TransactionForAnalysis[]
 const findFuzzyDuplicateRows = (userId: string, inputs: TransactionForAnalysis[]) => {
   if (inputs.length === 0) return Promise.resolve([]);
 
-  const { AMOUNT_TOLERANCE_PERCENT, DATE_TOLERANCE_DAYS, SIMILARITY_THRESHOLD } =
+  const { DATE_TOLERANCE_DAYS, SIMILARITY_THRESHOLD } =
     CSV_IMPORT_CONFIG.DUPLICATE_DETECTION;
 
   return executeRows(
@@ -205,8 +223,15 @@ const findFuzzyDuplicateRows = (userId: string, inputs: TransactionForAnalysis[]
     sql`
       WITH input AS (
         SELECT *
-        FROM jsonb_to_recordset(${JSON.stringify(transactionInputPayload(inputs))}::jsonb)
-          AS input("csvRowIndex" integer, "date" timestamp, "amount" integer, "payee" text)
+        FROM jsonb_to_recordset(${JSON.stringify(fuzzyDuplicateInputPayload(inputs))}::jsonb)
+          AS input(
+            "csvRowIndex" integer,
+            "date" timestamp,
+            "amount" integer,
+            "amountMin" integer,
+            "amountMax" integer,
+            "payee" text
+          )
       )
       SELECT
         input."csvRowIndex",
@@ -230,13 +255,7 @@ const findFuzzyDuplicateRows = (userId: string, inputs: TransactionForAnalysis[]
         WHERE account.user_id = ${userId}
           AND transaction.date BETWEEN input."date" - (${DATE_TOLERANCE_DAYS} * INTERVAL '1 day')
             AND input."date" + (${DATE_TOLERANCE_DAYS} * INTERVAL '1 day')
-          AND transaction.amount BETWEEN LEAST(
-            FLOOR(input."amount" * ${1 - AMOUNT_TOLERANCE_PERCENT}),
-            CEIL(input."amount" * ${1 + AMOUNT_TOLERANCE_PERCENT})
-          ) AND GREATEST(
-            FLOOR(input."amount" * ${1 - AMOUNT_TOLERANCE_PERCENT}),
-            CEIL(input."amount" * ${1 + AMOUNT_TOLERANCE_PERCENT})
-          )
+          AND transaction.amount BETWEEN input."amountMin" AND input."amountMax"
           AND similarity(transaction.payee, input."payee") > ${SIMILARITY_THRESHOLD}
         ORDER BY similarity(transaction.payee, input."payee") DESC, transaction.id
         LIMIT 1
@@ -268,6 +287,9 @@ const findPayeeRows = (
       FROM input
       INNER JOIN transactions AS transaction ON ${matchCondition}
       INNER JOIN accounts AS account ON account.id = transaction.account_id
+      INNER JOIN categories AS category
+        ON category.id = transaction.category_id
+        AND category.user_id = ${userId}
       WHERE account.user_id = ${userId}
         AND transaction.category_id IS NOT NULL
         AND transaction.transaction_type_id IN (${sql.join(
@@ -331,7 +353,9 @@ const findFewShotRows = (userId: string, inputs: TransactionForAnalysis[]) => {
           category.name AS "categoryName"
         FROM transactions AS transaction
         INNER JOIN accounts AS account ON account.id = transaction.account_id
-        LEFT JOIN categories AS category ON category.id = transaction.category_id
+        INNER JOIN categories AS category
+          ON category.id = transaction.category_id
+          AND category.user_id = ${userId}
         WHERE account.user_id = ${userId}
           AND transaction.category_id IS NOT NULL
           AND transaction.payee ILIKE '%' || input."searchTerm" || '%'
