@@ -59,13 +59,13 @@ export function useImportOrchestrator({
   const resetUIState = useImportUIState((s) => s.reset);
 
   const [ConfirmDialog, confirm] = useConfirm(
-    "Are you sure?",
-    "All progress will be lost.",
+    "¿Estás seguro?",
+    "Se perderá todo el progreso.",
   );
 
   const [RerunConfirmDialog, confirmRerun] = useConfirm(
-    "Re-run analysis?",
-    "Current analysis results will be discarded and re-computed.",
+    "¿Volver a ejecutar el análisis?",
+    "Los resultados actuales del análisis se descartarán y se volverán a calcular.",
   );
 
   const detectionForAnalyzer = useMemo(
