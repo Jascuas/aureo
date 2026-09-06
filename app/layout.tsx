@@ -8,6 +8,11 @@ import { Toaster } from "@/components/ui/sonner";
 import QueryProvider from "@/providers/query-provider";
 import { SheetProvider } from "@/providers/sheet-provider";
 
+const aureoLocalization = {
+  ...esES,
+  formFieldInputPlaceholder__signUpPassword: "Crea una contraseña",
+};
+
 export const metadata: Metadata = {
   title: "AUREO",
   description: "Personal finance platform",
@@ -20,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider
-      localization={esES}
+      localization={aureoLocalization}
       appearance={{
         variables: {
           colorBackground: "var(--crt-surface)",
