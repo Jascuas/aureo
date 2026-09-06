@@ -2,11 +2,11 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 
+import { categoryFormSchema } from "@/features/categories/lib/category-form-schema";
 import {
   getCategories,
   getCategory,
 } from "@/features/categories/server/category-read-operations";
-import { categoryFormSchema } from "@/features/categories/lib/category-form-schema";
 import {
   createCategory,
   deleteCategories,
