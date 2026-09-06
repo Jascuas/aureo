@@ -48,9 +48,7 @@ export const AiImportCard = ({
     handleCategoryChange,
     analyze,
     handleRerunAnalyze,
-    cancelAnalysis,
     retryAnalyze,
-    retryCategorize,
   } = useImportOrchestrator({ accountId, onCancel });
 
   return (
@@ -75,9 +73,7 @@ export const AiImportCard = ({
           onComplete={onComplete}
           onImportAnother={onImportAnother}
           analyze={analyze}
-          cancelAnalysis={cancelAnalysis}
           retryAnalyze={retryAnalyze}
-          retryCategorize={retryCategorize}
           handleCategoryChange={handleCategoryChange}
         />
       </CardContent>

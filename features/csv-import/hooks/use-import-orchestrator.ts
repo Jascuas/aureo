@@ -1,8 +1,6 @@
 import { useCallback, useMemo } from "react";
 
 import { ImportStep } from "@/features/csv-import/const/import-const";
-import { useAnalyzeRetry } from "@/features/csv-import/hooks/use-analyze-retry";
-import { useCategorizeRetry } from "@/features/csv-import/hooks/use-categorize-retry";
 import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
 import { useTransactionAnalyzer } from "@/features/csv-import/hooks/use-transaction-analyzer";
 import { useTransactionImport } from "@/features/csv-import/hooks/use-transaction-import";
@@ -17,10 +15,10 @@ import {
   useImportUIState,
 } from "@/features/csv-import/store/import-ui-state";
 import type {
-  AITransaction,
   AmountFormat,
-  AutoResolvedTransaction,
   DateFormat,
+  DuplicateMatch,
+  EnrichedCategorization,
   ImportOrchestrator,
   ImportRowOutcome,
   PayeeMatchResult,
@@ -50,8 +48,6 @@ export function useImportOrchestrator({
     setDuplicates,
     setCategorizations,
     setPayeeMatches,
-    setAutoResolved,
-    setAITransactions,
     setImportResult,
     nextStep,
     reset,
@@ -113,28 +109,24 @@ export function useImportOrchestrator({
 
   const analyzerCallbacks = useMemo(
     () => ({
-      onDuplicatesDetected: setDuplicates,
-      onAnalyzeComplete: ({
-        autoResolved,
-        aiTransactions,
+      onAnalysisComplete: ({
+        categorizations,
+        duplicates,
         payeeMatches,
       }: {
-        autoResolved: AutoResolvedTransaction[];
-        aiTransactions: AITransaction[];
+        categorizations: EnrichedCategorization[];
+        duplicates: DuplicateMatch[];
         payeeMatches: PayeeMatchResult[];
       }) => {
-        setAutoResolved(autoResolved);
-        setAITransactions(aiTransactions);
+        setDuplicates(duplicates);
+        setCategorizations(categorizations);
         setPayeeMatches(payeeMatches);
       },
-      onCategorizationsReady: setCategorizations,
       onError: (message: string) => setError("analyze", message),
       onComplete: nextStep,
     }),
     [
       setDuplicates,
-      setAutoResolved,
-      setAITransactions,
       setPayeeMatches,
       setCategorizations,
       nextStep,
@@ -142,26 +134,11 @@ export function useImportOrchestrator({
     ],
   );
 
-  const { analyze, cancel: cancelAnalysis } = useTransactionAnalyzer({
+  const { analyze } = useTransactionAnalyzer({
     csvData,
     columnMapping: columnMapping.finalMapping,
     detectionResult: detectionForAnalyzer,
     callbacks: analyzerCallbacks,
-  });
-
-  const { retry: retryAnalyze } = useAnalyzeRetry({
-    csvData,
-    columnMapping: columnMapping.finalMapping,
-    detectionResult: detectionForAnalyzer,
-    onDuplicatesDetected: setDuplicates,
-    onAnalyzeComplete: analyzerCallbacks.onAnalyzeComplete,
-  });
-
-  const { retry: retryCategorize } = useCategorizeRetry({
-    csvData,
-    columnMapping: columnMapping.finalMapping,
-    detectionResult: detectionForAnalyzer,
-    onCategorizationsReady: setCategorizations,
   });
 
   const { importTransactions } = useTransactionImport({
@@ -248,8 +225,6 @@ export function useImportOrchestrator({
     handleCategoryChange,
     analyze,
     handleRerunAnalyze,
-    cancelAnalysis,
-    retryAnalyze,
-    retryCategorize,
+    retryAnalyze: analyze,
   };
 }

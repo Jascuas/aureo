@@ -11,7 +11,7 @@ export function ImportStep({ onComplete, onImportAnother }: ImportStepProps) {
   const { importResult, reset } = useImportSession();
   const loading = useUILoading();
 
-  if (loading.categorizing || loading.analyzing) return null;
+  if (loading.analyzing) return null;
   if (!importResult) return null;
 
   return (

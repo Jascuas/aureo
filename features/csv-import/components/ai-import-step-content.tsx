@@ -15,9 +15,7 @@ interface AiImportStepContentProps {
   onComplete?: () => void;
   onImportAnother?: () => void;
   analyze: () => Promise<void>;
-  cancelAnalysis: () => void;
   retryAnalyze: () => Promise<void>;
-  retryCategorize: () => Promise<void>;
   handleCategoryChange: (
     csvRowIndex: number,
     categoryId: string | null,
@@ -31,9 +29,7 @@ export const AiImportStepContent = memo(function AiImportStepContent({
   onComplete,
   onImportAnother,
   analyze,
-  cancelAnalysis,
   retryAnalyze,
-  retryCategorize,
   handleCategoryChange,
 }: AiImportStepContentProps) {
   const {
@@ -82,11 +78,8 @@ export const AiImportStepContent = memo(function AiImportStepContent({
     case ImportStep.ANALYSIS:
       return (
         <AnalysisStep
-          totalTransactions={csvData?.rows.length ?? 0}
           analyze={analyze}
-          onCancelAnalysis={cancelAnalysis}
           onRetryAnalyze={retryAnalyze}
-          onRetryCategorize={retryCategorize}
         />
       );
 

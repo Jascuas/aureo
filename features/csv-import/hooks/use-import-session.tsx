@@ -10,8 +10,6 @@ import {
 
 import { ImportStep } from "@/features/csv-import/const/import-const";
 import type {
-  AITransaction,
-  AutoResolvedTransaction,
   ColumnDetectionResult,
   DuplicateMatch,
   EnrichedCategorization,
@@ -35,8 +33,6 @@ type AnalyzedRows = {
   duplicates: DuplicateMatch[];
   categorizations: EnrichedCategorization[];
   payeeMatches: PayeeMatchResult[];
-  autoResolved: AutoResolvedTransaction[];
-  aiTransactions: AITransaction[];
 };
 
 type ImportSessionState = {
@@ -55,8 +51,7 @@ type ImportSessionActions = {
   setDuplicates: (duplicates: DuplicateMatch[]) => void;
   setCategorizations: (categorizations: EnrichedCategorization[]) => void;
   setPayeeMatches: (payeeMatches: PayeeMatchResult[]) => void;
-  setAutoResolved: (autoResolved: AutoResolvedTransaction[]) => void;
-  setAITransactions: (aiTransactions: AITransaction[]) => void;
+
   setImportResult: (result: ImportResult | null) => void;
   nextStep: () => void;
   previousStep: () => void;
@@ -86,8 +81,6 @@ const createInitialState = (): ImportSessionState => ({
     duplicates: [],
     categorizations: [],
     payeeMatches: [],
-    autoResolved: [],
-    aiTransactions: [],
   },
   importResult: null,
 });
@@ -145,18 +138,7 @@ export function ImportSessionProvider({ children }: { children: ReactNode }) {
           analyzedRows: { ...current.analyzedRows, payeeMatches },
         }));
       },
-      setAutoResolved: (autoResolved) => {
-        setState((current) => ({
-          ...current,
-          analyzedRows: { ...current.analyzedRows, autoResolved },
-        }));
-      },
-      setAITransactions: (aiTransactions) => {
-        setState((current) => ({
-          ...current,
-          analyzedRows: { ...current.analyzedRows, aiTransactions },
-        }));
-      },
+
       setImportResult: (importResult) => {
         setState((current) => ({
           ...current,

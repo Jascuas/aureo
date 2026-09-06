@@ -8,14 +8,12 @@ type ImportUIState = {
     parsingCSV: boolean;
     detectingColumns: boolean;
     analyzing: boolean;
-    categorizing: boolean;
   };
 
   errors: {
     upload: string | null;
     detection: string | null;
     analyze: string | null;
-    categorize: string | null;
   };
 
   batchProgress: BatchProgress | null;
@@ -37,13 +35,11 @@ const initialState = {
     parsingCSV: false,
     detectingColumns: false,
     analyzing: false,
-    categorizing: false,
   },
   errors: {
     upload: null,
     detection: null,
     analyze: null,
-    categorize: null,
   },
   batchProgress: null,
   analyzeComplete: false,
@@ -68,7 +64,6 @@ export const useImportUIState = create<ImportUIState>((set) => ({
         upload: null,
         detection: null,
         analyze: null,
-        categorize: null,
       },
     }),
 

@@ -8,10 +8,15 @@ export function enrichCategorizations(
   categorizations: AICategorization[],
   originalTransactions: TransactionForAnalysis[],
 ): EnrichedCategorization[] {
+  const transactionsByRow = new Map(
+    originalTransactions.map((transaction) => [
+      transaction.csvRowIndex,
+      transaction,
+    ]),
+  );
+
   return categorizations.map((cat) => {
-    const originalTx = originalTransactions.find(
-      (t) => t.csvRowIndex === cat.csvRowIndex,
-    );
+    const originalTx = transactionsByRow.get(cat.csvRowIndex);
     return {
       csvRowIndex: cat.csvRowIndex,
       date: originalTx?.date || "",

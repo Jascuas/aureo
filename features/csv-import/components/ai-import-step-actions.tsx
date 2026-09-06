@@ -59,9 +59,9 @@ export const AiImportStepActions = memo(function AiImportStepActions({
           onBack={previousStep}
           onContinue={nextStep}
           onRerun={handleRerunAnalyze}
-          isAnalyzing={loading.analyzing || loading.categorizing}
+          isAnalyzing={loading.analyzing}
           isAnalyzeComplete={analyzeComplete}
-          hasError={!!(errors.analyze || errors.categorize)}
+          hasError={!!errors.analyze}
           duplicatesCount={analyzedRows.duplicates.length}
         />
       );

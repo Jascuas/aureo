@@ -74,13 +74,14 @@ export function prepareTransactionsForAnalysis(
   amountFormat: AmountFormat,
 ): TransactionForAnalysis[] {
   const previews = buildMappingPreview(rows, mapping, dateFormat, amountFormat);
+  const sourceRowsByIndex = new Map(rows.map((row) => [row.index, row]));
 
   return previews.flatMap((preview) => {
     if (!preview.date || preview.amount === null || preview.errors.length > 0) {
       return [];
     }
 
-    const sourceRow = rows.find((row) => row.index === preview.csvRowIndex);
+    const sourceRow = sourceRowsByIndex.get(preview.csvRowIndex);
     if (!sourceRow) return [];
 
     return [{
