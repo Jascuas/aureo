@@ -108,7 +108,12 @@ export const ImportStepper = ({
                 </button>
                 <span className="mt-2 text-center text-[10px] tracking-[0.08em] uppercase">
                   <span className="block">{step.label}</span>
-                  <span className={cn("block text-3xs", STATUS_TEXT_CLASSES[status])}>
+                  <span
+                    className={cn(
+                      "mx-1 block w-max whitespace-nowrap text-3xs",
+                      STATUS_TEXT_CLASSES[status],
+                    )}
+                  >
                     {statusLabel}
                   </span>
                 </span>

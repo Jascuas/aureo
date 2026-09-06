@@ -61,7 +61,7 @@ export const AiImportCard = ({
       : currentStep === ImportStep.UPLOAD && csvData
         ? "available"
         : undefined,
-    [ImportStep.ANALYSIS]: errors.analyze || errors.categorize
+    [ImportStep.ANALYSIS]: errors.analyze
       ? "failed"
       : currentStep === ImportStep.MAPPING && csvData
         ? "available"
