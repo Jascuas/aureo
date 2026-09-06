@@ -70,7 +70,8 @@ try {
       id text PRIMARY KEY,
       amount integer NOT NULL,
       account_id text NOT NULL,
-      transaction_type_id text NOT NULL
+      transaction_type_id text NOT NULL,
+      date timestamp NOT NULL DEFAULT timestamp '2026-03-01 12:00:00'
     );
     ${migration}
     INSERT INTO accounts (id, balance) VALUES ('account-1', 0);
@@ -138,15 +139,24 @@ try {
   );
   assert.equal(
     summaryOperationSource.includes(
-      "to_char(${transactions.date} AT TIME ZONE 'UTC' AT TIME ZONE ${DATE_RANGE_TIME_ZONE}, 'YYYY-MM-DD')",
+      "const summaryTimeZoneSql = sql.raw(`'${DATE_RANGE_TIME_ZONE}'`);",
     ),
     true,
   );
   assert.equal(
     summaryOperationSource.includes(
-      "to_char(${transactions.date} AT TIME ZONE ${DATE_RANGE_TIME_ZONE}, 'YYYY-MM-DD')",
+      "to_char(${transactions.date} AT TIME ZONE 'UTC' AT TIME ZONE ${summaryTimeZoneSql}, 'YYYY-MM-DD')",
     ),
-    false,
+    true,
+  );
+  assert.equal(
+    runSql(`
+      SELECT to_char(date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Madrid', 'YYYY-MM-DD'), COUNT(*)
+      FROM transactions
+      GROUP BY to_char(date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Madrid', 'YYYY-MM-DD')
+      ORDER BY 1;
+    `),
+    "2026-03-01,5",
   );
 
   runSql("SET TIME ZONE 'UTC';");
