@@ -2,6 +2,11 @@
 
 import Link from "next/link";
 
+import { getDashboardDataState } from "@/components/dashboard/dashboard-data-state";
+import {
+  DashboardEmptyState,
+  DashboardErrorState,
+} from "@/components/dashboard/dashboard-state-message";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -107,8 +112,14 @@ const RecentTransactionsLoading = () => (
 
 export const RecentTransactionsCard = () => {
   const { data, isError, isLoading, refetch } = useGetRecentTransactions();
+  const state = getDashboardDataState({
+    data,
+    isEmpty: (transactions) => transactions.length === 0,
+    isError,
+    isLoading,
+  });
 
-  if (isLoading) return <RecentTransactionsLoading />;
+  if (state.kind === "loading") return <RecentTransactionsLoading />;
 
   return (
     <Card className="border-border border drop-shadow-sm">
@@ -121,19 +132,14 @@ export const RecentTransactionsCard = () => {
         </Button>
       </CardHeader>
       <CardContent>
-        {isError ? (
-          <div className="flex flex-col items-center gap-3 py-8 text-center" role="alert">
-            <p className="text-destructive text-xs">
-              Unable to load recent transactions. Please try again.
-            </p>
-            <Button size="sm" variant="outline" onClick={() => void refetch()}>
-              Retry
-            </Button>
-          </div>
-        ) : !data || data.length === 0 ? (
-          <p className="text-muted-foreground py-8 text-center text-xs uppercase tracking-widest">
-            No transactions found
-          </p>
+        {state.kind === "error" ? (
+          <DashboardErrorState
+            title="TRANSACCIONES NO DISPONIBLES"
+            description="No se han podido cargar las transacciones recientes. Inténtalo de nuevo."
+            onRetry={() => void refetch()}
+          />
+        ) : state.kind === "empty" ? (
+          <DashboardEmptyState message="No hay transacciones en este periodo" />
         ) : (
           <Table>
             <TableHeader>
@@ -146,7 +152,7 @@ export const RecentTransactionsCard = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((tx) => {
+              {state.data.map((tx) => {
                 const formattedDate = formatDashboardDate(tx.date);
 
                 return (

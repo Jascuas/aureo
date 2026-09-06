@@ -1,21 +1,31 @@
 "use client";
 
-import { FileSearch } from "lucide-react";
-
+import { getDashboardDataState } from "@/components/dashboard/dashboard-data-state";
+import {
+  DashboardEmptyState,
+  DashboardErrorState,
+} from "@/components/dashboard/dashboard-state-message";
 import { SpendingPieLoading } from "@/components/loading/spending-pie-loading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGetPayeeSummary } from "@/features/summary/api/use-get-payee-summary";
 import { formatCurrency } from "@/lib/utils";
 
 export const PayeeChart = () => {
-  const { data = [], isLoading } = useGetPayeeSummary({
+  const { data, isError, isLoading, refetch } = useGetPayeeSummary({
     type: "Expense",
     top: 10,
   });
+  const state = getDashboardDataState({
+    data,
+    isEmpty: (rows) => rows.length === 0,
+    isError,
+    isLoading,
+  });
 
-  if (isLoading) return <SpendingPieLoading />;
+  if (state.kind === "loading") return <SpendingPieLoading />;
 
-  const max = data.reduce((m, r) => Math.max(m, r.value), 0);
+  const rows = state.kind === "populated" ? state.data : [];
+  const max = rows.reduce((m, r) => Math.max(m, r.value), 0);
 
   return (
     <Card className="border-border border drop-shadow-sm">
@@ -26,17 +36,21 @@ export const PayeeChart = () => {
       </CardHeader>
 
       <CardContent className="p-4 pt-0 lg:p-6">
-        {data.length === 0 ? (
-          <div className="flex h-[350px] w-full flex-col items-center justify-center gap-y-4">
-            <FileSearch className="text-muted-foreground size-6" />
-
-            <p className="text-muted-foreground text-sm">
-              No data for this period.
-            </p>
-          </div>
+        {state.kind === "error" ? (
+          <DashboardErrorState
+            className="h-[350px]"
+            title="PAGADORES NO DISPONIBLES"
+            description="No se han podido cargar los pagadores. Inténtalo de nuevo."
+            onRetry={() => void refetch()}
+          />
+        ) : state.kind === "empty" ? (
+          <DashboardEmptyState
+            className="h-[350px]"
+            message="Sin pagadores con movimientos en este periodo"
+          />
         ) : (
           <ul className="flex flex-col gap-3">
-            {data.map((row, i) => {
+            {rows.map((row, i) => {
               const pct = max > 0 ? (row.value / max) * 100 : 0;
 
               return (

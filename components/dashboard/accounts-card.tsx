@@ -4,6 +4,11 @@ import {
   getAccountRowColors,
   getAccountSummaryMetrics,
 } from "@/components/dashboard/accounts-card-lib";
+import { getDashboardDataState } from "@/components/dashboard/dashboard-data-state";
+import {
+  DashboardEmptyState,
+  DashboardErrorState,
+} from "@/components/dashboard/dashboard-state-message";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetAccountSummary } from "@/features/summary/api/use-get-account-summary";
@@ -52,9 +57,33 @@ const AccountsCardLoading = () => (
 /* ─── main component ─────────────────────────────────────────────────── */
 
 export const AccountsCard = () => {
-  const { data, isLoading } = useGetAccountSummary();
+  const { data, isError, isLoading, refetch } = useGetAccountSummary();
+  const state = getDashboardDataState({
+    data,
+    isEmpty: (rows) => rows.length === 0,
+    isError,
+    isLoading,
+  });
 
-  if (isLoading) return <AccountsCardLoading />;
+  if (state.kind === "loading") return <AccountsCardLoading />;
+
+  if (state.kind === "error")
+    return (
+      <Card className="border-border h-full border drop-shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between px-4 pt-4 pb-3 lg:px-5 lg:pt-5">
+          <span className="text-crt-muted text-2xs font-bold tracking-[0.1em] uppercase">
+            <span className="text-crt-accent">▌</span> ACCOUNTS
+          </span>
+        </CardHeader>
+        <CardContent className="px-4 pb-4 lg:px-5 lg:pb-5">
+          <DashboardErrorState
+            title="CUENTAS NO DISPONIBLES"
+            description="No se han podido cargar las cuentas. Inténtalo de nuevo."
+            onRetry={() => void refetch()}
+          />
+        </CardContent>
+      </Card>
+    );
 
   const { rows, maxAbs, totalAbs, total } = getAccountSummaryMetrics(
     data ?? [],
@@ -73,9 +102,7 @@ export const AccountsCard = () => {
       {/* ── body ── */}
       <CardContent className="px-4 pb-4 lg:px-5 lg:pb-5">
         {rows.length === 0 ? (
-          <p className="text-muted-foreground text-2xs py-8 text-center tracking-widest uppercase">
-            No accounts
-          </p>
+          <DashboardEmptyState message="No hay cuentas para mostrar" />
         ) : (
           <div className="acct-list-a">
             {rows.map((acct, i) => {

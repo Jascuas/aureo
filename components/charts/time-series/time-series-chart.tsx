@@ -1,5 +1,8 @@
-import { FileSearch } from "lucide-react";
-
+import type { DashboardDataState } from "@/components/dashboard/dashboard-data-state";
+import {
+  DashboardEmptyState,
+  DashboardErrorState,
+} from "@/components/dashboard/dashboard-state-message";
 import { GenericSelect } from "@/components/inputs/generic-select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useChartControls } from "@/hooks/use-chart-controls";
@@ -9,10 +12,11 @@ import { groupByPeriod, overtimeReducers } from "@/lib/utils";
 import { AreaVariant } from "./variants/area-variant";
 
 type ChartProps = {
-  data?: OverTimeData;
+  onRetry: () => void;
+  state: DashboardDataState<OverTimeData>;
 };
 
-export const TimeSeriesChart = ({ data = [] }: ChartProps) => {
+export const TimeSeriesChart = ({ onRetry, state }: ChartProps) => {
   const {
     groupBy,
     dataType,
@@ -23,6 +27,7 @@ export const TimeSeriesChart = ({ data = [] }: ChartProps) => {
     onDataTypeChange,
   } = useChartControls();
 
+  const data = state.kind === "populated" ? state.data : [];
   const groupedData = groupByPeriod(
     data,
     groupBy,
@@ -53,13 +58,18 @@ export const TimeSeriesChart = ({ data = [] }: ChartProps) => {
       </CardHeader>
 
       <CardContent className="p-4 pt-0 lg:p-6">
-        {data.length === 0 ? (
-          <div className="flex h-[350px] w-full flex-col items-center justify-center gap-y-4">
-            <FileSearch className="text-muted-foreground size-6" />
-            <p className="text-muted-foreground text-sm">
-              No data for this period.
-            </p>
-          </div>
+        {state.kind === "error" ? (
+          <DashboardErrorState
+            className="h-[350px]"
+            title="GRÁFICO NO DISPONIBLE"
+            description="No se ha podido cargar el gráfico. Inténtalo de nuevo."
+            onRetry={onRetry}
+          />
+        ) : state.kind === "empty" ? (
+          <DashboardEmptyState
+            className="h-[350px]"
+            message="Sin movimientos en este periodo"
+          />
         ) : (
           <AreaVariant data={groupedData} series={series} />
         )}

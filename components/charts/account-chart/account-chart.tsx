@@ -1,9 +1,13 @@
 "use client";
 
-import { FileSearch } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Pie, PieChart, Sector, type SectorProps } from "recharts";
 
+import { getDashboardDataState } from "@/components/dashboard/dashboard-data-state";
+import {
+  DashboardEmptyState,
+  DashboardErrorState,
+} from "@/components/dashboard/dashboard-state-message";
 import { SpendingPieLoading } from "@/components/loading/spending-pie-loading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -39,9 +43,19 @@ const ACTIVE_INDEX = 0;
 
 export const AccountChart = () => {
   const [top, setTop] = useState<string>("5");
-  const { data = [], isLoading } = useGetAccountSummary();
+  const { data, isError, isLoading, refetch } = useGetAccountSummary();
+  const state = getDashboardDataState({
+    data,
+    isEmpty: (rows) => rows.every((row) => row.value <= 0),
+    isError,
+    isLoading,
+  });
+  const accountRows = state.kind === "populated" ? state.data : [];
 
-  const positiveData = useMemo(() => data.filter((r) => r.value > 0), [data]);
+  const positiveData = useMemo(
+    () => accountRows.filter((r) => r.value > 0),
+    [accountRows],
+  );
 
   const chartData = useMemo(() => {
     if (top === "all") return positiveData;
@@ -75,7 +89,7 @@ export const AccountChart = () => {
     [chartData],
   );
 
-  if (isLoading) return <SpendingPieLoading />;
+  if (state.kind === "loading") return <SpendingPieLoading />;
 
   return (
     <Card className="border-border border drop-shadow-sm">
@@ -99,13 +113,18 @@ export const AccountChart = () => {
       </CardHeader>
 
       <CardContent className="p-4 pt-0 lg:p-6">
-        {chartDataWithFill.length === 0 ? (
-          <div className="flex h-[350px] w-full flex-col items-center justify-center gap-y-4">
-            <FileSearch className="text-muted-foreground size-6" />
-            <p className="text-muted-foreground text-sm">
-              No accounts with a positive balance.
-            </p>
-          </div>
+        {state.kind === "error" ? (
+          <DashboardErrorState
+            className="h-[350px]"
+            title="CUENTAS NO DISPONIBLES"
+            description="No se han podido cargar las cuentas. Inténtalo de nuevo."
+            onRetry={() => void refetch()}
+          />
+        ) : state.kind === "empty" ? (
+          <DashboardEmptyState
+            className="h-[350px]"
+            message="No hay cuentas con saldo positivo"
+          />
         ) : (
           <div>
             <ChartContainer

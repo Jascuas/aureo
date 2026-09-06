@@ -1,7 +1,11 @@
 "use client";
-import { FileSearch } from "lucide-react";
 import { useState } from "react";
 
+import { getDashboardDataState } from "@/components/dashboard/dashboard-data-state";
+import {
+  DashboardEmptyState,
+  DashboardErrorState,
+} from "@/components/dashboard/dashboard-state-message";
 import { SpendingPieLoading } from "@/components/loading/spending-pie-loading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGetCategorySummary } from "@/features/summary/api/use-get-category-summary";
@@ -18,12 +22,18 @@ export const CategoryChart = () => {
     DEFAULT_CATEGORY_FILTER,
   );
 
-  const { data = [], isLoading } = useGetCategorySummary({
+  const { data, isError, isLoading, refetch } = useGetCategorySummary({
     type: filter.type,
     top: filter.top,
   });
+  const state = getDashboardDataState({
+    data,
+    isEmpty: (rows) => rows.length === 0,
+    isError,
+    isLoading,
+  });
 
-  if (isLoading) return <SpendingPieLoading />;
+  if (state.kind === "loading") return <SpendingPieLoading />;
 
   return (
     <Card className="border-border flex h-full flex-col border drop-shadow-sm">
@@ -36,16 +46,20 @@ export const CategoryChart = () => {
       </CardHeader>
 
       <CardContent className="flex-1 p-4 pt-0 lg:px-6 lg:pt-0 lg:pb-6">
-        {data.length === 0 ? (
-          <div className="flex h-[350px] w-full flex-col items-center justify-center gap-y-4">
-            <FileSearch className="text-muted-foreground size-6" />
-
-            <p className="text-muted-foreground text-sm">
-              No data for this period.
-            </p>
-          </div>
+        {state.kind === "error" ? (
+          <DashboardErrorState
+            className="h-[350px]"
+            title="CATEGORÍAS NO DISPONIBLES"
+            description="No se han podido cargar las categorías. Inténtalo de nuevo."
+            onRetry={() => void refetch()}
+          />
+        ) : state.kind === "empty" ? (
+          <DashboardEmptyState
+            className="h-[350px]"
+            message="Sin categorías con movimientos en este periodo"
+          />
         ) : (
-          <ProgressVariant data={data} />
+          <ProgressVariant data={state.data} />
         )}
       </CardContent>
     </Card>
