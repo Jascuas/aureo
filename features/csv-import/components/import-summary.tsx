@@ -1,10 +1,11 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { getImportResultFeedback } from "@/features/csv-import/lib/import-result-feedback";
 import type { ImportRowOutcome } from "@/features/csv-import/types/import-types";
 import { cn } from "@/lib/utils";
 
@@ -41,23 +42,32 @@ export const ImportSummary = ({
     { duplicate: 0, failed: 0, imported: 0, skipped: 0 },
   );
   const skippedCount = outcomeCounts.skipped + outcomeCounts.duplicate;
-  const hasErrors = outcomeCounts.failed > 0;
+  const feedback = getImportResultFeedback(
+    outcomeCounts.failed,
+    outcomeCounts.imported,
+  );
+  const hasErrors = feedback.kind === "error";
+  const hasNoImportedTransactions = feedback.kind === "info";
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col items-center justify-center py-8">
         {hasErrors ? (
           <XCircle className="text-destructive mb-4 size-16" aria-hidden="true" />
+        ) : hasNoImportedTransactions ? (
+          <Info className="text-crt-amber mb-4 size-16" aria-hidden="true" />
         ) : (
           <CheckCircle2 className="text-crt-pos mb-4 size-16" aria-hidden="true" />
         )}
         <h2 className="text-foreground text-xl font-bold tracking-[0.1em] uppercase">
-          {hasErrors ? "Importación incompleta" : "Importación completada"}
+          {hasErrors
+            ? "Importación incompleta"
+            : hasNoImportedTransactions
+              ? "Sin transacciones nuevas"
+              : "Importación completada"}
         </h2>
         <p className="text-muted-foreground mt-2 text-sm">
-          {hasErrors
-            ? "Revisa los resultados y corrige las filas que no se hayan importado."
-            : "Las transacciones seleccionadas se han añadido a tu cuenta."}
+          {feedback.message}
         </p>
       </div>
 

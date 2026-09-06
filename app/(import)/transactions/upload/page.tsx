@@ -36,7 +36,7 @@ const UploadPageContent = () => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-screen-2xl px-3 py-6 pb-10 lg:px-14 lg:py-10">
+    <div className="mx-auto w-full max-w-screen-2xl py-6 pb-10 lg:py-10">
       {AccountDialog}
       <AiImportCard
         accountId={accountId}
