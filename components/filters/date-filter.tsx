@@ -71,7 +71,7 @@ export const DateFilter = () => {
           disabled={false}
           size="sm"
           variant="outline"
-          className="hover:border-crt-accent hover:text-crt-accent focus:border-crt-accent h-9 w-full rounded-none border border-white/40 bg-transparent px-3 text-[10px] font-bold tracking-[0.14em] text-white uppercase transition outline-none focus:ring-transparent focus:ring-offset-0 lg:w-auto"
+          className="hover:border-crt-accent hover:text-crt-accent focus-visible:border-crt-accent h-9 w-full rounded-none border border-input bg-transparent px-3 text-[10px] font-bold tracking-[0.14em] text-foreground uppercase transition outline-none focus-visible:ring-1 focus-visible:ring-crt-accent focus-visible:ring-offset-0 lg:w-auto"
         >
           <span>{formatDateRange(paramState)}</span>
 

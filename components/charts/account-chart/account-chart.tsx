@@ -32,10 +32,10 @@ const ACCOUNT_COLORS = Array.from(
 );
 
 const TOP_OPTIONS = [
-  { value: "3", label: "Top 3" },
-  { value: "5", label: "Top 5" },
-  { value: "8", label: "Top 8" },
-  { value: "all", label: "All" },
+  { value: "3", label: "Principales 3" },
+  { value: "5", label: "Principales 5" },
+  { value: "8", label: "Principales 8" },
+  { value: "all", label: "Todas" },
 ];
 
 // Highest balance account is always index 0 (API sorts desc by balance)
@@ -69,7 +69,7 @@ export const AccountChart = () => {
 
   // Build chartConfig: account-0, account-1, ... → resolves var(--color-account-N)
   const chartConfig = useMemo<ChartConfig>(() => {
-    const config: ChartConfig = { value: { label: "Balance" } };
+    const config: ChartConfig = { value: { label: "Saldo" } };
     chartData.forEach((item, index) => {
       config[`account-${index}`] = {
         label: item.name,
@@ -95,7 +95,7 @@ export const AccountChart = () => {
     <Card className="border-border border drop-shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-0 lg:p-6 lg:pb-0">
         <CardTitle className="line-clamp-1 text-xs">
-          <span className="text-crt-accent">▌</span> Accounts
+          <span className="text-crt-accent">▌</span> Cuentas
         </CardTitle>
 
         <Select value={top} onValueChange={setTop}>
@@ -184,7 +184,7 @@ export const AccountChart = () => {
 
         {total > 0 && (
           <p className="text-muted-foreground mt-2 text-center text-xs">
-            Total {formatCurrency(total)}
+            Total: {formatCurrency(total)}
           </p>
         )}
       </CardContent>

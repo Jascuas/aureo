@@ -69,14 +69,14 @@ export const DataGrid = () => {
       />
 
       <DataCard
-        title="Income"
+        title="Ingresos"
         value={summary.income.amount}
         valueChange={summary.income.changeAmount}
         percentageChange={summary.income.changePtc}
       />
 
       <DataCard
-        title="Expenses"
+        title="Gastos"
         value={summary.expenses.amount}
         valueChange={summary.expenses.changeAmount}
         percentageChange={summary.expenses.changePtc}
