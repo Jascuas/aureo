@@ -23,14 +23,14 @@ export const columns: ColumnDef<ResponseType>[] = [
           (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label="Seleccionar todo"
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label="Seleccionar fila"
       />
     ),
     enableSorting: false,
@@ -44,7 +44,7 @@ export const columns: ColumnDef<ResponseType>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Name
+          Nombre
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );

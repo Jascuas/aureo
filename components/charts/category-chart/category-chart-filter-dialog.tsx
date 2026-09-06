@@ -29,10 +29,10 @@ export type CategoryFilterValue = {
 };
 
 const TYPE_OPTIONS: { value: CategorySummaryType; label: string }[] = [
-  { value: "All", label: "All" },
-  { value: "Expense", label: "Expense" },
-  { value: "Income", label: "Income" },
-  { value: "Refund", label: "Refund" },
+  { value: "All", label: "Todas" },
+  { value: "Expense", label: "Gastos" },
+  { value: "Income", label: "Ingresos" },
+  { value: "Refund", label: "Devoluciones" },
 ];
 
 const TOP_OPTIONS = [3, 5, 10, 15];
@@ -71,7 +71,7 @@ export const CategoryChartFilterDialog = ({ value, onChange }: Props) => {
           className="relative h-9 gap-2 rounded-md px-3"
         >
           <Filter className="size-4" />
-          <span className="hidden sm:inline">Filters</span>
+          <span className="hidden sm:inline">Filtros</span>
           {isDirty && (
             <span className="bg-crt-accent absolute top-1 right-1 size-2 rounded-full" />
           )}
@@ -80,16 +80,16 @@ export const CategoryChartFilterDialog = ({ value, onChange }: Props) => {
 
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Filter categories</DialogTitle>
+          <DialogTitle>Filtrar categorías</DialogTitle>
 
           <DialogDescription>
-            Customize what is shown on the categories chart.
+            Personaliza lo que se muestra en el gráfico de categorías.
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-5 py-2">
           <div className="flex flex-col gap-2">
-            <Label>Transaction type</Label>
+            <Label>Tipo de transacción</Label>
 
             <Select
               value={draft.type}
@@ -111,12 +111,12 @@ export const CategoryChartFilterDialog = ({ value, onChange }: Props) => {
             </Select>
 
             <p className="text-muted-foreground text-xs">
-              Expense includes refunds (subtracted).
+              Los gastos incluyen devoluciones (se restan).
             </p>
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label>Top categories</Label>
+            <Label>Principales categorías</Label>
 
             <Select
               value={String(draft.top)}
@@ -129,25 +129,25 @@ export const CategoryChartFilterDialog = ({ value, onChange }: Props) => {
               <SelectContent>
                 {TOP_OPTIONS.map((n) => (
                   <SelectItem key={n} value={String(n)}>
-                    Top {n}
+                    Principales {n}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
             <p className="text-muted-foreground text-xs">
-              Remaining categories are grouped into &quot;Other&quot;.
+              Las categorías restantes se agrupan en &quot;Otras&quot;.
             </p>
           </div>
         </div>
 
         <DialogFooter className="gap-2 sm:gap-2">
           <Button type="button" variant="ghost" onClick={handleReset}>
-            Reset
+            Restablecer
           </Button>
 
           <Button type="button" onClick={handleApply}>
-            Apply
+            Aplicar
           </Button>
         </DialogFooter>
       </DialogContent>

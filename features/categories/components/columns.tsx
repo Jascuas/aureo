@@ -22,14 +22,14 @@ export const columns: ColumnDef<ResponseType>[] = [
           (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label="Seleccionar todo"
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label="Seleccionar fila"
       />
     ),
     enableSorting: false,
@@ -37,7 +37,7 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: "name",
-    header: "Name",
+    header: "Nombre",
     cell: ({ row }) => {
       const hasParent = row.original.depth > 0;
       return (
@@ -54,7 +54,7 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: "parentName",
-    header: "Parent Category",
+    header: "Categoría superior",
   },
   {
     id: "actions",
