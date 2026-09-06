@@ -52,7 +52,7 @@ export const ImportStepper = ({
                     isPending && "border-border bg-card text-muted-foreground",
                     isClickable && "hover:border-crt-accent hover:text-crt-accent cursor-pointer",
                   )}
-                  aria-label={`Step ${step.order}: ${step.label}`}
+                  aria-label={`Paso ${step.order}: ${step.label}`}
                   aria-current={isCurrent ? "step" : undefined}
                 >
                   <span className="text-sm font-semibold">{step.order}</span>
