@@ -17,7 +17,7 @@ type PieTooltipProps = {
 export const PieTooltip = ({
   active,
   payload,
-  label = "Expenses",
+  label = "Gastos",
   negate = false,
 }: PieTooltipProps) => {
   if (!active || !payload) return null;

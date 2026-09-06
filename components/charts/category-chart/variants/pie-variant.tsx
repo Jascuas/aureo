@@ -23,7 +23,7 @@ export const PieVariant = ({ data }: PieVariantProps) => {
               <PieTooltip
                 active={active}
                 payload={payload}
-                label="Expenses"
+                label="Gastos"
                 negate
               />
             )}
