@@ -112,7 +112,7 @@ export const BarVariant = ({ data, series }: BarVariantProps) => {
         />
 
         <ChartTooltip
-          cursor={{ fill: "rgba(255,255,255,0.1)" }}
+          cursor={{ fill: "var(--crt-surface-2)" }}
           content={
             <ChartTooltipContent
               labelFormatter={(value) => formatDashboardDate(value)}

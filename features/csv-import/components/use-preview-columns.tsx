@@ -64,6 +64,13 @@ export function usePreviewColumns({
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="h-8 px-2"
+          aria-label={`Ordenar por importe: ${
+            column.getIsSorted() === "asc"
+              ? "descendente"
+              : column.getIsSorted() === "desc"
+                ? "sin orden"
+                : "ascendente"
+          }`}
         >
           Importe
           <ArrowUpDown className="ml-2 size-4" />
@@ -102,6 +109,13 @@ export function usePreviewColumns({
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="h-8 px-2"
+          aria-label={`Ordenar por confianza: ${
+            column.getIsSorted() === "asc"
+              ? "descendente"
+              : column.getIsSorted() === "desc"
+                ? "sin orden"
+                : "ascendente"
+          }`}
         >
           Confianza
           <ArrowUpDown className="ml-2 size-4" />

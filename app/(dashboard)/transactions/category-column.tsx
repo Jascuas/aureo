@@ -28,7 +28,7 @@ export const CategoryColumn = ({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex min-h-11 cursor-pointer items-center text-left hover:underline focus-visible:outline-none",
+        "flex min-h-11 cursor-pointer items-center text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0",
         !category && "text-destructive",
       )}
       aria-label={

@@ -107,7 +107,7 @@ function Calendar({
   const buttonNavClassName = buttonVariants({
     variant: "outline",
     className:
-      "absolute h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+      "absolute h-7 min-w-11 w-7 bg-transparent p-0 opacity-50 after:absolute after:-inset-1 hover:opacity-100",
   });
   const _buttonNextClassName = cn(
     buttonNavClassName,
@@ -128,7 +128,7 @@ function Calendar({
   );
   const _dayButtonClassName = cn(
     buttonVariants({ variant: "ghost" }),
-    "relative size-8 rounded-md p-0 font-normal transition-none after:absolute after:-inset-1 aria-selected:opacity-100",
+    "relative size-8 rounded-md p-0 font-normal transition-none after:absolute after:-inset-2 aria-selected:opacity-100",
     props.dayButtonClassName,
   );
   const buttonRangeClassName =
