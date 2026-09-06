@@ -63,7 +63,7 @@ export const TemplateControls = ({
   };
 
   return (
-    <div className="flex items-center justify-between gap-4">
+    <div className="flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center">
       <div className="flex items-center gap-2">
         {templates && templates.length > 0 && (
           <Select
@@ -72,8 +72,8 @@ export const TemplateControls = ({
               if (template) onLoadTemplate?.(template);
             }}
           >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Load template..." />
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder="Cargar plantilla…" />
             </SelectTrigger>
             <SelectContent>
               {templates.map((template) => (
@@ -93,8 +93,8 @@ export const TemplateControls = ({
               type="text"
               value={templateName}
               onChange={(e) => setTemplateName(e.target.value)}
-              placeholder="Template name..."
-              className="h-9 w-[200px]"
+              placeholder="Nombre de la plantilla…"
+              className="h-9 w-full sm:w-[200px]"
               autoFocus
             />
             <Button
@@ -112,7 +112,7 @@ export const TemplateControls = ({
                 setTemplateName("");
               }}
             >
-              Cancel
+              Cancelar
             </Button>
           </>
         ) : (
@@ -123,7 +123,7 @@ export const TemplateControls = ({
             disabled={disableSave}
           >
             <Save className="mr-2 size-4" />
-            Save as Template
+            Guardar como plantilla
           </Button>
         )}
       </div>

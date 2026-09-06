@@ -28,18 +28,18 @@ export const ResolutionFooter = ({
             onClose();
           }}
         >
-          Skip All Exact Duplicates
+          Omitir todas las duplicadas exactas
         </Button>
       )}
     </div>
 
     <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
       <Button className="min-h-11 w-full" variant="outline" onClick={onSkip}>
-        Skip Import
+        Omitir importación
         <span className="text-muted-foreground ml-2 text-xs">(Esc)</span>
       </Button>
       <Button className="min-h-11 w-full" onClick={onImport}>
-        Import Anyway
+        Importar de todos modos
         <span className="text-muted-foreground ml-2 text-xs">(Enter)</span>
       </Button>
     </div>

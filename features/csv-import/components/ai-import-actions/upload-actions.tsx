@@ -6,8 +6,8 @@ interface UploadActionsProps {
 
 export function UploadActions({ onCancel }: UploadActionsProps) {
   return (
-    <Button variant="outline" onClick={onCancel}>
-      Cancel
+    <Button className="w-full sm:w-auto" variant="outline" onClick={onCancel}>
+      Cancelar
     </Button>
   );
 }

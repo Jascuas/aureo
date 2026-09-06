@@ -11,7 +11,7 @@ type HeaderProps = {
 
 export const Header = ({ showFilters = true }: HeaderProps) => {
   return (
-    <header className="dark:to-background bg-linear-to-b from-teal-700 to-teal-500 px-4 pt-4 pb-8 lg:px-14 lg:pb-32 dark:from-[hsl(210_60%_10%)]">
+    <header className="border-border bg-background border-b px-4 py-4 lg:px-14">
       <div className="mx-auto max-w-screen-2xl">
         <div className="mb-4 flex w-full items-center justify-between lg:mb-14">
           <div className="flex items-center lg:gap-x-16">
@@ -25,7 +25,7 @@ export const Header = ({ showFilters = true }: HeaderProps) => {
             </ClerkLoaded>
 
             <ClerkLoading>
-              <Loader2 className="size-8 animate-spin text-slate-400" />
+              <Loader2 className="text-muted-foreground size-5 animate-spin" />
             </ClerkLoading>
           </div>
         </div>

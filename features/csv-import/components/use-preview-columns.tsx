@@ -43,16 +43,16 @@ export function usePreviewColumns({
   return [
     {
       accessorKey: "date",
-      header: "Date",
+      header: "Fecha",
       cell: ({ row }) => (
         <span className="font-medium">
-          {row.original.date.toLocaleDateString()}
+          {row.original.date.toLocaleDateString("es-ES")}
         </span>
       ),
     },
     {
       accessorKey: "payee",
-      header: "Payee",
+      header: "Beneficiario",
       cell: ({ row }) => (
         <span className="max-w-50 truncate">{row.original.payee}</span>
       ),
@@ -65,7 +65,7 @@ export function usePreviewColumns({
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="h-8 px-2"
         >
-          Amount
+          Importe
           <ArrowUpDown className="ml-2 size-4" />
         </Button>
       ),
@@ -77,7 +77,7 @@ export function usePreviewColumns({
     },
     {
       accessorKey: "categoryName",
-      header: "Category",
+      header: "Categoría",
       cell: ({ row }) => (
         <EditableCategoryCell
           categoryId={row.original.categoryId}

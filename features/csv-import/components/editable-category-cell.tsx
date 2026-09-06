@@ -65,7 +65,7 @@ export const EditableCategoryCell = ({
     return null;
   })();
 
-  const displayName = categoryName ?? "Uncategorized";
+  const displayName = categoryName ?? "Sin categoría";
   const isLowConfidence = confidence < 0.7;
 
   const handleSelect = (id: string, name: string, isAiSuggestion = false) => {
@@ -81,11 +81,11 @@ export const EditableCategoryCell = ({
             variant="ghost"
             role="combobox"
             aria-expanded={open}
-            aria-label={`Select category, current: ${displayName}`}
+            aria-label={`Seleccionar categoría, actual: ${displayName}`}
             className={cn(
               "w-full justify-between text-left font-normal",
               !categoryName && "text-muted-foreground",
-              isLowConfidence && "text-rose-500",
+              isLowConfidence && "text-crt-amber",
             )}
           >
             <span className="flex min-w-0 items-center gap-1.5">
@@ -101,7 +101,7 @@ export const EditableCategoryCell = ({
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-xs">
-                    {userEdited ? "Manually edited" : "Suggested by AI"}
+                    {userEdited ? "Editada manualmente" : "Sugerida por IA"}
                   </TooltipContent>
                 </Tooltip>
               )}
@@ -117,16 +117,16 @@ export const EditableCategoryCell = ({
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           {isLoading ? (
-            <div className="text-muted-foreground p-3 text-sm">Loading…</div>
+            <div className="text-muted-foreground p-3 text-sm">Cargando…</div>
           ) : (
             <Command>
-              <CommandInput placeholder="Search categories…" />
+              <CommandInput placeholder="Buscar categorías…" />
               <CommandList>
-                <CommandEmpty>No categories found.</CommandEmpty>
+                <CommandEmpty>No se han encontrado categorías.</CommandEmpty>
 
                 {topSuggestion && (
                   <>
-                    <CommandGroup heading="Top Suggestion">
+                    <CommandGroup heading="Sugerencia principal">
                       <CommandItem
                         value={`${topSuggestion.path}::${topSuggestion.id}`}
                         onSelect={() =>

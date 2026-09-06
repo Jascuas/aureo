@@ -25,6 +25,12 @@ type DuplicateComparisonProps = {
   score: number;
 };
 
+const DIFFERENCE_LABELS = {
+  amount: "importe",
+  date: "fecha",
+  payee: "beneficiario",
+} as const;
+
 export const DuplicateComparison = ({
   csvRow,
   existingTransaction,
@@ -34,7 +40,7 @@ export const DuplicateComparison = ({
   const scorePercent = Math.round(score * 100);
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString("es-ES", {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -42,7 +48,7 @@ export const DuplicateComparison = ({
   };
 
   const getDifferences = () => {
-    const diffs: string[] = [];
+    const diffs: (keyof typeof DIFFERENCE_LABELS)[] = [];
 
     if (csvRow.date.getTime() !== existingTransaction.date.getTime()) {
       diffs.push("date");
@@ -65,45 +71,45 @@ export const DuplicateComparison = ({
         <div className="flex items-center gap-2">
           <Badge
             variant={
-              matchType === MatchType.Exact ? "destructive" : "secondary"
+              matchType === MatchType.Exact ? "warning" : "secondary"
             }
           >
-            {matchType === MatchType.Exact ? "Exact Match" : "Fuzzy Match"}
+            {matchType === MatchType.Exact ? "Coincidencia exacta" : "Coincidencia aproximada"}
           </Badge>
           <span className="text-muted-foreground text-sm">
-            {scorePercent}% similarity
+            {scorePercent}% de similitud
           </span>
         </div>
 
         {differences.length > 0 && (
           <span className="text-muted-foreground text-xs">
-            Differences: {differences.join(", ")}
+            Diferencias: {differences.map((difference) => DIFFERENCE_LABELS[difference]).join(", ")}
           </span>
         )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-2 border-amber-500/20 bg-amber-500/5">
+        <Card className="border-crt-amber/40 bg-crt-amber/5 border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
-              <span className="text-amber-600">
+              <span className="text-crt-amber">
                 Fila CSV {csvRow.csvRowIndex + 2} (nueva)
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <p className="text-muted-foreground text-xs">Date</p>
+              <p className="text-muted-foreground text-xs">Fecha</p>
               <p className="font-medium">{formatDate(csvRow.date)}</p>
             </div>
             <Separator />
             <div>
-              <p className="text-muted-foreground text-xs">Payee</p>
+              <p className="text-muted-foreground text-xs">Beneficiario</p>
               <p className="font-medium">{csvRow.payee}</p>
             </div>
             <Separator />
             <div>
-              <p className="text-muted-foreground text-xs">Amount</p>
+              <p className="text-muted-foreground text-xs">Importe</p>
               <p className="font-medium">
                 {formatCurrency(csvRow.amount / 1000)}
               </p>
@@ -112,7 +118,7 @@ export const DuplicateComparison = ({
               <>
                 <Separator />
                 <div>
-                  <p className="text-muted-foreground text-xs">Category</p>
+                  <p className="text-muted-foreground text-xs">Categoría</p>
                   <p className="font-medium">{csvRow.category}</p>
                 </div>
               </>
@@ -124,27 +130,27 @@ export const DuplicateComparison = ({
           <ArrowRight className="text-muted-foreground size-6" />
         </div>
 
-        <Card className="border-2 border-blue-500/20 bg-blue-500/5">
+        <Card className="border-crt-accent/40 bg-crt-accent/5 border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
-              <span className="text-blue-600">Existing Transaction</span>
+              <span className="text-crt-accent">Transacción existente</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <p className="text-muted-foreground text-xs">Date</p>
+              <p className="text-muted-foreground text-xs">Fecha</p>
               <p className="font-medium">
                 {formatDate(existingTransaction.date)}
               </p>
             </div>
             <Separator />
             <div>
-              <p className="text-muted-foreground text-xs">Payee</p>
+              <p className="text-muted-foreground text-xs">Beneficiario</p>
               <p className="font-medium">{existingTransaction.payee}</p>
             </div>
             <Separator />
             <div>
-              <p className="text-muted-foreground text-xs">Amount</p>
+              <p className="text-muted-foreground text-xs">Importe</p>
               <p className="font-medium">
                 {formatCurrency(existingTransaction.amount / 1000)}
               </p>

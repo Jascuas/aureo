@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export const HeaderLogo = () => {
   return (
-    <Link href="/" className="hidden items-center lg:flex">
+    <Link href="/" className="flex items-center" aria-label="Aureo, inicio">
       <span className="font-mono text-3xl leading-none font-bold tracking-tight uppercase select-none">
         <span className="text-muted-foreground">&gt;&nbsp;</span>
         <span className="glow-sm text-foreground">AUREO</span>

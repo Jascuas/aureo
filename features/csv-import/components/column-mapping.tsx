@@ -97,7 +97,7 @@ export const ColumnMapping = ({
         !mappedTypes.includes(requiredType)
       ) {
         const label = COLUMN_TYPES.find((t) => t.value === requiredType)?.label;
-        errors.push(`${label} column is required`);
+        errors.push(`La columna ${label} es obligatoria`);
       }
     });
 
@@ -184,7 +184,7 @@ export const ColumnMapping = ({
       {detectionResult && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Format Detection</CardTitle>
+            <CardTitle className="text-base">Detección de formato</CardTitle>
           </CardHeader>
           <CardContent>
             <FormatDetector

@@ -9,11 +9,11 @@ type ImportStepperProps = {
 };
 
 const STEPS: { key: ImportStep; label: string; order: number }[] = [
-  { key: ImportStep.UPLOAD, label: "Upload", order: 1 },
-  { key: ImportStep.MAPPING, label: "Map Columns", order: 2 },
-  { key: ImportStep.ANALYSIS, label: "Analyze", order: 3 },
-  { key: ImportStep.REVIEW, label: "Review", order: 4 },
-  { key: ImportStep.IMPORT, label: "Import", order: 5 },
+  { key: ImportStep.UPLOAD, label: "Subir", order: 1 },
+  { key: ImportStep.MAPPING, label: "Mapear", order: 2 },
+  { key: ImportStep.ANALYSIS, label: "Analizar", order: 3 },
+  { key: ImportStep.REVIEW, label: "Revisar", order: 4 },
+  { key: ImportStep.IMPORT, label: "Importar", order: 5 },
 ];
 
 export const ImportStepper = ({
@@ -23,7 +23,7 @@ export const ImportStepper = ({
   const currentOrder = STEPS.find((s) => s.key === currentStep)?.order || 1;
 
   return (
-    <div className="w-full pb-4">
+    <nav className="w-full pb-4" aria-label="Progreso de importación">
       <div className="flex w-full items-center">
         {STEPS.map((step, index) => {
           const isComplete = step.order < currentOrder;
@@ -39,24 +39,32 @@ export const ImportStepper = ({
                 index < STEPS.length - 1 ? "flex-1" : "flex-none",
               )}
             >
-              <div className="flex flex-col items-center">
+              <div className="flex min-w-12 flex-col items-center">
                 <button
                   onClick={() => isClickable && onStepClick(step.key)}
                   disabled={!isClickable}
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all",
+                    "flex size-10 items-center justify-center rounded-none border transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                     isComplete &&
-                      "border-brand-green bg-brand-green text-white",
+                      "border-crt-pos bg-crt-pos text-background",
                     isCurrent &&
-                      "border-brand-green bg-brand-green ring-brand-green/50 animate-pulse text-white ring-4",
-                    isPending && "border-gray-300 bg-white text-gray-400",
-                    isClickable && "hover:bg-brand-green/80 cursor-pointer",
+                      "border-crt-accent bg-crt-accent text-background ring-2 ring-crt-accent/30",
+                    isPending && "border-border bg-card text-muted-foreground",
+                    isClickable && "hover:border-crt-accent hover:text-crt-accent cursor-pointer",
                   )}
                   aria-label={`Step ${step.order}: ${step.label}`}
                   aria-current={isCurrent ? "step" : undefined}
                 >
                   <span className="text-sm font-semibold">{step.order}</span>
                 </button>
+                <span
+                  className={cn(
+                    "mt-2 text-center text-[10px] tracking-[0.08em] uppercase",
+                    isCurrent ? "text-crt-accent font-bold" : "text-muted-foreground",
+                  )}
+                >
+                  {step.label}
+                </span>
               </div>
 
               {index < STEPS.length - 1 && (
@@ -65,8 +73,8 @@ export const ImportStepper = ({
                     className={cn(
                       "h-0.5 w-full transition-all",
                       step.order < currentOrder
-                        ? "bg-brand-green"
-                        : "bg-gray-300",
+                        ? "bg-crt-pos"
+                        : "bg-border",
                     )}
                   />
                 </div>
@@ -75,6 +83,6 @@ export const ImportStepper = ({
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 };

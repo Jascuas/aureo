@@ -39,18 +39,18 @@ export const ColumnPreview = ({
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium">Corrected preview</p>
+      <p className="text-sm font-medium">Previsualización corregida</p>
       <div className="overflow-x-auto border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-20 text-center">CSV row</TableHead>
-              <TableHead>{headers[mapping[ColumnType.Date]] ?? "Date"}</TableHead>
+              <TableHead className="w-20 text-center">Fila CSV</TableHead>
+              <TableHead>{headers[mapping[ColumnType.Date]] ?? "Fecha"}</TableHead>
               <TableHead>
-                {headers[mapping[ColumnType.Amount]] ?? "Amount"}
+                {headers[mapping[ColumnType.Amount]] ?? "Importe"}
               </TableHead>
-              <TableHead>{headers[mapping[ColumnType.Payee]] ?? "Payee"}</TableHead>
-              <TableHead>Validation</TableHead>
+              <TableHead>{headers[mapping[ColumnType.Payee]] ?? "Beneficiario"}</TableHead>
+              <TableHead>Validación</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -74,7 +74,7 @@ export const ColumnPreview = ({
                   {row.errors.length > 0 ? (
                     <span className="text-destructive">{row.errors.join(" ")}</span>
                   ) : (
-                    <span className="text-crt-pos">Ready for analysis</span>
+                    <span className="text-crt-pos">Listo para analizar</span>
                   )}
                 </TableCell>
               </TableRow>
@@ -83,7 +83,7 @@ export const ColumnPreview = ({
         </Table>
       </div>
       <p className="text-xs text-muted-foreground">
-        Showing first {rowsToShow.length} rows of {rows.length} total
+        Mostrando las primeras {rowsToShow.length} filas de {rows.length}
       </p>
     </div>
   );

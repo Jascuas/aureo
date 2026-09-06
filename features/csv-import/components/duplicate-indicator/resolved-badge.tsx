@@ -13,8 +13,8 @@ export const ResolvedBadge = ({
   onResolve,
 }: ResolvedBadgeProps) => {
   const isSkip = resolution === Resolution.Skip;
-  const displayText = isSkip ? "Skipped" : "Will Import";
-  const colorClass = isSkip ? "text-muted-foreground" : "text-blue-600";
+  const displayText = isSkip ? "Omitida" : "Se importará";
+  const colorClass = isSkip ? "text-muted-foreground" : "text-crt-pos";
 
   if (!onResolve) return null;
 

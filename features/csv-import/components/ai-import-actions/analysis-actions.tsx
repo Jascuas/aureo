@@ -24,22 +24,22 @@ export function AnalysisActions({
   const showCompletionActions = !isAnalyzing && !hasError && isAnalyzeComplete;
 
   return (
-    <div className="flex gap-2">
-      <Button variant="outline" onClick={onBack}>
-        Back to Mapping
+    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
+      <Button className="w-full sm:w-auto" variant="outline" onClick={onBack}>
+        Volver al mapeo
       </Button>
-      <Button variant="outline" onClick={onCancel}>
-        Cancel
+      <Button className="w-full sm:w-auto" variant="outline" onClick={onCancel}>
+        Cancelar
       </Button>
       {showCompletionActions && (
         <>
-          <Button variant="outline" onClick={onRerun}>
-            Re-run analysis
+          <Button className="w-full sm:w-auto" variant="outline" onClick={onRerun}>
+            Repetir análisis
           </Button>
-          <Button onClick={onContinue}>
+          <Button className="w-full sm:w-auto" onClick={onContinue}>
             {duplicatesCount > 0
-              ? `Review ${duplicatesCount} Duplicates`
-              : "Continue to Review"}
+              ? `Revisar ${duplicatesCount} duplicados`
+              : "Continuar a la revisión"}
           </Button>
         </>
       )}

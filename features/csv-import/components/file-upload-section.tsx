@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Upload } from "lucide-react";
+import { AlertCircle, FileUp, Loader2 } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -25,15 +25,15 @@ export const FileUploadSection = ({
   
   const validateFile = (file: File): string | null => {
     if (!file.name.toLowerCase().endsWith('.csv')) {
-      return 'Please upload a CSV file (.csv extension required)';
+      return 'Sube un archivo CSV (es necesaria la extensión .csv)';
     }
     
     if (file.size === 0) {
-      return 'File is empty';
+      return 'El archivo está vacío';
     }
     
     if (file.size > MAX_FILE_SIZE) {
-      return `File is too large. Maximum size: ${MAX_FILE_SIZE / 1024 / 1024}MB`;
+      return `El archivo es demasiado grande. Tamaño máximo: ${MAX_FILE_SIZE / 1024 / 1024} MB`;
     }
     
     return null;
@@ -80,29 +80,29 @@ export const FileUploadSection = ({
   }, [handleFile]);
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={cn(
-          'relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 transition-colors',
-          isDragging && 'border-blue-500 bg-blue-50',
-          !isDragging && 'border-gray-300 hover:border-gray-400',
-          isProcessing && 'opacity-50 pointer-events-none'
+          'relative flex min-h-64 flex-col items-center justify-center border border-dashed bg-card p-6 text-center transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-crt-accent sm:p-12',
+          isDragging && 'border-crt-accent bg-crt-accent/5',
+          !isDragging && 'border-border hover:border-crt-accent',
+          isProcessing && 'pointer-events-none opacity-50',
         )}
       >
-        <Upload className={cn(
-          'mb-4 h-12 w-12',
-          isDragging ? 'text-blue-500' : 'text-gray-400'
-        )} />
+        <FileUp className={cn(
+          'mb-4 size-12',
+          isDragging ? 'text-crt-accent' : 'text-muted-foreground',
+        )} aria-hidden="true" />
         
-        <p className="mb-2 text-sm font-medium text-gray-700">
-          {isDragging ? 'Drop your CSV file here' : 'Drag and drop your CSV file'}
+        <p className="text-foreground mb-2 text-sm font-medium">
+          {isDragging ? 'Suelta aquí tu archivo CSV' : 'Arrastra y suelta tu archivo CSV'}
         </p>
         
-        <p className="mb-4 text-xs text-gray-500">
-          or click to browse (max {MAX_FILE_SIZE / 1024 / 1024}MB)
+        <p id="csv-upload-help" className="text-muted-foreground mb-4 text-xs">
+          o haz clic para buscarlo (máximo {MAX_FILE_SIZE / 1024 / 1024} MB)
         </p>
         
         <input
@@ -110,21 +110,22 @@ export const FileUploadSection = ({
           accept=".csv"
           onChange={handleFileInput}
           disabled={isProcessing}
-          className="absolute inset-0 cursor-pointer opacity-0"
-          aria-label="Upload CSV file"
+          className="absolute inset-0 cursor-pointer opacity-0 focus-visible:outline-none"
+          aria-label="Subir archivo CSV"
+          aria-describedby="csv-upload-help csv-upload-format"
         />
         
         {selectedFileName && !(validationError || error) && (
-          <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
-            <span className="font-medium">Selected:</span>
+          <div className="text-muted-foreground mt-4 flex items-center gap-2 text-sm">
+            <span className="font-medium">Seleccionado:</span>
             <span>{selectedFileName}</span>
           </div>
         )}
         
         {isProcessing && (
-          <div className="mt-4 flex items-center gap-2 text-sm text-blue-600">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-            <span>Processing CSV file...</span>
+          <div className="text-crt-accent mt-4 flex items-center gap-2 text-sm" role="status" aria-live="polite">
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            <span>Procesando el archivo CSV…</span>
           </div>
         )}
       </div>
@@ -136,13 +137,13 @@ export const FileUploadSection = ({
         </Alert>
       )}
       
-      <div className="rounded-md bg-blue-50 p-4">
-        <p className="text-sm font-medium text-blue-900">CSV Format Requirements:</p>
-        <ul className="mt-2 space-y-1 text-xs text-blue-700">
-          <li>• First row should contain column headers</li>
-          <li>• Must include: Date, Amount, and Payee/Description columns</li>
-          <li>• Dates should be consistent format (e.g., DD/MM/YYYY or YYYY-MM-DD)</li>
-          <li>• Maximum 1,000 transactions per import</li>
+      <div id="csv-upload-format" className="border-crt-amber/50 bg-crt-amber/5 border p-4">
+        <p className="text-crt-amber text-sm font-medium">Requisitos del formato CSV</p>
+        <ul className="text-muted-foreground mt-2 space-y-1 text-xs">
+          <li>• La primera fila debe contener los encabezados</li>
+          <li>• Debe incluir columnas de fecha, importe y beneficiario o descripción</li>
+          <li>• Mantén un formato de fecha coherente, como DD/MM/AAAA o AAAA-MM-DD</li>
+          <li>• Máximo de 1.000 transacciones por importación</li>
         </ul>
       </div>
     </div>
