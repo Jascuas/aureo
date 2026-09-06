@@ -68,6 +68,12 @@ export type SummaryBreakdown = {
   value: number;
 };
 
+export type SummaryAccountBreakdown = {
+  id: string;
+  name: string;
+  value: number;
+};
+
 const accountScope = (userId: string, accountId?: string) =>
   and(
     eq(accounts.userId, userId),
@@ -279,6 +285,26 @@ export const getSummaryOverview = async (
       ),
     },
   };
+};
+
+export const getSummaryAccountBreakdown = async (
+  userId: string,
+): Promise<SummaryAccountBreakdown[]> => {
+  const rows = await db
+    .select({
+      id: accounts.id,
+      name: accounts.name,
+      balanceMilliunits: accounts.balance,
+    })
+    .from(accounts)
+    .where(eq(accounts.userId, userId))
+    .orderBy(desc(accounts.balance));
+
+  return rows.map(({ balanceMilliunits, id, name }) => ({
+    id,
+    name,
+    value: convertAmountFromMilliunits(Number(balanceMilliunits ?? 0)),
+  }));
 };
 
 export const getSummaryOverTime = async (

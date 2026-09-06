@@ -1,12 +1,16 @@
 import { zValidator } from "@hono/zod-validator";
-import { createId } from "@paralleldrive/cuid2";
-import { and, eq, inArray } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 
-import { db } from "@/db/drizzle";
-import { accounts } from "@/db/schema";
 import { accountFormSchema } from "@/features/accounts/lib/account-form-schema";
+import {
+  createAccount,
+  deleteAccount,
+  deleteAccounts,
+  getAccount,
+  listAccounts,
+  updateAccount,
+} from "@/features/accounts/server/account-operations";
 import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
@@ -15,14 +19,7 @@ import { requireId } from "@/lib/validation-middleware";
 const app = new Hono<AppEnv>()
   .get("/", requireAuth, async (c) => {
     const userId = c.var.userId;
-
-    const data = await db
-      .select({
-        id: accounts.id,
-        name: accounts.name,
-      })
-      .from(accounts)
-      .where(eq(accounts.userId, userId));
+    const data = await listAccounts(userId);
 
     return c.json({ data });
   })
@@ -40,13 +37,7 @@ const app = new Hono<AppEnv>()
       const userId = c.var.userId;
       const id = c.var.validatedId;
 
-      const [data] = await db
-        .select({
-          id: accounts.id,
-          name: accounts.name,
-        })
-        .from(accounts)
-        .where(and(eq(accounts.userId, userId), eq(accounts.id, id)));
+      const data = await getAccount(userId, id);
 
       if (!data) {
         return c.json(API_ERRORS.NOT_FOUND, 404);
@@ -63,18 +54,7 @@ const app = new Hono<AppEnv>()
       const userId = c.var.userId;
       const values = c.req.valid("json");
 
-      const [data] = await db
-        .insert(accounts)
-        .values({
-          id: createId(),
-          userId,
-          balance: 0,
-          ...values,
-        })
-        .returning({
-          id: accounts.id,
-          name: accounts.name,
-        });
+      const data = await createAccount(userId, values);
 
       return c.json({ data });
     },
@@ -92,14 +72,7 @@ const app = new Hono<AppEnv>()
       const userId = c.var.userId;
       const values = c.req.valid("json");
 
-      const data = await db
-        .delete(accounts)
-        .where(
-          and(eq(accounts.userId, userId), inArray(accounts.id, values.ids)),
-        )
-        .returning({
-          id: accounts.id,
-        });
+      const data = await deleteAccounts(userId, values.ids);
 
       return c.json({ data });
     },
@@ -120,20 +93,13 @@ const app = new Hono<AppEnv>()
       const id = c.var.validatedId;
       const values = c.req.valid("json");
 
-      const [data] = await db
-        .update(accounts)
-        .set(values)
-        .where(and(eq(accounts.userId, userId), eq(accounts.id, id)))
-        .returning({
-          id: accounts.id,
-          name: accounts.name,
-        });
+      const result = await updateAccount(userId, id, values);
 
-      if (!data) {
+      if (!result.ok) {
         return c.json(API_ERRORS.NOT_FOUND, 404);
       }
 
-      return c.json({ data });
+      return c.json({ data: result.data });
     },
   )
   .delete(
@@ -150,18 +116,13 @@ const app = new Hono<AppEnv>()
       const userId = c.var.userId;
       const id = c.var.validatedId;
 
-      const [data] = await db
-        .delete(accounts)
-        .where(and(eq(accounts.userId, userId), eq(accounts.id, id)))
-        .returning({
-          id: accounts.id,
-        });
+      const result = await deleteAccount(userId, id);
 
-      if (!data) {
+      if (!result.ok) {
         return c.json(API_ERRORS.NOT_FOUND, 404);
       }
 
-      return c.json({ data });
+      return c.json({ data: result.data });
     },
   );
 
