@@ -14,12 +14,12 @@ export const useGetTemplates = (accountId?: string) => {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch import templates");
+        throw new Error("No se han podido cargar las plantillas de importación.");
       }
 
       const result = await response.json();
       if (!("data" in result)) {
-        throw new Error("Unexpected response shape");
+        throw new Error("La respuesta del servidor no tiene un formato válido.");
       }
       return result.data;
     },

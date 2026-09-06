@@ -47,7 +47,7 @@ export function useTransactionImport({
           preImportFailedOutcomes.concat(
             categorizations.map((categorization) => ({
               csvRowIndex: categorization.csvRowIndex,
-              reason: "No account selected.",
+              reason: "No se ha seleccionado ninguna cuenta.",
               status: "failed" as const,
             })),
           ),
@@ -66,7 +66,7 @@ export function useTransactionImport({
 
       skippedOutcomes.push({
         csvRowIndex: categorization.csvRowIndex,
-        reason: "Skipped during duplicate review.",
+        reason: "Omitida durante la revisión de duplicados.",
         status: "skipped",
       });
       return false;
@@ -120,7 +120,9 @@ export function useTransactionImport({
           outcomes.push(...result.outcomes);
         } catch (error: unknown) {
           const reason =
-            error instanceof Error ? error.message : "Import failed.";
+            error instanceof Error
+              ? error.message
+              : "Se ha producido un error durante la importación.";
           outcomes.push(
             ...batch.map((categorization) => ({
               csvRowIndex: categorization.csvRowIndex,

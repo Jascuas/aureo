@@ -5,7 +5,7 @@ export function validateColumnMapping(mapping: Record<string, number> | null): {
   error: string | null;
 } {
   if (!mapping) {
-    return { isValid: false, error: "Please complete the column mapping" };
+    return { isValid: false, error: "Completa el mapeo de columnas" };
   }
 
   const date = mapping[ColumnType.Date];
@@ -14,7 +14,7 @@ export function validateColumnMapping(mapping: Record<string, number> | null): {
   if (date === undefined || amount === undefined || payee === undefined) {
     return {
       isValid: false,
-      error: "Date, Amount, and Payee columns are required",
+      error: "Las columnas Fecha, Importe y Beneficiario son obligatorias",
     };
   }
 

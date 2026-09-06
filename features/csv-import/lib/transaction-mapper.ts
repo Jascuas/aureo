@@ -32,27 +32,29 @@ export function buildMappingPreview(
     const errors = [...row.errors];
 
     if (mapping[ColumnType.Date] === undefined) {
-      errors.push("Map a date column.");
+      errors.push("Mapea una columna de fecha.");
     } else if (!rawDate.trim()) {
-      errors.push("Date is required.");
+      errors.push("El campo Fecha es obligatorio.");
     } else if (dateFormat === "unknown") {
-      errors.push("Select an unambiguous date format.");
+      errors.push("Selecciona un formato de fecha sin ambigüedades.");
     } else if (!date) {
-      errors.push(`Date "${rawDate}" does not match ${dateFormat}.`);
+      errors.push(`La fecha "${rawDate}" no coincide con ${dateFormat}.`);
     }
 
     if (mapping[ColumnType.Amount] === undefined) {
-      errors.push("Map an amount column.");
+      errors.push("Mapea una columna de importe.");
     } else if (!rawAmount.trim()) {
-      errors.push("Amount is required.");
+      errors.push("El importe es obligatorio.");
     } else if (amount === null) {
-      errors.push(`Amount "${rawAmount}" does not match the selected format.`);
+      errors.push(
+        `El importe "${rawAmount}" no coincide con el formato seleccionado.`,
+      );
     }
 
     if (mapping[ColumnType.Payee] === undefined) {
-      errors.push("Map a payee column.");
+      errors.push("Mapea una columna de beneficiario.");
     } else if (!payee) {
-      errors.push("Payee is required.");
+      errors.push("El beneficiario es obligatorio.");
     }
 
     return {

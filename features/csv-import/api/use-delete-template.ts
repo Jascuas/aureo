@@ -23,21 +23,21 @@ export const useDeleteTemplate = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete template");
+        throw new Error("No se ha podido eliminar la plantilla.");
       }
 
       const result = await response.json();
       if (!("data" in result)) {
-        throw new Error("Unexpected response shape");
+        throw new Error("La respuesta del servidor no tiene un formato válido.");
       }
       return result.data;
     },
     onSuccess: () => {
-      toast.success("Template deleted");
+      toast.success("Plantilla eliminada");
       queryClient.invalidateQueries({ queryKey: ["import-templates"] });
     },
     onError: () => {
-      toast.error("Failed to delete template");
+      toast.error("No se ha podido eliminar la plantilla.");
     },
   });
 

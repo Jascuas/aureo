@@ -10,14 +10,16 @@ export const getImportResultFeedback = (
   failedCount > 0
     ? {
         kind: "error",
-        message: "Some transactions could not be imported. Review the row outcomes.",
+        message:
+          "Algunas transacciones no se han podido importar. Revisa el resultado de cada fila.",
       }
     : importedCount === 0
       ? {
           kind: "info",
-          message: "No new transactions were imported. Review the row outcomes.",
+          message:
+            "No se han importado transacciones nuevas. Revisa el resultado de cada fila.",
         }
     : {
         kind: "success",
-        message: "Transactions imported successfully",
+        message: "Transacciones importadas correctamente",
       };

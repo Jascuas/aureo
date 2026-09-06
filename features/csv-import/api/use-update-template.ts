@@ -32,23 +32,23 @@ export const useUpdateTemplate = () => {
         throw new Error(
           getApiErrorMessage(
             await response.json(),
-            "Failed to update template",
+            "No se ha podido actualizar la plantilla",
           ),
         );
       }
 
       const result = await response.json();
       if (!("data" in result)) {
-        throw new Error("Unexpected response shape");
+        throw new Error("La respuesta del servidor no tiene un formato válido.");
       }
       return result.data;
     },
     onSuccess: () => {
-      toast.success("Template updated");
+      toast.success("Plantilla actualizada");
       queryClient.invalidateQueries({ queryKey: ["import-templates"] });
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to update template");
+      toast.error(error.message || "No se ha podido actualizar la plantilla");
     },
   });
 

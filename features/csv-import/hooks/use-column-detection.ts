@@ -51,7 +51,7 @@ export function useColumnDetection({
       } catch {
         setError(
           "detection",
-          "Failed to detect columns. Please map them manually.",
+          "No se han podido detectar las columnas. Asígnalas manualmente.",
         );
       } finally {
         setLoading("detectingColumns", false);

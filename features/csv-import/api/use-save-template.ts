@@ -27,23 +27,23 @@ export const useSaveTemplate = () => {
         throw new Error(
           getApiErrorMessage(
             await response.json(),
-            "Failed to save template",
+            "No se ha podido guardar la plantilla",
           ),
         );
       }
 
       const result = await response.json();
       if (!("data" in result)) {
-        throw new Error("Unexpected response shape");
+        throw new Error("La respuesta del servidor no tiene un formato válido.");
       }
       return result.data;
     },
     onSuccess: () => {
-      toast.success("Template saved successfully");
+      toast.success("Plantilla guardada correctamente");
       queryClient.invalidateQueries({ queryKey: ["import-templates"] });
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to save template");
+      toast.error(error.message || "No se ha podido guardar la plantilla");
     },
   });
 

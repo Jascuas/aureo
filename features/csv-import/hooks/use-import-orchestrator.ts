@@ -175,7 +175,7 @@ export function useImportOrchestrator({
     }
     const finalMapping = columnMapping.finalMapping;
     if (!csvData || !columnMapping.detectionResult || !finalMapping) {
-      setError("detection", "CSV format detection is not ready yet.");
+      setError("detection", "La detección del formato CSV aún no está lista.");
       return;
     }
     setError("detection", null);
