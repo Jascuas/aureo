@@ -1,8 +1,6 @@
 "use client";
 
-import { ClerkLoaded, ClerkLoading, UserButton } from "@clerk/nextjs";
-import { Loader2 } from "lucide-react";
-
+import { ClerkUserButton } from "@/components/layout/clerk-user-button";
 import { HeaderLogo } from "@/components/layout/header-logo";
 import { Navigation } from "@/components/layout/navigation";
 import { useSidebarStore } from "@/lib/use-sidebar-store";
@@ -29,12 +27,7 @@ export const Sidebar = () => {
         </div>
 
         <div className="border-border flex shrink-0 items-center gap-3 border-t p-4">
-          <ClerkLoaded>
-            <UserButton />
-          </ClerkLoaded>
-          <ClerkLoading>
-            <Loader2 className="text-muted-foreground size-5 animate-spin" />
-          </ClerkLoading>
+          <ClerkUserButton />
           <span className="text-muted-foreground text-2xs tracking-wide uppercase">
             ACCOUNT
           </span>

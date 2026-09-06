@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import {
   Card,
   CardContent,
@@ -33,9 +35,16 @@ export const AiImportCard = ({
   const { currentStep, goToStep } = useImportSession();
 
   const { data: accounts } = useGetAccounts();
-  const accountName = accountId
-    ? accounts?.find((a) => a.id === accountId)?.name
-    : undefined;
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const accountName =
+    isMounted && accountId
+      ? accounts?.find((account) => account.id === accountId)?.name
+      : undefined;
 
   useUnloadWarning(currentStep);
 

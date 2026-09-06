@@ -1,7 +1,5 @@
-import { ClerkLoaded, ClerkLoading, UserButton } from "@clerk/nextjs";
-import { Loader2 } from "lucide-react";
-
 import { Filters } from "@/components/filters/filters";
+import { ClerkUserButton } from "@/components/layout/clerk-user-button";
 import { HeaderLogo } from "@/components/layout/header-logo";
 import { Navigation } from "@/components/layout/navigation";
 
@@ -20,13 +18,7 @@ export const Header = ({ showFilters = true }: HeaderProps) => {
           </div>
 
           <div className="flex items-center gap-x-2">
-            <ClerkLoaded>
-              <UserButton />
-            </ClerkLoaded>
-
-            <ClerkLoading>
-              <Loader2 className="text-muted-foreground size-5 animate-spin" />
-            </ClerkLoading>
+            <ClerkUserButton />
           </div>
         </div>
 

@@ -1,7 +1,4 @@
-import { SignIn } from "@clerk/nextjs";
-import { ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
-import { Loader2 } from "lucide-react";
-
+import { ClerkAuthForm } from "@/app/(auth)/_components/clerk-auth-form";
 import { HeaderLogo } from "@/components/layout/header-logo";
 
 export default function Page() {
@@ -21,14 +18,7 @@ export default function Page() {
               Accede a tu espacio privado de finanzas.
             </p>
           </div>
-          <div className="flex justify-center">
-            <ClerkLoaded>
-              <SignIn />
-            </ClerkLoaded>
-            <ClerkLoading>
-              <Loader2 className="text-muted-foreground animate-spin" />
-            </ClerkLoading>
-          </div>
+          <ClerkAuthForm mode="sign-in" />
         </div>
       </section>
     </main>
