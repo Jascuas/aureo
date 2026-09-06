@@ -25,14 +25,20 @@ export const CategoryColumn = ({
 
   return (
     <button
+      type="button"
       onClick={onClick}
       className={cn(
-        "flex cursor-pointer items-center hover:underline",
-        !category && "text-rose-500"
+        "flex min-h-11 cursor-pointer items-center text-left hover:underline focus-visible:outline-none",
+        !category && "text-destructive",
       )}
+      aria-label={
+        category
+          ? `Editar categoría ${category}`
+          : "Asignar categoría a la transacción"
+      }
     >
       {!category && <TriangleAlert className="mr-2 size-4 shrink-0" />}
-      {category || "Uncategorized"}
+      {category || "Sin categoría"}
     </button>
   );
 };

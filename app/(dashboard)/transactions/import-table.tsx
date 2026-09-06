@@ -23,14 +23,22 @@ export const ImportTable = ({
   selectedColumns,
 }: ImportTableProps) => {
   return (
-    <div className="overflow-hidden rounded-md border">
-      <Table>
+    <div className="overflow-hidden border">
+      <Table
+        className="min-w-[520px]"
+        containerProps={{
+          role: "region",
+          "aria-label": "Previsualización del archivo CSV",
+          tabIndex: 0,
+        }}
+      >
         <TableHeader className="bg-muted">
           <TableRow>
-            {headers.map((_header, index) => (
+            {headers.map((header, index) => (
               <TableHead key={index}>
                 <TableHeadSelect
                   columnIndex={index}
+                  headerLabel={header}
                   selectedColumns={selectedColumns}
                   onChange={onTableHeadSelectChange}
                 />

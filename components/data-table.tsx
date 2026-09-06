@@ -73,14 +73,15 @@ export function DataTable<TData, TValue>({
     <div>
       <ConfirmDialog />
 
-      <div className="flex items-center py-4">
+      <div className="flex flex-col items-stretch gap-3 py-4 sm:flex-row sm:items-center">
         <Input
           placeholder={`Filtrar ${filterLabel}...`}
+          aria-label={`Filtrar ${filterLabel}`}
           value={(table.getColumn(filterKey)?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn(filterKey)?.setFilterValue(event.target.value)
           }
-          className="max-w-sm"
+          className="w-full sm:max-w-sm"
         />
 
         {table.getFilteredSelectedRowModel().rows.length > 0 && (
@@ -88,7 +89,7 @@ export function DataTable<TData, TValue>({
             disabled={disabled}
             size="sm"
             variant="outline"
-            className="ml-auto text-xs font-normal"
+            className="ml-0 text-xs font-normal sm:ml-auto"
             onClick={async () => {
               const ok = await confirm();
 
@@ -104,14 +105,32 @@ export function DataTable<TData, TValue>({
         )}
       </div>
 
-      <div className="rounded-md border">
-        <Table>
+      <div className="border">
+        <Table
+          className="min-w-[560px]"
+          containerProps={{
+            role: "region",
+            "aria-label": "Resultados de la tabla",
+            tabIndex: 0,
+          }}
+        >
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead
+                      key={header.id}
+                      aria-sort={
+                        header.column.getCanSort()
+                          ? header.column.getIsSorted() === "asc"
+                            ? "ascending"
+                            : header.column.getIsSorted() === "desc"
+                              ? "descending"
+                              : "none"
+                          : undefined
+                      }
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -156,7 +175,7 @@ export function DataTable<TData, TValue>({
       </div>
 
       <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-muted-foreground flex-1 text-sm">
+        <div className="text-muted-foreground flex-1 text-sm" role="status" aria-live="polite">
           Seleccionadas: {table.getFilteredSelectedRowModel().rows.length} de{" "}
           {table.getFilteredRowModel().rows.length}
         </div>

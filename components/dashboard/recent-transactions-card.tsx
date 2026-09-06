@@ -84,7 +84,14 @@ const RecentTransactionsLoading = () => (
       <Skeleton className="h-8 w-20" />
     </CardHeader>
     <CardContent>
-      <Table>
+      <Table
+        className="min-w-[620px]"
+        containerProps={{
+          role: "region",
+          "aria-label": "Transacciones recientes",
+          tabIndex: 0,
+        }}
+      >
         <TableHeader>
           <TableRow>
             <TableHead className="text-3xs uppercase tracking-widest">Beneficiario</TableHead>
@@ -141,7 +148,14 @@ export const RecentTransactionsCard = () => {
         ) : state.kind === "empty" ? (
           <DashboardEmptyState message="No hay transacciones en este periodo" />
         ) : (
-          <Table>
+          <Table
+            className="min-w-[620px]"
+            containerProps={{
+              role: "region",
+              "aria-label": "Transacciones recientes",
+              tabIndex: 0,
+            }}
+          >
             <TableHeader>
               <TableRow>
                 <TableHead className="text-3xs uppercase tracking-widest">Beneficiario</TableHead>

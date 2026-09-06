@@ -66,7 +66,7 @@ const CategoriesPage = () => {
             <span className="text-crt-accent">▌</span> Página de categorías
           </CardTitle>
 
-          <Button size="sm" onClick={newCategory.onOpen}>
+          <Button size="sm" onClick={newCategory.onOpen} className="w-full lg:w-auto">
             <Plus className="mr-2 size-4" /> Añadir categoría
           </Button>
         </CardHeader>

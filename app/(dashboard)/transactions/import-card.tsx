@@ -113,12 +113,12 @@ export const ImportCard = ({ data, onCancel, onSubmit }: ImportCardProps) => {
       <Card className="border-border border drop-shadow-sm">
         <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
           <CardTitle className="line-clamp-1 text-xs">
-            <span className="text-crt-accent">▌</span> Import Transaction
+            <span className="text-crt-accent">▌</span> Importar transacciones
           </CardTitle>
 
           <div className="flex flex-col items-center gap-x-2 gap-y-2 lg:flex-row">
             <Button size="sm" onClick={onCancel} className="w-full lg:w-auto">
-              Cancel
+              Cancelar
             </Button>
 
             <Button
@@ -127,7 +127,7 @@ export const ImportCard = ({ data, onCancel, onSubmit }: ImportCardProps) => {
               onClick={handleContinue}
               className="w-full lg:w-auto"
             >
-              Continue ({progress}/{requiredOptions.length})
+              Continuar ({progress}/{requiredOptions.length})
             </Button>
           </div>
         </CardHeader>

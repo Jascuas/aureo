@@ -128,7 +128,7 @@ function Calendar({
   );
   const _dayButtonClassName = cn(
     buttonVariants({ variant: "ghost" }),
-    "size-8 rounded-md p-0 font-normal transition-none aria-selected:opacity-100",
+    "relative size-8 rounded-md p-0 font-normal transition-none after:absolute after:-inset-1 aria-selected:opacity-100",
     props.dayButtonClassName,
   );
   const buttonRangeClassName =

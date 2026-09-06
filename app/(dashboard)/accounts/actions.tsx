@@ -35,8 +35,12 @@ export const Actions = ({ id }: Props) => {
       <ConfirmDialog />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="size-8 p-0">
-            <MoreHorizontal className="size-4" />
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Abrir acciones de la cuenta"
+          >
+            <MoreHorizontal className="size-4" aria-hidden="true" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

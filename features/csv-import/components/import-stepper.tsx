@@ -96,7 +96,7 @@ export const ImportStepper = ({
                   onClick={() => isClickable && onStepClick(step.key)}
                   disabled={!isClickable}
                   className={cn(
-                    "flex size-10 items-center justify-center rounded-none border transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                    "relative flex size-10 items-center justify-center rounded-none border transition-colors after:absolute after:-inset-0.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                     STATUS_CLASSES[status],
                     isClickable &&
                       "hover:border-crt-accent hover:text-crt-accent cursor-pointer",
@@ -110,7 +110,7 @@ export const ImportStepper = ({
                   <span className="block">{step.label}</span>
                   <span
                     className={cn(
-                      "mx-1 block w-max whitespace-nowrap text-3xs",
+                      "mx-1 block max-w-full text-3xs leading-tight break-words",
                       STATUS_TEXT_CLASSES[status],
                     )}
                   >

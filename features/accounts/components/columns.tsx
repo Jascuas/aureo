@@ -43,15 +43,23 @@ export const columns: ColumnDef<ResponseType>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          aria-label={`Ordenar por nombre: ${
+            column.getIsSorted() === "asc"
+              ? "descendente"
+              : column.getIsSorted() === "desc"
+                ? "sin orden"
+                : "ascendente"
+          }`}
         >
           Nombre
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="ml-2 h-4 w-4" aria-hidden="true" />
         </Button>
       );
     },
   },
   {
     id: "actions",
+    header: "Acciones",
     cell: ({ row }) => <Actions id={row.original.id} />,
   },
 ];
