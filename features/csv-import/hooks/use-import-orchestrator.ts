@@ -22,6 +22,7 @@ import type {
   AutoResolvedTransaction,
   DateFormat,
   ImportOrchestrator,
+  ImportRowOutcome,
   PayeeMatchResult,
 } from "@/features/csv-import/types/import-types";
 import { useConfirm } from "@/hooks/use-confirm";
@@ -43,6 +44,7 @@ export function useImportOrchestrator({
   const {
     currentStep,
     csvData,
+    importAttemptId,
     columnMapping,
     analyzedRows,
     setDuplicates,
@@ -82,6 +84,33 @@ export function useImportOrchestrator({
     [columnMapping.detectionResult],
   );
 
+  const mappingFailureOutcomes = useMemo<ImportRowOutcome[]>(() => {
+    if (!csvData || !columnMapping.detectionResult || !columnMapping.finalMapping) {
+      return [];
+    }
+
+    return buildMappingPreview(
+      csvData.rows,
+      columnMapping.finalMapping,
+      columnMapping.detectionResult.dateFormat,
+      columnMapping.detectionResult.amountFormat,
+    ).flatMap((row) =>
+      row.errors.length === 0
+        ? []
+        : [
+            {
+              csvRowIndex: row.csvRowIndex,
+              reason: row.errors.join(" "),
+              status: "failed" as const,
+            },
+          ],
+    );
+  }, [
+    columnMapping.detectionResult,
+    columnMapping.finalMapping,
+    csvData,
+  ]);
+
   const analyzerCallbacks = useMemo(
     () => ({
       onDuplicatesDetected: setDuplicates,
@@ -99,7 +128,7 @@ export function useImportOrchestrator({
         setPayeeMatches(payeeMatches);
       },
       onCategorizationsReady: setCategorizations,
-      onError: () => {},
+      onError: (message: string) => setError("analyze", message),
       onComplete: nextStep,
     }),
     [
@@ -109,6 +138,7 @@ export function useImportOrchestrator({
       setPayeeMatches,
       setCategorizations,
       nextStep,
+      setError,
     ],
   );
 
@@ -137,6 +167,8 @@ export function useImportOrchestrator({
   const { importTransactions } = useTransactionImport({
     accountId,
     categorizations: analyzedRows.categorizations,
+    importAttemptId,
+    preImportFailedOutcomes: mappingFailureOutcomes,
     resolutions,
     setImportResult,
     onComplete: () => {},
@@ -167,23 +199,6 @@ export function useImportOrchestrator({
     const finalMapping = columnMapping.finalMapping;
     if (!csvData || !columnMapping.detectionResult || !finalMapping) {
       setError("detection", "CSV format detection is not ready yet.");
-      return;
-    }
-    const invalidRows = buildMappingPreview(
-      csvData.rows,
-      finalMapping,
-      columnMapping.detectionResult.dateFormat,
-      columnMapping.detectionResult.amountFormat,
-    ).filter((row) => row.errors.length > 0);
-    if (invalidRows.length > 0) {
-      const rowNumbers = invalidRows
-        .slice(0, 5)
-        .map((row) => row.csvRowIndex + 2)
-        .join(", ");
-      setError(
-        "detection",
-        `${invalidRows.length} CSV row(s) need correction before analysis (rows ${rowNumbers}${invalidRows.length > 5 ? ", …" : ""}).`,
-      );
       return;
     }
     setError("detection", null);

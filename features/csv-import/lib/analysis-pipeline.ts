@@ -79,16 +79,23 @@ export function mergeAutoResolvedAndAi(
   aiCategorizations: AICategorization[],
   preparedTransactions: TransactionForAnalysis[],
 ): EnrichedCategorization[] {
-  const allRaw: AICategorization[] = [
-    ...autoResolved.map((r) => ({
-      csvRowIndex: r.csvRowIndex,
-      categoryId: r.categoryId as string | null,
-      transactionTypeId: r.transactionTypeId,
-      confidence: r.confidence,
-      normalizedPayee: r.normalizedPayee,
-    })),
-    ...aiCategorizations,
-  ];
+  const resolvedByRow = new Map<number, AICategorization>();
+  autoResolved.forEach((result) => {
+    resolvedByRow.set(result.csvRowIndex, {
+      categoryId: result.categoryId,
+      confidence: result.confidence,
+      csvRowIndex: result.csvRowIndex,
+      normalizedPayee: result.normalizedPayee,
+      transactionTypeId: result.transactionTypeId,
+    });
+  });
+  aiCategorizations.forEach((result) => {
+    if (!resolvedByRow.has(result.csvRowIndex)) {
+      resolvedByRow.set(result.csvRowIndex, result);
+    }
+  });
+
+  const allRaw: AICategorization[] = Array.from(resolvedByRow.values());
 
   return enrichCategorizations(allRaw, preparedTransactions);
 }

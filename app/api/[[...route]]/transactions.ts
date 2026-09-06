@@ -25,10 +25,13 @@ import { requireAuth as defaultRequireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
 import { requireId } from "@/lib/validation-middleware";
 
-const transactionValuesSchema = insertTransactionSchema.omit({ id: true });
+const transactionValuesSchema = insertTransactionSchema.omit({
+  id: true,
+  importKey: true,
+});
 const transactionWriteSchema = transactionValuesSchema.extend({
   transactionTypeId: supportedTransactionTypeIdSchema,
-});
+}).strict();
 
 export const createTransactionsApp = (
   authMiddleware: MiddlewareHandler<AppEnv> = defaultRequireAuth,

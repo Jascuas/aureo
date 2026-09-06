@@ -3,6 +3,7 @@ import { InferRequestType, InferResponseType } from "hono";
 import { toast } from "sonner";
 
 import { accountQueryKeys } from "@/features/accounts/api/query-keys";
+import { getImportResultFeedback } from "@/features/csv-import/lib/import-result-feedback";
 import { summaryQueryKeys } from "@/features/summary/api/query-keys";
 import { transactionQueryKeys } from "@/features/transactions/api/query-keys";
 import { client } from "@/lib/hono";
@@ -31,8 +32,12 @@ export const useBulkImportTransactions = () => {
       }
       return result.data;
     },
-    onSuccess: () => {
-      toast.success("Transactions imported successfully");
+    onSuccess: (data) => {
+      const feedback = getImportResultFeedback(
+        data.summary.failed,
+        data.summary.imported,
+      );
+      toast[feedback.kind](feedback.message);
       queryClient.invalidateQueries({ queryKey: transactionQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: accountQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: summaryQueryKeys.all });

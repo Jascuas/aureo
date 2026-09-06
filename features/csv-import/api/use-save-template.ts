@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { InferRequestType, InferResponseType } from "hono";
 import { toast } from "sonner";
 
+import { getApiErrorMessage } from "@/features/csv-import/api/get-api-error-message";
 import { client } from "@/lib/hono";
 
 type SuccessResponse = InferResponseType<
@@ -23,10 +24,12 @@ export const useSaveTemplate = () => {
       });
 
       if (!response.ok) {
-        const errorData = (await response.json()) as {
-          error?: { message?: string };
-        };
-        throw new Error(errorData.error?.message || "Failed to save template");
+        throw new Error(
+          getApiErrorMessage(
+            await response.json(),
+            "Failed to save template",
+          ),
+        );
       }
 
       const result = await response.json();

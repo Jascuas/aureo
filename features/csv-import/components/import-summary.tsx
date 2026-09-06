@@ -6,26 +6,28 @@ import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import type { ImportRowOutcome } from "@/features/csv-import/types/import-types";
 
 type ImportSummaryProps = {
-  importedCount: number;
-  skippedCount: number;
-  errorCount: number;
-  errors: Array<{ row: number; message: string }>;
+  outcomes: ImportRowOutcome[];
   onImportAnother: () => void;
   onViewTransactions: () => void;
 };
 
 export const ImportSummary = ({
-  importedCount,
-  skippedCount,
-  errorCount,
-  errors,
+  outcomes,
   onImportAnother,
   onViewTransactions,
 }: ImportSummaryProps) => {
-  const totalProcessed = importedCount + skippedCount + errorCount;
-  const hasErrors = errorCount > 0;
+  const outcomeCounts = outcomes.reduce(
+    (counts, outcome) => ({
+      ...counts,
+      [outcome.status]: counts[outcome.status] + 1,
+    }),
+    { duplicate: 0, failed: 0, imported: 0, skipped: 0 },
+  );
+  const skippedCount = outcomeCounts.skipped + outcomeCounts.duplicate;
+  const hasErrors = outcomeCounts.failed > 0;
 
   return (
     <div className="space-y-6">
@@ -64,20 +66,20 @@ export const ImportSummary = ({
               <span className="text-muted-foreground text-sm">
                 Total Processed
               </span>
-              <span className="text-2xl font-bold">{totalProcessed}</span>
+              <span className="text-2xl font-bold">{outcomes.length}</span>
             </div>
 
             <Separator />
 
             <div className="space-y-3">
-              {importedCount > 0 && (
+              {outcomeCounts.imported > 0 && (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                     <span className="text-sm">Successfully Imported</span>
                   </div>
                   <span className="font-medium text-emerald-600">
-                    {importedCount}
+                    {outcomeCounts.imported}
                   </span>
                 </div>
               )}
@@ -94,14 +96,14 @@ export const ImportSummary = ({
                 </div>
               )}
 
-              {errorCount > 0 && (
+              {outcomeCounts.failed > 0 && (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <XCircle className="h-4 w-4 text-rose-500" />
                     <span className="text-sm">Errors</span>
                   </div>
                   <span className="font-medium text-rose-600">
-                    {errorCount}
+                    {outcomeCounts.failed}
                   </span>
                 </div>
               )}
@@ -110,19 +112,23 @@ export const ImportSummary = ({
         </CardContent>
       </Card>
 
-      {errors.length > 0 && (
+      {outcomes.length > 0 && (
         <Card>
           <CardContent className="pt-6">
-            <h3 className="mb-4 text-sm font-semibold text-rose-600">
-              Error Details
+            <h3 className="mb-4 text-sm font-semibold">
+              Row outcomes
             </h3>
             <div className="max-h-60 space-y-2 overflow-y-auto">
-              {errors.map((error, idx) => (
-                <div key={idx} className="rounded-md bg-rose-50 p-3">
-                  <p className="text-xs font-medium text-rose-900">
-                    Row {error.row}
+              {outcomes.map((outcome) => (
+                <div key={outcome.csvRowIndex} className="rounded-md p-3">
+                  <p className="text-xs font-medium">
+                    Row {outcome.csvRowIndex + 2}: {outcome.status}
                   </p>
-                  <p className="text-xs text-rose-700">{error.message}</p>
+                  {outcome.reason && (
+                    <p className="text-muted-foreground text-xs">
+                      {outcome.reason}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

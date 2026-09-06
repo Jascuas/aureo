@@ -2,28 +2,34 @@ import { useCallback, useRef } from "react";
 
 import { useBulkImportTransactions } from "@/features/csv-import/api/use-bulk-import-transactions";
 import { Resolution } from "@/features/csv-import/const/import-const";
+import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
 import type {
   DuplicateResolution,
   EnrichedCategorization,
   ImportResult,
+  ImportRowOutcome,
 } from "@/features/csv-import/types/import-types";
 
-interface UseTransactionImportOptions {
+type UseTransactionImportOptions = {
   accountId: string | undefined;
   categorizations: EnrichedCategorization[];
+  importAttemptId: string;
+  preImportFailedOutcomes: ImportRowOutcome[];
   resolutions: DuplicateResolution[];
   setImportResult: (result: ImportResult) => void;
   onComplete: () => void;
-}
+};
 
-interface UseTransactionImportReturn {
+type UseTransactionImportReturn = {
   importTransactions: () => Promise<void>;
   isImporting: boolean;
-}
+};
 
 export function useTransactionImport({
   accountId,
   categorizations,
+  importAttemptId,
+  preImportFailedOutcomes,
   resolutions,
   setImportResult,
   onComplete,
@@ -36,82 +42,131 @@ export function useTransactionImport({
     isImportingRef.current = true;
 
     if (!accountId) {
-      setImportResult({
-        importedCount: 0,
-        skippedCount: 0,
-        errorCount: categorizations.length,
-        errors: [{ row: 0, message: "No account selected" }],
-      });
+      setImportResult(
+        buildImportResult(
+          preImportFailedOutcomes.concat(
+            categorizations.map((categorization) => ({
+              csvRowIndex: categorization.csvRowIndex,
+              reason: "No account selected.",
+              status: "failed" as const,
+            })),
+          ),
+        ),
+      );
       isImportingRef.current = false;
       return;
     }
 
-    const rowsToImport = categorizations.filter((cat) => {
+    const skippedOutcomes: ImportRowOutcome[] = [];
+    const rowsToImport = categorizations.filter((categorization) => {
       const resolution = resolutions.find(
-        (r) => r.csvIndex === cat.csvRowIndex,
+        (item) => item.csvIndex === categorization.csvRowIndex,
       );
-      if (resolution?.action === Resolution.Skip) return false;
-      return true;
+      if (resolution?.action !== Resolution.Skip) return true;
+
+      skippedOutcomes.push({
+        csvRowIndex: categorization.csvRowIndex,
+        reason: "Skipped during duplicate review.",
+        status: "skipped",
+      });
+      return false;
     });
 
     if (rowsToImport.length === 0) {
-      setImportResult({
-        importedCount: 0,
-        skippedCount: categorizations.length,
-        errorCount: 0,
-        errors: [],
-      });
+      setImportResult(
+        buildImportResult([...preImportFailedOutcomes, ...skippedOutcomes]),
+      );
       onComplete();
       isImportingRef.current = false;
       return;
     }
 
+    const outcomes = [...preImportFailedOutcomes, ...skippedOutcomes];
     try {
-      const result = await bulkImportMutation.mutateAsync({
-        accountId,
-        transactions: rowsToImport.map((cat) => ({
-          date: cat.date,
-          amount: cat.amount,
-          payee: cat.payee,
-          notes: cat.notes || undefined,
-          categoryId: cat.categoryId,
-          transactionTypeId: cat.transactionTypeId,
-        })),
-      });
+      for (
+        let start = 0;
+        start < rowsToImport.length;
+        start += CSV_IMPORT_CONFIG.BATCH_LIMITS.BULK_IMPORT
+      ) {
+        const batch = rowsToImport.slice(
+          start,
+          start + CSV_IMPORT_CONFIG.BATCH_LIMITS.BULK_IMPORT,
+        );
 
-      setImportResult({
-        importedCount: result.imported,
-        skippedCount: 0,
-        errorCount: result.errors.length,
-        errors: result.errors.map((err) => ({
-          row: 0,
-          message: err,
-        })),
-      });
-      onComplete();
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Import failed";
-      setImportResult({
-        importedCount: 0,
-        skippedCount: 0,
-        errorCount: rowsToImport.length,
-        errors: [{ row: 0, message }],
-      });
+        try {
+          const result = await bulkImportMutation.mutateAsync({
+            accountId,
+            transactions: batch.map((categorization) => {
+              const resolution = resolutions.find(
+                (item) => item.csvIndex === categorization.csvRowIndex,
+              );
+
+              return {
+                amount: categorization.amount,
+                categoryId: categorization.categoryId,
+                csvRowIndex: categorization.csvRowIndex,
+                date: categorization.date,
+                duplicateResolution:
+                  resolution?.action === Resolution.Import
+                    ? ("import" as const)
+                    : undefined,
+                idempotencyKey: `${importAttemptId}:${categorization.csvRowIndex}`,
+                notes: categorization.notes || undefined,
+                payee: categorization.payee,
+                transactionTypeId: categorization.transactionTypeId,
+              };
+            }),
+          });
+          outcomes.push(...result.outcomes);
+        } catch (error: unknown) {
+          const reason =
+            error instanceof Error ? error.message : "Import failed.";
+          outcomes.push(
+            ...batch.map((categorization) => ({
+              csvRowIndex: categorization.csvRowIndex,
+              reason,
+              status: "failed" as const,
+            })),
+          );
+        }
+      }
+
+      setImportResult(buildImportResult(outcomes));
       onComplete();
     } finally {
       isImportingRef.current = false;
     }
   }, [
     accountId,
+    bulkImportMutation,
     categorizations,
+    importAttemptId,
+    onComplete,
+    preImportFailedOutcomes,
     resolutions,
     setImportResult,
-    onComplete,
-    bulkImportMutation,
   ]);
 
   return {
     importTransactions,
     isImporting: bulkImportMutation.isPending,
   };
+}
+
+function buildImportResult(outcomes: ImportRowOutcome[]): ImportResult {
+  return [...outcomes]
+    .sort((first, second) => first.csvRowIndex - second.csvRowIndex)
+    .reduce<ImportResult>(
+      (result, outcome) => ({
+        ...result,
+        errorCount: result.errorCount + (outcome.status === "failed" ? 1 : 0),
+        importedCount:
+          result.importedCount + (outcome.status === "imported" ? 1 : 0),
+        outcomes: [...result.outcomes, outcome],
+        skippedCount:
+          result.skippedCount +
+          (outcome.status === "skipped" || outcome.status === "duplicate" ? 1 : 0),
+      }),
+      { errorCount: 0, importedCount: 0, outcomes: [], skippedCount: 0 },
+    );
 }

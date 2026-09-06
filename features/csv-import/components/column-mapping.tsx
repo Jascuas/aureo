@@ -17,6 +17,7 @@ import type {
   AmountFormat,
   ColumnDetectionResult,
   DateFormat,
+  ImportTemplate,
   ParsedCSVRow,
 } from "@/features/csv-import/types/import-types";
 
@@ -27,9 +28,11 @@ type ColumnMappingProps = {
   detectionResult?: ColumnDetectionResult;
   onMappingChange: (mapping: Record<string, number>) => void;
   onFormatChange: (dateFormat: DateFormat, amountFormat: AmountFormat) => void;
-  onSaveTemplate?: (name: string) => void;
-  onLoadTemplate?: (templateId: string) => void;
+  onLoadTemplate?: (template: ImportTemplate) => void;
 };
+
+const isColumnType = (value: string): value is ColumnType =>
+  Object.values(ColumnType).some((columnType) => columnType === value);
 
 export const ColumnMapping = ({
   accountId,
@@ -110,6 +113,37 @@ export const ColumnMapping = ({
     }
   });
 
+  const handleLoadTemplate = (template: ImportTemplate) => {
+    const templateMapping = Object.entries(template.columnMapping).reduce<
+      Record<number, ColumnType>
+    >((nextMapping, [columnType, columnIndex]) => {
+      if (
+        Number.isInteger(columnIndex) &&
+        columnIndex >= 0 &&
+        columnIndex < headers.length &&
+        isColumnType(columnType) &&
+        columnType !== ColumnType.Unknown
+      ) {
+        nextMapping[columnIndex] = columnType;
+      }
+      return nextMapping;
+    }, {});
+    const templateReverseMapping = Object.entries(templateMapping).reduce<
+      Record<string, number>
+    >((nextMapping, [columnIndex, columnType]) => {
+      nextMapping[columnType] = Number(columnIndex);
+      return nextMapping;
+    }, {});
+
+    setMapping(templateMapping);
+    if (onLoadTemplate) {
+      onLoadTemplate({ ...template, columnMapping: templateReverseMapping });
+      return;
+    }
+    onMappingChange(templateReverseMapping);
+    onFormatChange(template.dateFormat, template.amountFormat);
+  };
+
   return (
     <div className="space-y-6">
       <ColumnPreview
@@ -176,7 +210,7 @@ export const ColumnMapping = ({
         columnMapping={reverseMapping}
         detectionResult={detectionResult}
         disableSave={validationErrors.length > 0}
-        onLoadTemplate={onLoadTemplate}
+        onLoadTemplate={handleLoadTemplate}
       />
     </div>
   );

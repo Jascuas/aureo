@@ -7,6 +7,7 @@ import { ReviewStep } from "@/features/csv-import/components/ai-import-steps/rev
 import { UploadStep } from "@/features/csv-import/components/ai-import-steps/upload-step";
 import { ImportStep } from "@/features/csv-import/const/import-const";
 import { useImportSession } from "@/features/csv-import/hooks/use-import-session";
+import { templateToDetectionResult } from "@/features/csv-import/lib/template-applier";
 import { useDuplicateResolutionActions } from "@/features/csv-import/store/duplicate-resolution";
 
 interface AiImportStepContentProps {
@@ -68,6 +69,12 @@ export const AiImportStepContent = memo(function AiImportStepContent({
               dateFormat,
               amountFormat,
             });
+          }}
+          onLoadTemplate={(template) => {
+            setFinalMapping(template.columnMapping);
+            setDetectionResult(
+              templateToDetectionResult(template, csvData.headers),
+            );
           }}
         />
       );

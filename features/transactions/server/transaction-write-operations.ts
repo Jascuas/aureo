@@ -13,7 +13,7 @@ import { ensureOwnedReferences } from "./owned-references";
 
 export type TransactionWriteValues = Omit<
   InferInsertModel<typeof transactions>,
-  "id" | "transactionTypeId"
+  "id" | "importKey" | "transactionTypeId"
 > & {
   transactionTypeId: SupportedTransactionTypeId;
 };
@@ -56,11 +56,18 @@ const transactionReferences = (
 });
 
 const normalizeTransactionWriteValues = (
-  values: TransactionWriteValues,
-): TransactionWriteValues => ({
-  ...values,
-  amount: normalizeTransactionAmount(values.transactionTypeId, values.amount),
-});
+  values: TransactionWriteValues & { importKey?: unknown },
+): TransactionWriteValues => {
+  const { importKey: _importKey, ...transactionValues } = values;
+
+  return {
+    ...transactionValues,
+    amount: normalizeTransactionAmount(
+      transactionValues.transactionTypeId,
+      transactionValues.amount,
+    ),
+  };
+};
 
 const transactionProjection = {
   id: transactions.id,
