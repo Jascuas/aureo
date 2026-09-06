@@ -42,9 +42,11 @@ export function DataTable<TData, TValue>({
   disabled,
 }: DataTableProps<TData, TValue>) {
   const [ConfirmDialog, confirm] = useConfirm(
-    "Are you sure?",
-    "You are about to perform a bulk delete.",
+    "¿Estás seguro?",
+    "Vas a eliminar los elementos seleccionados.",
   );
+  const filterLabel =
+    { name: "nombre", payee: "beneficiario" }[filterKey] ?? filterKey;
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
@@ -73,7 +75,7 @@ export function DataTable<TData, TValue>({
 
       <div className="flex items-center py-4">
         <Input
-          placeholder={`Filter ${filterKey}...`}
+          placeholder={`Filtrar ${filterLabel}...`}
           value={(table.getColumn(filterKey)?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn(filterKey)?.setFilterValue(event.target.value)
@@ -97,7 +99,7 @@ export function DataTable<TData, TValue>({
             }}
           >
             <Trash className="mr-2 size-4" />
-            Delete ({table.getFilteredSelectedRowModel().rows.length})
+            Eliminar ({table.getFilteredSelectedRowModel().rows.length})
           </Button>
         )}
       </div>
@@ -145,7 +147,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sin resultados.
                 </TableCell>
               </TableRow>
             )}
@@ -155,8 +157,8 @@ export function DataTable<TData, TValue>({
 
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+          Seleccionadas: {table.getFilteredSelectedRowModel().rows.length} de{" "}
+          {table.getFilteredRowModel().rows.length}
         </div>
       </div>
     </div>
