@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { MatchType } from "@/features/csv-import/const/import-const";
+import { CSV_IMPORT_CONFIG } from "@/features/csv-import/lib/config";
 import {
   createCsvImportAnalysisOperations,
   type CsvImportAnalysisDependencies,
@@ -16,6 +17,60 @@ const maximumImport = Array.from({ length: 1_000 }, (_, csvRowIndex) => ({
   date: "2026-09-06",
   payee: `Payee ${csvRowIndex}`,
 }));
+
+const PERSISTENCE_ROUND_TRIP_DELAY_MS = 1;
+
+const waitForPersistenceRoundTrip = () =>
+  new Promise<void>((resolve) => {
+    setTimeout(resolve, PERSISTENCE_ROUND_TRIP_DELAY_MS);
+  });
+
+const measureLegacyPersistencePipeline = async (inputSize: number) => {
+  const startedAt = performance.now();
+
+  for (let index = 0; index < inputSize; index += 1) {
+    await waitForPersistenceRoundTrip(); // Exact duplicate lookup.
+  }
+  for (let index = 0; index < inputSize; index += 1) {
+    await waitForPersistenceRoundTrip(); // Fuzzy duplicate lookup.
+  }
+  for (let index = 0; index < inputSize; index += 1) {
+    await waitForPersistenceRoundTrip(); // Exact payee lookup.
+  }
+  for (let index = 0; index < inputSize; index += 1) {
+    await waitForPersistenceRoundTrip(); // Fuzzy payee lookup.
+  }
+  for (let index = 0; index < inputSize; index += 1) {
+    await waitForPersistenceRoundTrip(); // Few-shot example lookup.
+  }
+  for (let index = 0; index < inputSize; index += 1) {
+    await waitForPersistenceRoundTrip(); // Transaction-type lookup.
+  }
+  for (
+    let index = 0;
+    index < Math.ceil(inputSize / CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION);
+    index += 1
+  ) {
+    await waitForPersistenceRoundTrip(); // Per-batch category lookup.
+  }
+
+  return {
+    elapsedMs: performance.now() - startedAt,
+    inputSize,
+    persistencePhases: [
+      "duplicate_exact_per_row",
+      "duplicate_fuzzy_per_row",
+      "payee_exact_per_row",
+      "payee_fuzzy_per_row",
+      "few_shot_per_row",
+      "transaction_type_per_row",
+      "categories_per_ai_batch",
+    ],
+    persistenceQueryCount:
+      inputSize * 6 +
+      Math.ceil(inputSize / CSV_IMPORT_CONFIG.BATCH_LIMITS.CATEGORIZATION),
+  };
+};
 
 test("preserves fuzzy duplicate amount bounds for negative and positive values", () => {
   assert.deepEqual(getFuzzyAmountBounds(-10_001), {
@@ -181,6 +236,74 @@ test("analyzes a maximum-size import with six persistence phases, not row querie
     ],
     persistenceQueryCount: 6,
   }]);
+});
+
+test("records representative maximum-size persistence evidence before and after batching", async () => {
+  const before = await measureLegacyPersistencePipeline(maximumImport.length);
+  const metrics: CsvImportAnalysisMetrics[] = [];
+  const dependencies: CsvImportAnalysisDependencies = {
+    categorizeWithAI: async ({ transactions }) =>
+      transactions.map((transaction) => ({
+        csvRowIndex: transaction.csvRowIndex,
+        topSuggestion: { categoryId: "category-food", confidence: 0.9 },
+      })),
+    findExactDuplicateRows: async () => {
+      await waitForPersistenceRoundTrip();
+      return [];
+    },
+    findExactPayeeRows: async () => {
+      await waitForPersistenceRoundTrip();
+      return [];
+    },
+    findFewShotRows: async () => {
+      await waitForPersistenceRoundTrip();
+      return [];
+    },
+    findFuzzyDuplicateRows: async () => {
+      await waitForPersistenceRoundTrip();
+      return [];
+    },
+    findFuzzyPayeeRows: async () => {
+      await waitForPersistenceRoundTrip();
+      return [];
+    },
+    getUserCategories: async () => {
+      await waitForPersistenceRoundTrip();
+      return [{ id: "category-food", name: "Food" }];
+    },
+    now: () => performance.now(),
+    onComplete: (analysisMetrics) => metrics.push(analysisMetrics),
+  };
+  const { analyzeCsvImport } = createCsvImportAnalysisOperations(dependencies);
+
+  await analyzeCsvImport(
+    "user-1",
+    maximumImport satisfies TransactionForAnalysis[],
+  );
+
+  const [after] = metrics;
+  assert.ok(after);
+  assert.equal(before.inputSize, after.inputSize);
+  assert.equal(before.persistenceQueryCount, 6_034);
+  assert.equal(after.persistenceQueryCount, 6);
+  assert.equal(before.persistencePhases.length, 7);
+  assert.deepEqual(after.persistencePhases, [
+    "duplicate_exact",
+    "payee_exact",
+    "duplicate_fuzzy",
+    "payee_fuzzy",
+    "categories",
+    "few_shot_examples",
+  ]);
+  assert.ok(before.elapsedMs > after.elapsedMs);
+
+  console.info(
+    `CSV_IMPORT_ANALYSIS_PERFORMANCE_EVIDENCE=${JSON.stringify({
+      before,
+      after,
+      roundTripDelayMs: PERSISTENCE_ROUND_TRIP_DELAY_MS,
+    })}`,
+  );
 });
 
 test("records only the persistence phases executed for fully auto-resolved input", async () => {
