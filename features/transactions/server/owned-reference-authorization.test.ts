@@ -399,7 +399,7 @@ test("CSV import rejects foreign accounts, categories, and transaction types bef
         outcomes: [
           {
             csvRowIndex: 0,
-            reason: "The selected category is unavailable.",
+            reason: "La categoría seleccionada no está disponible.",
             status: "failed",
           },
         ],
@@ -455,18 +455,18 @@ test("CSV import returns one idempotent outcome per row and normalizes expense d
       outcomes: [
         {
           csvRowIndex: 2,
-          reason: "An identical transaction already exists in this account.",
+          reason: "Ya existe una transacción idéntica en esta cuenta.",
           status: "duplicate",
         },
         { csvRowIndex: 3, status: "imported" },
         {
           csvRowIndex: 4,
-          reason: "An identical transaction already exists in this account.",
+          reason: "Ya existe una transacción idéntica en esta cuenta.",
           status: "duplicate",
         },
         {
           csvRowIndex: 5,
-          reason: "This row could not be saved.",
+          reason: "No se ha podido guardar esta fila.",
           status: "failed",
         },
       ],

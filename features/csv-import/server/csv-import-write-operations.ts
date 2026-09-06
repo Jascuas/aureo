@@ -324,7 +324,7 @@ export const createCsvImportWriteOperations = (
       if (categoryId !== null && !ownedCategoryIds.has(categoryId)) {
         outcomes.push({
           csvRowIndex,
-          reason: "The selected category is unavailable.",
+          reason: "La categoría seleccionada no está disponible.",
           status: "failed",
         });
         continue;
@@ -341,7 +341,7 @@ export const createCsvImportWriteOperations = (
       if (existingTransaction) {
         outcomes.push({
           csvRowIndex,
-          reason: "An identical transaction already exists in this account.",
+          reason: "Ya existe una transacción idéntica en esta cuenta.",
           status: "duplicate",
         });
         continue;
@@ -357,7 +357,7 @@ export const createCsvImportWriteOperations = (
         if (writeResult === "already_imported") {
           outcomes.push({
             csvRowIndex,
-            reason: "This row was already imported by this import attempt.",
+            reason: "Esta fila ya se había importado en este intento.",
             status: "duplicate",
           });
           continue;
@@ -368,7 +368,7 @@ export const createCsvImportWriteOperations = (
       } catch {
         outcomes.push({
           csvRowIndex,
-          reason: "This row could not be saved.",
+          reason: "No se ha podido guardar esta fila.",
           status: "failed",
         });
       }

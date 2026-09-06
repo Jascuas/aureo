@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="es"
+      lang="es-ES"
       suppressHydrationWarning
       data-scroll-behavior="smooth"
     >
