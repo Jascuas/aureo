@@ -38,20 +38,20 @@ export const TimeSeriesChart = ({ onRetry, state }: ChartProps) => {
     <Card className="border-border h-full border drop-shadow-sm">
       <CardHeader className="flex justify-between space-y-2 p-4 pb-0 lg:flex-row lg:items-center lg:space-y-0 lg:p-6 lg:pb-0">
         <CardTitle className="line-clamp-1 text-xs">
-          <span className="text-crt-accent">▌</span> Transactions
+          <span className="text-crt-accent">▌</span> Transacciones
         </CardTitle>
         <div className="flex flex-wrap items-center gap-2">
           <GenericSelect
             value={groupBy}
             options={groupOptions}
-            placeholder="Group by"
+            placeholder="Agrupar por"
             onChange={onGroupChange}
           />
 
           <GenericSelect
             value={dataType}
             options={dataTypeOptions}
-            placeholder="Data"
+            placeholder="Datos"
             onChange={onDataTypeChange}
           />
         </div>

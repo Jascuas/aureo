@@ -42,11 +42,11 @@ const AccountsPage = () => {
       <Card className="border-border border drop-shadow-sm">
         <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
           <CardTitle className="line-clamp-1 text-xs">
-            <span className="text-crt-accent">▌</span> Accounts Page
+            <span className="text-crt-accent">▌</span> Página de cuentas
           </CardTitle>
 
           <Button size="sm" onClick={newAccount.onOpen}>
-            <Plus className="mr-2 size-4" /> Add new
+            <Plus className="mr-2 size-4" /> Añadir cuenta
           </Button>
         </CardHeader>
 
