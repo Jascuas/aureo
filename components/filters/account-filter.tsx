@@ -54,11 +54,11 @@ export const AccountFilter = () => {
       disabled={mounted && isLoading}
     >
       <SelectTrigger className="hover:border-crt-accent hover:text-crt-accent focus:border-crt-accent h-9 w-full rounded-none border border-white/40 bg-transparent px-3 text-[10px] font-bold tracking-[0.14em] text-white uppercase transition outline-none focus:ring-transparent focus:ring-offset-0 lg:w-auto">
-        <SelectValue placeholder="Select account" />
+        <SelectValue placeholder="Seleccionar cuenta" />
       </SelectTrigger>
 
       <SelectContent>
-        <SelectItem value="all">All accounts</SelectItem>
+        <SelectItem value="all">Todas las cuentas</SelectItem>
 
         {accounts?.map((account: Account) => (
           <SelectItem key={account.id} value={account.id}>

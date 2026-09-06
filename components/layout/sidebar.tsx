@@ -29,7 +29,7 @@ export const Sidebar = () => {
         <div className="border-border flex shrink-0 items-center gap-3 border-t p-4">
           <ClerkUserButton />
           <span className="text-muted-foreground text-2xs tracking-wide uppercase">
-            ACCOUNT
+            CUENTA
           </span>
         </div>
       </div>
