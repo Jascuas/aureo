@@ -4,54 +4,54 @@ import test from "node:test";
 import { createBalanceVerificationOperations } from "./balance-verification-operations";
 
 test("balance verification batches all user accounts in one persistence operation", async () => {
-  const requestedUsers: string[] = [];
+  const requests: Array<{ maximumAccounts: number; userId: string }> = [];
   const operations = createBalanceVerificationOperations({
-    listAccountBalances: async (userId) => {
-      requestedUsers.push(userId);
+    listAccountBalances: async (userId, maximumAccounts) => {
+      requests.push({ maximumAccounts, userId });
 
       return [
         {
-          accountId: "account-1",
-          accountName: "Healthy",
           calculatedBalanceMilliunits: 2_000,
           currentBalanceMilliunits: 2_000,
         },
         {
-          accountId: "account-2",
-          accountName: "Corrupt",
           calculatedBalanceMilliunits: 1_000,
           currentBalanceMilliunits: 2_500,
+        },
+        {
+          calculatedBalanceMilliunits: 4_000,
+          currentBalanceMilliunits: 4_000,
         },
       ];
     },
   });
 
-  const result = await operations.verifyBalances("user-1");
-
-  assert.deepEqual(requestedUsers, ["user-1"]);
-  assert.deepEqual(result.summary, {
-    corruptedAccounts: 1,
-    corruptionRate: "50.0%",
-    healthyAccounts: 1,
-    totalAccounts: 2,
-    totalCorruption: 1.5,
+  const result = await operations.verifyBalances({
+    maximumAccounts: 2,
+    userId: "user-1",
   });
-  assert.deepEqual(result.accounts, [
-    {
-      accountId: "account-1",
-      accountName: "Healthy",
-      calculatedBalance: 2,
-      currentBalance: 2,
-      difference: 0,
-      isValid: true,
+
+  assert.deepEqual(requests, [{ maximumAccounts: 2, userId: "user-1" }]);
+  assert.deepEqual(result, {
+    accountsInspected: 2,
+    accountsWithDiscrepancies: 1,
+    isTruncated: true,
+  });
+});
+
+test("balance verification caps an operator-supplied account limit", async () => {
+  const requests: Array<{ maximumAccounts: number; userId: string }> = [];
+  const operations = createBalanceVerificationOperations({
+    listAccountBalances: async (userId, maximumAccounts) => {
+      requests.push({ maximumAccounts, userId });
+      return [];
     },
-    {
-      accountId: "account-2",
-      accountName: "Corrupt",
-      calculatedBalance: 1,
-      currentBalance: 2.5,
-      difference: 1.5,
-      isValid: false,
-    },
-  ]);
+  });
+
+  await operations.verifyBalances({
+    maximumAccounts: 1_000,
+    userId: "user-1",
+  });
+
+  assert.deepEqual(requests, [{ maximumAccounts: 100, userId: "user-1" }]);
 });

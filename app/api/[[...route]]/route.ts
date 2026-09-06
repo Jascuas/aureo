@@ -6,7 +6,6 @@ import { requireAuth } from "@/lib/auth-middleware";
 import type { AppEnv } from "@/lib/hono-env";
 
 import accounts from "./accounts";
-import admin from "./admin";
 import categories from "./categories";
 import csvImport from "./csv-import";
 import summary from "./summary";
@@ -19,7 +18,6 @@ const app = new Hono<AppEnv>()
   .basePath("/api")
   .use("*", clerkMiddleware(), requireAuth)
   .route("/accounts", accounts)
-  .route("/admin", admin)
   .route("/categories", categories)
   .route("/csv-import", csvImport)
   .route("/summary", summary)

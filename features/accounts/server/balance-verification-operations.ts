@@ -3,105 +3,93 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "@/db/drizzle";
 import { transactionBalanceDeltaSql } from "@/db/helpers";
 import { accounts, transactions } from "@/db/schema";
-import { calculateTotalCorruptionMilliunits } from "@/features/accounts/lib/balance-reconciliation";
-import { convertAmountFromMilliunits } from "@/lib/utils";
 
 type BalanceVerificationPersistenceRow = {
-  accountId: string;
-  accountName: string;
   calculatedBalanceMilliunits: number;
   currentBalanceMilliunits: number;
 };
 
 type BalanceVerificationDependencies = {
-  listAccountBalances: (userId: string) => Promise<BalanceVerificationPersistenceRow[]>;
+  listAccountBalances: (
+    userId: string,
+    maximumAccounts: number,
+  ) => Promise<BalanceVerificationPersistenceRow[]>;
+};
+
+export type BalanceVerificationInput = {
+  maximumAccounts?: number;
+  userId: string;
 };
 
 export type BalanceVerificationResult = {
-  accounts: Array<{
-    accountId: string;
-    accountName: string;
-    calculatedBalance: number;
-    currentBalance: number;
-    difference: number;
-    isValid: boolean;
-  }>;
-  summary: {
-    corruptedAccounts: number;
-    corruptionRate: string;
-    healthyAccounts: number;
-    totalAccounts: number;
-    totalCorruption: number;
-  };
+  accountsWithDiscrepancies: number;
+  accountsInspected: number;
+  isTruncated: boolean;
 };
 
+const DEFAULT_MAXIMUM_ACCOUNTS = 100;
+const MAXIMUM_ACCOUNT_LIMIT = 100;
+
 const balanceVerificationDependencies: BalanceVerificationDependencies = {
-  listAccountBalances: (userId) =>
-    db
+  listAccountBalances: (userId, maximumAccounts) => {
+    const selectedAccounts = db.$with("selected_accounts").as(
+      db
+        .select({
+          accountId: accounts.id,
+          currentBalanceMilliunits: accounts.balance,
+        })
+        .from(accounts)
+        .where(eq(accounts.userId, userId))
+        .orderBy(accounts.id)
+        .limit(maximumAccounts + 1),
+    );
+
+    return db
+      .with(selectedAccounts)
       .select({
-        accountId: accounts.id,
-        accountName: accounts.name,
         calculatedBalanceMilliunits: sql<number>`COALESCE(${transactionBalanceDeltaSql}, 0)`.mapWith(Number),
-        currentBalanceMilliunits: sql<number>`COALESCE(${accounts.balance}, 0)`.mapWith(Number),
+        currentBalanceMilliunits: sql<number>`COALESCE(${selectedAccounts.currentBalanceMilliunits}, 0)`.mapWith(Number),
       })
-      .from(accounts)
-      .leftJoin(transactions, eq(transactions.accountId, accounts.id))
-      .where(eq(accounts.userId, userId))
-      .groupBy(accounts.id, accounts.name, accounts.balance),
+      .from(selectedAccounts)
+      .leftJoin(transactions, eq(transactions.accountId, selectedAccounts.accountId))
+      .groupBy(selectedAccounts.accountId, selectedAccounts.currentBalanceMilliunits)
+      .orderBy(selectedAccounts.accountId);
+  },
+};
+
+const resolveMaximumAccounts = (maximumAccounts?: number): number => {
+  if (maximumAccounts === undefined) {
+    return DEFAULT_MAXIMUM_ACCOUNTS;
+  }
+
+  return Math.min(Math.max(maximumAccounts, 1), MAXIMUM_ACCOUNT_LIMIT);
 };
 
 export const createBalanceVerificationOperations = (
   dependencies: BalanceVerificationDependencies = balanceVerificationDependencies,
 ) => ({
-  verifyBalances: async (userId: string): Promise<BalanceVerificationResult> => {
-    const verificationResults = (await dependencies.listAccountBalances(userId)).map(
-      ({
-        accountId,
-        accountName,
-        calculatedBalanceMilliunits,
-        currentBalanceMilliunits,
-      }) => {
-        const differenceMilliunits =
-          currentBalanceMilliunits - calculatedBalanceMilliunits;
-
-        return {
-          accountId,
-          accountName,
-          calculatedBalanceMilliunits,
-          currentBalanceMilliunits,
-          differenceMilliunits,
-          isValid: differenceMilliunits === 0,
-        };
-      },
+  verifyBalances: async ({
+    maximumAccounts,
+    userId,
+  }: BalanceVerificationInput): Promise<BalanceVerificationResult> => {
+    const resolvedMaximumAccounts = resolveMaximumAccounts(maximumAccounts);
+    const persistenceRows = await dependencies.listAccountBalances(
+      userId,
+      resolvedMaximumAccounts,
     );
-    const totalAccounts = verificationResults.length;
-    const corruptedAccounts = verificationResults.filter(({ isValid }) => !isValid).length;
-    const totalCorruptionMilliunits = calculateTotalCorruptionMilliunits(verificationResults);
+    const inspectedRows = persistenceRows.slice(0, resolvedMaximumAccounts);
+    const discrepancies = inspectedRows.map(
+      ({ calculatedBalanceMilliunits, currentBalanceMilliunits }) => ({
+        differenceMilliunits: currentBalanceMilliunits - calculatedBalanceMilliunits,
+      }),
+    );
 
     return {
-      summary: {
-        corruptedAccounts,
-        corruptionRate:
-          totalAccounts > 0
-            ? `${((corruptedAccounts / totalAccounts) * 100).toFixed(1)}%`
-            : "0%",
-        healthyAccounts: totalAccounts - corruptedAccounts,
-        totalAccounts,
-        totalCorruption: convertAmountFromMilliunits(totalCorruptionMilliunits),
-      },
-      accounts: verificationResults.map(
-        ({
-          calculatedBalanceMilliunits,
-          currentBalanceMilliunits,
-          differenceMilliunits,
-          ...account
-        }) => ({
-          ...account,
-          calculatedBalance: convertAmountFromMilliunits(calculatedBalanceMilliunits),
-          currentBalance: convertAmountFromMilliunits(currentBalanceMilliunits),
-          difference: convertAmountFromMilliunits(differenceMilliunits),
-        }),
-      ),
+      accountsWithDiscrepancies: discrepancies.filter(
+        ({ differenceMilliunits }) => differenceMilliunits !== 0,
+      ).length,
+      accountsInspected: inspectedRows.length,
+      isTruncated: persistenceRows.length > resolvedMaximumAccounts,
     };
   },
 });
