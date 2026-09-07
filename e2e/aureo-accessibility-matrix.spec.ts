@@ -139,7 +139,9 @@ test.describe("AUR-18 authenticated accessibility matrix", () => {
     await expect(page.getByLabel("Fecha")).toBeVisible();
     await expect(page.getByLabel("Cuenta")).toBeVisible();
     await expect(page.getByLabel("Tipo")).toBeVisible();
-    await expect(page.getByLabel("Importe")).toBeVisible();
+    await expect(
+      page.getByRole("textbox", { name: "Importe", exact: true }),
+    ).toBeVisible();
     await expect(
       transactionDialog.getByRole("button", { name: "Cambiar el signo del importe" }),
     ).toBeVisible();
