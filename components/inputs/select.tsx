@@ -1,7 +1,7 @@
 "use client";
 
-import { type AriaAttributes, useMemo } from "react";
-import ReactSelect, { type SingleValue } from "react-select";
+import { type AriaAttributes, forwardRef, useMemo } from "react";
+import ReactSelect, { type SelectInstance, type SingleValue } from "react-select";
 import CreatableSelect from "react-select/creatable";
 
 type SelectProps = {
@@ -17,19 +17,23 @@ type SelectProps = {
   "aria-invalid"?: AriaAttributes["aria-invalid"];
 };
 
-export const Select = ({
-  value,
-  onChange,
-  onCreate,
-  options = [],
-  disabled,
-  isClearable,
-  placeholder,
-  id,
-  "aria-describedby": ariaDescribedBy,
-  "aria-invalid": ariaInvalid,
-}: SelectProps) => {
-  const onSelect = (option: SingleValue<{ label: string; value: string }>) => {
+type SelectOption = { label: string; value: string };
+type SelectRef = SelectInstance<SelectOption, false>;
+
+export const Select = forwardRef<SelectRef, SelectProps>(
+  ({
+    value,
+    onChange,
+    onCreate,
+    options = [],
+    disabled,
+    isClearable,
+    placeholder,
+    id,
+    "aria-describedby": ariaDescribedBy,
+    "aria-invalid": ariaInvalid,
+  }, ref) => {
+  const onSelect = (option: SingleValue<SelectOption>) => {
     onChange(option?.value);
   };
 
@@ -91,8 +95,9 @@ export const Select = ({
   };
 
   return onCreate ? (
-    <CreatableSelect {...selectProps} onCreateOption={onCreate} />
+    <CreatableSelect {...selectProps} ref={ref} onCreateOption={onCreate} />
   ) : (
-    <ReactSelect {...selectProps} />
+    <ReactSelect {...selectProps} ref={ref} />
   );
-};
+});
+Select.displayName = "Select";

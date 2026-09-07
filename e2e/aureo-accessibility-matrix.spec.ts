@@ -43,6 +43,12 @@ test.describe("AUR-18 authenticated accessibility matrix", () => {
     await categoryFilters.click();
     const categoryDialog = page.getByRole("dialog");
     await expect(categoryDialog.getByRole("button", { name: "Cerrar" })).toBeVisible();
+    await expect(
+      categoryDialog.getByRole("combobox", { name: "Tipo de transacción" }),
+    ).toBeVisible();
+    await expect(
+      categoryDialog.getByRole("combobox", { name: "Principales categorías" }),
+    ).toBeVisible();
     await page.keyboard.press("Escape");
 
     const themeToggle = page.getByRole("button", { name: /Cambiar a tema/ });
@@ -137,6 +143,11 @@ test.describe("AUR-18 authenticated accessibility matrix", () => {
     await expect(
       transactionDialog.getByRole("button", { name: "Cambiar el signo del importe" }),
     ).toBeVisible();
+    await transactionDialog
+      .getByRole("button", { name: "Crear transacción" })
+      .click();
+    await expect(transactionDialog.getByRole("alert").first()).toBeVisible();
+    await expect(page.getByLabel("Cuenta")).toBeFocused();
     await page.keyboard.press("Escape");
 
     await page.goto("/transactions/upload?accountId=e2e-dashboard-positive");

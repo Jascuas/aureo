@@ -21,18 +21,20 @@ type DatePickerProps = {
   "aria-invalid"?: React.AriaAttributes["aria-invalid"];
 };
 
-export const DatePicker = ({
-  value,
-  onChange,
-  disabled,
-  id,
-  "aria-describedby": ariaDescribedBy,
-  "aria-invalid": ariaInvalid,
-}: DatePickerProps) => {
+export const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
+  ({
+    value,
+    onChange,
+    disabled,
+    id,
+    "aria-describedby": ariaDescribedBy,
+    "aria-invalid": ariaInvalid,
+  }, ref) => {
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button
+          ref={ref}
           disabled={disabled}
           id={id}
           aria-describedby={ariaDescribedBy}
@@ -58,4 +60,5 @@ export const DatePicker = ({
       </PopoverContent>
     </Popover>
   );
-};
+});
+DatePicker.displayName = "DatePicker";

@@ -1,5 +1,5 @@
 import { Info, MinusCircle, PlusCircle } from "lucide-react";
-import type { AriaAttributes } from "react";
+import { type AriaAttributes, forwardRef } from "react";
 import CurrencyInput from "react-currency-input-field";
 
 import {
@@ -20,15 +20,16 @@ type AmountInputProps = {
   "aria-invalid"?: AriaAttributes["aria-invalid"];
 };
 
-export const AmountInput = ({
-  value,
-  onChange,
-  placeholder,
-  disabled,
-  id,
-  "aria-describedby": ariaDescribedBy,
-  "aria-invalid": ariaInvalid,
-}: AmountInputProps) => {
+export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
+  ({
+    value,
+    onChange,
+    placeholder,
+    disabled,
+    id,
+    "aria-describedby": ariaDescribedBy,
+    "aria-invalid": ariaInvalid,
+  }, ref) => {
   const parsedValue = parseFloat(value);
   const isIncome = parsedValue > 0;
   const isExpense = parsedValue < 0;
@@ -67,6 +68,7 @@ export const AmountInput = ({
       </TooltipProvider>
 
       <CurrencyInput
+        ref={ref}
         prefix="€"
         className="flex h-10 min-h-11 w-full rounded-none border border-input bg-background px-3 py-2 pl-12 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         placeholder={placeholder}
@@ -81,4 +83,5 @@ export const AmountInput = ({
       />
     </div>
   );
-};
+});
+AmountInput.displayName = "AmountInput";
