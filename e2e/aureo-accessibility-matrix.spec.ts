@@ -55,12 +55,14 @@ test.describe("AUR-18 authenticated accessibility matrix", () => {
     await expect(themeToggle).toBeVisible();
 
     const initialTheme = await page.locator("html").getAttribute("class");
-    await themeToggle.click();
+    await themeToggle.focus();
+    await page.keyboard.press("Enter");
     await expect
       .poll(() => page.locator("html").getAttribute("class"))
       .not.toBe(initialTheme);
 
-    await themeToggle.click();
+    await themeToggle.focus();
+    await page.keyboard.press("Enter");
     await expect
       .poll(() => page.locator("html").getAttribute("class"))
       .toBe(initialTheme);

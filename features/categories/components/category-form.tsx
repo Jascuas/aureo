@@ -98,6 +98,7 @@ export const CategoryForm = ({
 
               <FormControl>
                 <Select
+                  ref={field.ref}
                   placeholder="Selecciona una categoría principal"
                   options={categoryOptions}
                   value={field.value}

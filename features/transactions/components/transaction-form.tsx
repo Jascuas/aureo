@@ -145,6 +145,7 @@ export const TransactionForm = ({
 
               <FormControl>
                 <DatePicker
+                  ref={field.ref}
                   value={field.value}
                   onChange={field.onChange}
                   disabled={disabled}
@@ -166,6 +167,7 @@ export const TransactionForm = ({
 
               <FormControl>
                 <Select
+                  ref={field.ref}
                   placeholder="Selecciona una cuenta"
                   options={accountOptions}
                   onCreate={onCreateAccount}
@@ -190,6 +192,7 @@ export const TransactionForm = ({
 
               <FormControl>
                 <Select
+                  ref={field.ref}
                   placeholder="Selecciona una categoría"
                   options={categoryOptions}
                   onCreate={onCreateCategory}
@@ -214,6 +217,7 @@ export const TransactionForm = ({
 
               <FormControl>
                 <GenericSelect
+                  ref={field.ref}
                   placeholder="Selecciona un tipo"
                   options={transactionTypeOptions}
                   value={field.value}
