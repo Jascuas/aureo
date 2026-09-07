@@ -66,9 +66,10 @@ export const Select = forwardRef<SelectRef, SelectProps>(
         backgroundColor: state.isFocused
           ? "var(--crt-accent)"
           : "var(--crt-surface)",
-        color: "var(--crt-fg)",
+        color: state.isFocused ? "var(--crt-accent-fg)" : "var(--crt-fg)",
         ":active": {
           backgroundColor: "var(--crt-accent)",
+          color: "var(--crt-accent-fg)",
         },
       }),
       input: (base: object) => ({

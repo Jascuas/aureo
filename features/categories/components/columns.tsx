@@ -2,8 +2,10 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { InferResponseType } from "hono";
+import { ArrowUpDown } from "lucide-react";
 
 import { Actions } from "@/app/(dashboard)/categories/actions";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { client } from "@/lib/hono";
 
@@ -37,7 +39,33 @@ export const columns: ColumnDef<ResponseType>[] = [
   },
   {
     accessorKey: "name",
-    header: "Nombre",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => {
+            const sorted = column.getIsSorted();
+
+            if (sorted === "desc") {
+              column.clearSorting();
+              return;
+            }
+
+            column.toggleSorting(sorted === "asc");
+          }}
+          aria-label={`Ordenar por nombre: ${
+            column.getIsSorted() === "asc"
+              ? "descendente"
+              : column.getIsSorted() === "desc"
+                ? "sin orden"
+                : "ascendente"
+          }`}
+        >
+          Nombre
+          <ArrowUpDown className="ml-2 h-4 w-4" aria-hidden="true" />
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       const hasParent = row.original.depth > 0;
       return (

@@ -38,7 +38,9 @@ test.describe("AUR-18 authenticated accessibility matrix", () => {
     await page.goto("/");
     await expect((await overTimeResponse).ok()).toBe(true);
 
-    const categoryFilters = page.getByRole("button", { name: "Filtros" });
+    const categoryFilters = page.getByRole("button", {
+      name: "Filtros de categorías",
+    });
     await expect(categoryFilters).toBeVisible();
     await categoryFilters.click();
     const categoryDialog = page.getByRole("dialog");
@@ -121,6 +123,21 @@ test.describe("AUR-18 authenticated accessibility matrix", () => {
       .getByRole("button", { name: "Ordenar por nombre: sin orden" })
       .press("Enter");
     await expect(nameHeader).toHaveAttribute("aria-sort", "none");
+
+    await page.goto("/categories");
+    const categoryNameSortButton = page.getByRole("button", {
+      name: /Ordenar por nombre:/,
+    });
+    const categoryNameHeader = page
+      .getByRole("columnheader")
+      .filter({ hasText: "Nombre" });
+    await expect(categoryNameHeader).toHaveAttribute("aria-sort", "none");
+    await categoryNameSortButton.focus();
+    await categoryNameSortButton.press("Enter");
+    await expect(categoryNameHeader).toHaveAttribute(
+      "aria-sort",
+      "ascending",
+    );
 
     await page.goto("/transactions");
     const dateFilter = page.getByRole("button").filter({ hasText: / - / }).first();
