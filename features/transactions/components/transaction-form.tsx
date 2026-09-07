@@ -80,7 +80,11 @@ export const TransactionForm = ({
   );
   const handleSubmit = (values: TransactionFormValues) => {
     if (!accountOptions.some((option) => option.value === values.accountId)) {
-      form.setError("accountId", { message: "Selecciona una cuenta válida." });
+      form.setError("accountId", {
+        message: "Selecciona una cuenta válida.",
+      }, {
+        shouldFocus: true,
+      });
       return;
     }
 
@@ -90,6 +94,8 @@ export const TransactionForm = ({
     ) {
       form.setError("categoryId", {
         message: "Selecciona una categoría válida o déjala vacía.",
+      }, {
+        shouldFocus: true,
       });
       return;
     }
@@ -101,6 +107,8 @@ export const TransactionForm = ({
     ) {
       form.setError("transactionTypeId", {
         message: "Selecciona un tipo de transacción válido.",
+      }, {
+        shouldFocus: true,
       });
       return;
     }

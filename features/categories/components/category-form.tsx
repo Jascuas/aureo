@@ -47,6 +47,8 @@ export const CategoryForm = ({
     ) {
       form.setError("parentId", {
         message: "Selecciona una categoría principal válida o déjala vacía.",
+      }, {
+        shouldFocus: true,
       });
       return;
     }
