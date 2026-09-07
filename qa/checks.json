@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "project": "aureo",
   "fixtures_version": "aureo-v1",
   "checks": {
@@ -7,25 +7,74 @@
       "command": "pnpm test:unit",
       "network": "none",
       "database": "stubbed adapters only",
-      "writes": "repository test artifacts only"
+      "writes": "repository test artifacts only",
+      "timeout_seconds": 300,
+      "result_codes": {
+        "product_failure": [
+          1
+        ],
+        "environment_failure": []
+      }
     },
     "db": {
       "command": "pnpm test:db",
       "network": "local Docker only",
       "database": "ephemeral postgres:16-alpine containers",
-      "writes": "ephemeral container databases; containers removed on exit"
+      "writes": "ephemeral container databases; containers removed on exit",
+      "timeout_seconds": 180,
+      "result_codes": {
+        "product_failure": [
+          1
+        ],
+        "environment_failure": []
+      }
     },
     "e2e": {
       "command": "pnpm test:e2e",
       "network": "reserved loopback server, dedicated Clerk development instance, validated Neon QA branch",
       "database": "validated managed-QA Neon branch",
-      "writes": "run-scoped synthetic fixtures and Playwright artifacts"
+      "writes": "run-scoped synthetic fixtures and Playwright artifacts",
+      "timeout_seconds": 900,
+      "result_codes": {
+        "product_failure": [],
+        "environment_failure": []
+      }
     },
     "fixtures": {
       "command": "pnpm qa:fixtures",
       "network": "validated Neon QA branch",
       "database": "validated managed-QA Neon branch",
-      "writes": "run-scoped two-owner accounts, categories, imports, and transactions only"
+      "writes": "run-scoped two-owner accounts, categories, imports, and transactions only",
+      "timeout_seconds": 60,
+      "result_codes": {
+        "product_failure": [],
+        "environment_failure": [
+          2
+        ]
+      }
     }
-  }
+  },
+  "order": [
+    "unit",
+    "db",
+    "fixtures",
+    "e2e"
+  ],
+  "required_checks": [
+    "unit",
+    "db",
+    "fixtures",
+    "e2e"
+  ],
+  "criterion_checks": [
+    {
+      "criterion": "*",
+      "checks": [
+        "unit",
+        "db",
+        "fixtures",
+        "e2e"
+      ]
+    }
+  ]
 }

@@ -10,7 +10,7 @@ test("QA catalog maps every tier to an explicit package command and effect contr
     readJson("../qa/checks.json"),
     readJson("../package.json"),
   ]);
-  assert.equal(catalog.version, 1);
+  assert.equal(catalog.version, 2);
   assert.equal(catalog.project, "aureo");
   assert.equal(catalog.fixtures_version, "aureo-v1");
   for (const check of Object.values(catalog.checks)) {

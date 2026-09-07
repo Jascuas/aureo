@@ -1,4 +1,4 @@
-import { mkdirSync } from "node:fs";
+import { chmodSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
 import { clerk, clerkSetup } from "@clerk/testing/playwright";
@@ -28,14 +28,14 @@ setup("authenticate the dedicated E2E user", async ({ page }) => {
   }
 
   const expectedUserId = getE2EClerkUserId();
-  const authenticatedUserId = await page.evaluate(() => {
+  await expect.poll(() => page.evaluate(() => {
     const browserClerk = (window as unknown as { Clerk?: { user?: { id?: string } } }).Clerk;
     return browserClerk?.user?.id ?? null;
-  });
-  expect(authenticatedUserId).toBe(expectedUserId);
+  }), { timeout: 10_000, message: "Clerk must hydrate the exact approved QA identity" }).toBe(expectedUserId);
 
   const protectedResponse = await page.request.get("/api/accounts");
   expect(protectedResponse.status()).toBe(200);
-  mkdirSync(dirname(E2E_STORAGE_STATE_PATH), { recursive: true });
+  mkdirSync(dirname(E2E_STORAGE_STATE_PATH), { recursive: true, mode: 0o700 });
   await page.context().storageState({ path: E2E_STORAGE_STATE_PATH });
+  chmodSync(E2E_STORAGE_STATE_PATH, 0o600);
 });

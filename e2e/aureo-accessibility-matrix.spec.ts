@@ -1,12 +1,20 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
+import { E2E_ENVIRONMENT } from "./environment";
+import { buildAureoQaFixture } from "./fixtures";
+
+const uploadAccountId = E2E_ENVIRONMENT.descriptor
+  ? buildAureoQaFixture(E2E_ENVIRONMENT.descriptor).accounts[0].id
+  : "e2e-dashboard-positive";
+const uploadRoute = `/transactions/upload?accountId=${encodeURIComponent(uploadAccountId)}`;
+
 const essentialRoutes = [
   "/",
   "/accounts",
   "/categories",
   "/transactions",
-  "/transactions/upload?accountId=e2e-dashboard-positive",
+  uploadRoute,
 ];
 
 const assertNoHorizontalOverflow = async (page: Page) => {
@@ -155,9 +163,9 @@ test.describe("AUR-18 authenticated accessibility matrix", () => {
     await addTransaction.click();
     const transactionDialog = page.getByRole("dialog");
     await expect(transactionDialog).toBeVisible();
-    await expect(page.getByLabel("Fecha")).toBeVisible();
-    await expect(page.getByLabel("Cuenta")).toBeVisible();
-    await expect(page.getByLabel("Tipo")).toBeVisible();
+    await expect(transactionDialog.getByLabel("Fecha", { exact: true })).toBeVisible();
+    await expect(transactionDialog.getByRole("combobox", { name: "Cuenta", exact: true })).toBeVisible();
+    await expect(transactionDialog.getByLabel("Tipo", { exact: true })).toBeVisible();
     await expect(
       page.getByRole("textbox", { name: "Importe", exact: true }),
     ).toBeVisible();
@@ -168,11 +176,11 @@ test.describe("AUR-18 authenticated accessibility matrix", () => {
       .getByRole("button", { name: "Crear transacción" })
       .click();
     await expect(transactionDialog.getByRole("alert").first()).toBeVisible();
-    await expect(page.getByLabel("Cuenta")).toBeFocused();
+    await expect(transactionDialog.getByRole("combobox", { name: "Cuenta", exact: true })).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(addTransaction).toBeFocused();
 
-    await page.goto("/transactions/upload?accountId=e2e-dashboard-positive");
+    await page.goto(uploadRoute);
     const csvInput = page.getByLabel("Subir archivo CSV");
     await expect(csvInput).toBeAttached();
     await csvInput.setInputFiles({
@@ -180,7 +188,7 @@ test.describe("AUR-18 authenticated accessibility matrix", () => {
       mimeType: "text/plain",
       buffer: Buffer.from("not a csv"),
     });
-    await expect(page.getByRole("alert")).toContainText("Sube un archivo CSV");
+    await expect(page.getByRole("main").getByRole("alert")).toContainText("Sube un archivo CSV");
     await assertNoHorizontalOverflow(page);
   });
 });
