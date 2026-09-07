@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "next dev -p 4000",
     "dev:e2e": "NEXT_PUBLIC_APP_URL=${PLAYWRIGHT_BASE_URL:-http://localhost:${PLAYWRIGHT_PORT:-4100}} next dev -p ${PLAYWRIGHT_PORT:-4100}",
-    "e2e:fixture": "node --experimental-strip-types scripts/seed-e2e-accounts.ts",
+    "test": "pnpm test:unit",
+    "test:unit": "node --experimental-strip-types --experimental-loader ./scripts/test-path-alias-loader.mjs --test 'app/api/[[...route]]/transactions.test.ts' components/dashboard/dashboard-data-state.test.ts features/accounts/lib/balance-reconciliation.test.ts features/accounts/server/balance-verification-operations.test.ts features/categories/lib/category-hierarchy.test.ts features/categories/server/category-write-operations.test.ts features/csv-import/api/get-api-error-message.test.ts features/csv-import/lib/import-result-feedback.test.ts features/csv-import/server/csv-import-analysis-operations.test.ts features/summary/lib/summary-contract.test.ts features/transactions/lib/transaction-form-schema.test.ts features/transactions/lib/transaction-list-input.test.ts features/transactions/server/owned-reference-authorization.test.ts lib/api-client-error.test.ts tests/qa/environment.test.ts tests/qa/fixtures.test.ts tests/qa/project-selection.test.ts && node --test scripts/test-qa-catalog.mjs",
+    "test:db": "node --experimental-strip-types scripts/test-migration-replay.ts && node --experimental-loader ./scripts/test-path-alias-loader.mjs scripts/test-transaction-type-sql.ts",
+    "qa:fixtures": "node --experimental-strip-types scripts/seed-qa-fixtures.ts",
+    "e2e:fixture": "pnpm qa:fixtures",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",

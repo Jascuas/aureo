@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "project": "aureo",
+  "fixtures_version": "aureo-v1",
+  "checks": {
+    "unit": {
+      "command": "pnpm test:unit",
+      "network": "none",
+      "database": "stubbed adapters only",
+      "writes": "repository test artifacts only"
+    },
+    "db": {
+      "command": "pnpm test:db",
+      "network": "local Docker only",
+      "database": "ephemeral postgres:16-alpine containers",
+      "writes": "ephemeral container databases; containers removed on exit"
+    },
+    "e2e": {
+      "command": "pnpm test:e2e",
+      "network": "reserved loopback server, dedicated Clerk development instance, validated Neon QA branch",
+      "database": "validated managed-QA Neon branch",
+      "writes": "run-scoped synthetic fixtures and Playwright artifacts"
+    },
+    "fixtures": {
+      "command": "pnpm qa:fixtures",
+      "network": "validated Neon QA branch",
+      "database": "validated managed-QA Neon branch",
+      "writes": "run-scoped two-owner accounts, categories, imports, and transactions only"
+    }
+  }
+}

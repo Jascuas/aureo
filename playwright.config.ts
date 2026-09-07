@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-import { E2E_BASE_URL, E2E_STORAGE_STATE_PATH } from "./e2e/environment";
+import { E2E_BASE_URL, E2E_PORT, E2E_STORAGE_STATE_PATH } from "./e2e/environment";
+import { AUTH_SETUP_TEST_MATCH,AUTHENTICATED_TEST_IGNORE } from "./e2e/project-selection";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -11,7 +12,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "pnpm dev:e2e",
+    command: `node_modules/.bin/next dev -p ${E2E_PORT}`,
     reuseExistingServer: false,
     timeout: 120_000,
     url: E2E_BASE_URL,
@@ -19,12 +20,12 @@ export default defineConfig({
   projects: [
     {
       name: "setup",
-      testMatch: "**/*.setup.ts",
+      testMatch: AUTH_SETUP_TEST_MATCH,
     },
     {
       name: "chromium",
       dependencies: ["setup"],
-      testIgnore: "**/*.setup.ts",
+      testIgnore: AUTHENTICATED_TEST_IGNORE,
       use: {
         ...devices["Desktop Chrome"],
         storageState: E2E_STORAGE_STATE_PATH,
@@ -33,7 +34,7 @@ export default defineConfig({
     {
       name: "iphone-13",
       dependencies: ["setup"],
-      testIgnore: "**/*.setup.ts",
+      testIgnore: AUTHENTICATED_TEST_IGNORE,
       use: {
         ...devices["iPhone 13"],
         browserName: "chromium",

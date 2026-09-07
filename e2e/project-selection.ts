@@ -1,0 +1,2 @@
+export const AUTH_SETUP_TEST_MATCH = /\.setup\.ts$/;
+export const AUTHENTICATED_TEST_IGNORE = AUTH_SETUP_TEST_MATCH;
