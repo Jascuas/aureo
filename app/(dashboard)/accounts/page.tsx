@@ -45,7 +45,11 @@ const AccountsPage = () => {
             <span className="text-crt-accent">▌</span> Página de cuentas
           </CardTitle>
 
-          <Button size="sm" onClick={newAccount.onOpen}>
+          <Button
+            size="sm"
+            onClick={newAccount.onOpen}
+            className="w-full lg:w-auto"
+          >
             <Plus className="mr-2 size-4" /> Añadir cuenta
           </Button>
         </CardHeader>

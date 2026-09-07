@@ -12,8 +12,10 @@ export const AccountColumn = ({ account, accountId }: AccountColumnProps) => {
 
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="flex cursor-pointer items-center hover:underline"
+      className="flex min-h-11 cursor-pointer items-center text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0"
+      aria-label={`Editar cuenta ${account}`}
     >
       {account}
     </button>

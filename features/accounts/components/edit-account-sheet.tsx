@@ -13,11 +13,13 @@ import { useGetAccount } from "@/features/accounts/api/use-get-account";
 import { useOpenAccount } from "@/features/accounts/hooks/use-open-account";
 import type { AccountFormValues } from "@/features/accounts/lib/account-form-schema";
 import { useConfirm } from "@/hooks/use-confirm";
+import { useFocusRestoration } from "@/hooks/use-focus-restoration";
 
 import { AccountForm } from "./account-form";
 
 export const EditAccountSheet = () => {
   const { isOpen, onClose, id } = useOpenAccount();
+  const focusRestoration = useFocusRestoration();
 
   const [ConfirmDialog, confirm] = useConfirm(
     "¿Quieres eliminar la cuenta?",
@@ -69,7 +71,11 @@ export const EditAccountSheet = () => {
           if (!open && !isPending) onClose();
         }}
       >
-        <SheetContent className="space-y-4">
+        <SheetContent
+          className="space-y-4"
+          onCloseAutoFocus={focusRestoration.onCloseAutoFocus}
+          onOpenAutoFocus={focusRestoration.onOpenAutoFocus}
+        >
           <SheetHeader>
             <SheetTitle>Editar cuenta</SheetTitle>
 

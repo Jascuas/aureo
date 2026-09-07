@@ -41,7 +41,7 @@ const STATUS_LABELS: Record<ImportStepStatus, string> = {
 const STATUS_CLASSES: Record<ImportStepStatus, string> = {
   completed: "border-crt-pos bg-crt-pos text-background",
   active:
-    "border-crt-accent bg-crt-accent text-background ring-2 ring-crt-accent/30",
+    "border-crt-accent bg-accent text-accent-foreground ring-2 ring-crt-accent/30",
   available: "border-crt-accent bg-card text-crt-accent",
   blocked: "border-border bg-card text-muted-foreground",
   failed:
@@ -96,7 +96,7 @@ export const ImportStepper = ({
                   onClick={() => isClickable && onStepClick(step.key)}
                   disabled={!isClickable}
                   className={cn(
-                    "flex size-10 items-center justify-center rounded-none border transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                    "relative flex size-10 items-center justify-center rounded-none border transition-colors after:absolute after:-inset-0.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                     STATUS_CLASSES[status],
                     isClickable &&
                       "hover:border-crt-accent hover:text-crt-accent cursor-pointer",
@@ -110,7 +110,7 @@ export const ImportStepper = ({
                   <span className="block">{step.label}</span>
                   <span
                     className={cn(
-                      "mx-1 block w-max whitespace-nowrap text-3xs",
+                      "mx-1 block max-w-full text-3xs leading-tight break-words",
                       STATUS_TEXT_CLASSES[status],
                     )}
                   >

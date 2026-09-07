@@ -3,6 +3,7 @@
 import { ClerkUserButton } from "@/components/layout/clerk-user-button";
 import { HeaderLogo } from "@/components/layout/header-logo";
 import { Navigation } from "@/components/layout/navigation";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { useSidebarStore } from "@/lib/use-sidebar-store";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +28,7 @@ export const Sidebar = () => {
         </div>
 
         <div className="border-border flex shrink-0 items-center gap-3 border-t p-4">
+          <ThemeToggle />
           <ClerkUserButton />
           <span className="text-muted-foreground text-2xs tracking-wide uppercase">
             CUENTA

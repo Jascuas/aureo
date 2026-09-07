@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import qs from "query-string";
 import { useEffect, useState } from "react";
 import { type DateRange } from "react-day-picker";
+import { useMedia } from "react-use";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -35,6 +36,7 @@ export const DateFilter = () => {
   };
 
   const [date, setDate] = useState<DateRange | undefined>(paramState);
+  const isNarrowViewport = useMedia("(max-width: 640px)", false);
 
   // Sync local state when URL params change
   useEffect(() => {
@@ -79,14 +81,17 @@ export const DateFilter = () => {
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-full p-0 lg:w-auto" align="start">
+      <PopoverContent
+        className="w-[calc(100vw-2rem)] max-w-md p-0 lg:w-auto"
+        align="start"
+      >
         <Calendar
           disabled={false}
           mode="range"
           defaultMonth={date?.from}
           selected={date}
           onSelect={setDate}
-          numberOfMonths={2}
+          numberOfMonths={isNarrowViewport ? 1 : 2}
         />
 
         <div className="flex w-full items-center gap-x-2 p-4">

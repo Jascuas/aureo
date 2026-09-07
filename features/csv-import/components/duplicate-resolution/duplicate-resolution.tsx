@@ -16,6 +16,7 @@ import {
   useDuplicateResolutionActions,
 } from "@/features/csv-import/store/duplicate-resolution";
 import type { DuplicateResolutionProps } from "@/features/csv-import/types/import-types";
+import { useFocusRestoration } from "@/hooks/use-focus-restoration";
 
 import { ResolutionFooter } from "./resolution-footer";
 
@@ -26,6 +27,7 @@ export const DuplicateResolution = ({
 }: DuplicateResolutionProps) => {
   const { isOpen, currentDuplicate } = useDuplicateDialog();
   const { closeResolution, resolveAs } = useDuplicateResolutionActions();
+  const focusRestoration = useFocusRestoration();
 
   useResolutionKeyboard({
     isOpen,
@@ -53,7 +55,11 @@ export const DuplicateResolution = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeResolution()}>
-      <DialogContent className="!flex max-h-[calc(100dvh-2rem)] !w-[calc(100%-2rem)] max-w-3xl !flex-col gap-4 overflow-hidden !p-4 sm:max-h-[calc(100dvh-4rem)] sm:!w-full sm:!p-6">
+      <DialogContent
+        className="!flex max-h-[calc(100dvh-2rem)] !w-[calc(100%-2rem)] max-w-3xl !flex-col gap-4 overflow-hidden !p-4 sm:max-h-[calc(100dvh-4rem)] sm:!w-full sm:!p-6"
+        onCloseAutoFocus={focusRestoration.onCloseAutoFocus}
+        onOpenAutoFocus={focusRestoration.onOpenAutoFocus}
+      >
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>Se ha detectado una transacción duplicada</DialogTitle>

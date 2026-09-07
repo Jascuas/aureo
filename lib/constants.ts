@@ -10,5 +10,5 @@ export const SERIES_MAP: Record<DataType, AreaSeries[]> = {
     { key: "income", color: "var(--color-success)" },
     { key: "expenses", color: "var(--crt-accent)" },
   ],
-  balance: [{ key: "balance", color: "#3b82f6" }],
+  balance: [{ key: "balance", color: "var(--chart-1)" }],
 };

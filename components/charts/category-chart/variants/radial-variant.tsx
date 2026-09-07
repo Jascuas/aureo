@@ -7,7 +7,10 @@ import {
 
 import { formatCurrency } from "@/lib/utils";
 
-const COLORS = ["#0062FF", "#12C6FF", "#FF647F", "#FF9354"];
+const COLORS = Array.from(
+  { length: 4 },
+  (_, index) => `var(--crt-pie-${index + 1})`,
+);
 
 type RadialVariantProps = {
   data: {
@@ -33,7 +36,7 @@ export const RadialVariant = ({ data }: RadialVariantProps) => {
         <RadialBar
           label={{
             position: "insideStart",
-            fill: "#fff",
+            fill: "var(--crt-bg)",
             fontSize: "12px",
           }}
           background

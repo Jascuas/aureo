@@ -1,7 +1,7 @@
 "use client";
 
 import { Filter } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +47,12 @@ type Props = {
 export const CategoryChartFilterDialog = ({ value, onChange }: Props) => {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<CategoryFilterValue>(value);
+  const typeLabelId = useId();
+  const typeSelectId = useId();
+  const typeDescriptionId = useId();
+  const topLabelId = useId();
+  const topSelectId = useId();
+  const topDescriptionId = useId();
 
   // Sync draft whenever the dialog opens.
   useEffect(() => {
@@ -68,12 +74,13 @@ export const CategoryChartFilterDialog = ({ value, onChange }: Props) => {
         <Button
           size="sm"
           variant="outline"
+          aria-label="Filtros de categorías"
           className="relative h-9 gap-2 rounded-md px-3"
         >
           <Filter className="size-4" />
           <span className="hidden sm:inline">Filtros</span>
           {isDirty && (
-            <span className="bg-crt-accent absolute top-1 right-1 size-2 rounded-full" />
+            <span className="bg-accent absolute top-1 right-1 size-2 rounded-full" />
           )}
         </Button>
       </DialogTrigger>
@@ -89,7 +96,9 @@ export const CategoryChartFilterDialog = ({ value, onChange }: Props) => {
 
         <div className="flex flex-col gap-5 py-2">
           <div className="flex flex-col gap-2">
-            <Label>Tipo de transacción</Label>
+            <Label id={typeLabelId} htmlFor={typeSelectId}>
+              Tipo de transacción
+            </Label>
 
             <Select
               value={draft.type}
@@ -97,7 +106,11 @@ export const CategoryChartFilterDialog = ({ value, onChange }: Props) => {
                 setDraft((d) => ({ ...d, type: v as CategorySummaryType }))
               }
             >
-              <SelectTrigger>
+              <SelectTrigger
+                id={typeSelectId}
+                aria-labelledby={typeLabelId}
+                aria-describedby={typeDescriptionId}
+              >
                 <SelectValue />
               </SelectTrigger>
 
@@ -110,19 +123,25 @@ export const CategoryChartFilterDialog = ({ value, onChange }: Props) => {
               </SelectContent>
             </Select>
 
-            <p className="text-muted-foreground text-xs">
+            <p id={typeDescriptionId} className="text-muted-foreground text-xs">
               Los gastos incluyen devoluciones (se restan).
             </p>
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label>Principales categorías</Label>
+            <Label id={topLabelId} htmlFor={topSelectId}>
+              Principales categorías
+            </Label>
 
             <Select
               value={String(draft.top)}
               onValueChange={(v) => setDraft((d) => ({ ...d, top: Number(v) }))}
             >
-              <SelectTrigger>
+              <SelectTrigger
+                id={topSelectId}
+                aria-labelledby={topLabelId}
+                aria-describedby={topDescriptionId}
+              >
                 <SelectValue />
               </SelectTrigger>
 
@@ -135,7 +154,7 @@ export const CategoryChartFilterDialog = ({ value, onChange }: Props) => {
               </SelectContent>
             </Select>
 
-            <p className="text-muted-foreground text-xs">
+            <p id={topDescriptionId} className="text-muted-foreground text-xs">
               Las categorías restantes se agrupan en &quot;Otras&quot;.
             </p>
           </div>

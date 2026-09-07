@@ -28,7 +28,7 @@ const Progress = React.forwardRef<
       className="animate-sweep relative h-full flex-1 transition-all"
       style={{
         transform: `translateX(-${100 - (value || 0)}%)`,
-        background: "var(--crt-accent)",
+        background: "var(--crt-accent-bg)",
       }}
     />
   </ProgressPrimitive.Root>

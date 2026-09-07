@@ -78,12 +78,30 @@ export const AiPreviewTable = ({
       </div>
 
       <div className="border-border border">
-        <Table>
+        <Table
+          className="min-w-[720px]"
+          containerProps={{
+            role: "region",
+            "aria-label": "Previsualización de transacciones analizadas",
+            tabIndex: 0,
+          }}
+        >
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    aria-sort={
+                      header.column.getCanSort()
+                        ? header.column.getIsSorted() === "asc"
+                          ? "ascending"
+                          : header.column.getIsSorted() === "desc"
+                            ? "descending"
+                            : "none"
+                        : undefined
+                    }
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(

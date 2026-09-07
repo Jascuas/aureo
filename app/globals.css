@@ -19,13 +19,14 @@
   --color-muted: var(--crt-surface-2);
   --color-muted-foreground: var(--crt-muted);
   --color-success: var(--crt-pos);
-  --color-accent: var(--crt-accent);
-  --color-accent-foreground: var(--crt-fg);
+  --color-accent: var(--crt-accent-bg);
+  --color-accent-foreground: var(--crt-accent-fg);
   --color-destructive: var(--crt-neg);
-  --color-destructive-foreground: var(--crt-fg);
+  --color-destructive-foreground: var(--crt-neg-fg);
   --color-border: var(--crt-border);
   --color-input: var(--crt-surface-2);
   --color-ring: var(--crt-accent);
+  --color-overlay: var(--crt-overlay);
 
   /* ── CRT chromatic tokens — text-crt-*, border-crt-*, bg-crt-* ── */
   --color-crt-accent: var(--crt-accent);
@@ -69,9 +70,13 @@
     --crt-muted: oklch(48% 0.005 85);
     --crt-dim: oklch(62% 0.005 85);
     --crt-border: oklch(78% 0.008 85);
+    --crt-overlay: oklch(18% 0.01 85);
     --crt-accent: oklch(46% 0.27 25);
+    --crt-accent-bg: oklch(46% 0.27 25);
+    --crt-accent-fg: oklch(100% 0 0);
     --crt-pos: oklch(36% 0.21 145);
     --crt-neg: oklch(48% 0.24 25);
+    --crt-neg-fg: oklch(100% 0 0);
     --crt-amber: oklch(44% 0.18 75);
 
     /* ── Pie chart palette — 15 steps, amber/green/cyan/blue/violet ── */
@@ -105,12 +110,16 @@
     --crt-surface: oklch(7.5% 0 0);
     --crt-surface-2: oklch(13% 0 0);
     --crt-fg: oklch(92% 0 0);
-    --crt-muted: oklch(50% 0 0);
+    --crt-muted: oklch(60% 0 0);
     --crt-dim: oklch(34% 0 0);
     --crt-border: oklch(22% 0 0);
-    --crt-accent: oklch(56% 0.27 25);
+    --crt-overlay: oklch(0% 0 0);
+    --crt-accent: oklch(64% 0.20 25);
+    --crt-accent-bg: oklch(48% 0.24 25);
+    --crt-accent-fg: oklch(100% 0 0);
     --crt-pos: oklch(72% 0.21 145);
     --crt-neg: oklch(62% 0.24 25);
+    --crt-neg-fg: oklch(0% 0 0);
     --crt-amber: oklch(76% 0.16 75);
 
     /* ── Pie chart palette — 15 steps, amber/green/cyan/blue/violet ── */
@@ -162,6 +171,11 @@
     overflow-x: hidden;
   }
 
+  :focus-visible {
+    outline: 2px solid var(--crt-accent);
+    outline-offset: 2px;
+  }
+
   /* ── CRT scanlines ── */
   body::before {
     content: "";
@@ -173,8 +187,8 @@
       0deg,
       transparent,
       transparent 2px,
-      rgba(0, 0, 0, 0.07) 2px,
-      rgba(0, 0, 0, 0.07) 3px
+      color-mix(in oklch, var(--crt-fg) 7%, transparent) 2px,
+      color-mix(in oklch, var(--crt-fg) 7%, transparent) 3px
     );
   }
 }
@@ -298,7 +312,7 @@
     background: linear-gradient(
       to bottom,
       transparent 0%,
-      oklch(56% 0.27 25 / 0.08) 50%,
+      color-mix(in oklch, var(--crt-accent) 8%, transparent) 50%,
       transparent 100%
     );
     animation: scan 8s linear infinite;
@@ -309,33 +323,33 @@
   /* ── Background grid ── */
   .bg-grid {
     background-image:
-      linear-gradient(oklch(92% 0 0 / 0.06) 1px, transparent 1px),
-      linear-gradient(90deg, oklch(92% 0 0 / 0.06) 1px, transparent 1px);
+      linear-gradient(color-mix(in oklch, var(--crt-fg) 6%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in oklch, var(--crt-fg) 6%, transparent) 1px, transparent 1px);
     background-size: 48px 48px;
     background-position: -1px -1px;
   }
 
   /* ── Phosphor glow utilities ── */
   .glow-sm {
-    text-shadow: 0 0 4px oklch(92% 0 0 / 0.4);
+    text-shadow: 0 0 4px color-mix(in oklch, var(--crt-fg) 40%, transparent);
   }
   .glow-md {
-    text-shadow: 0 0 8px oklch(92% 0 0 / 0.6);
+    text-shadow: 0 0 8px color-mix(in oklch, var(--crt-fg) 60%, transparent);
   }
   .glow-acc {
     text-shadow:
-      0 0 6px oklch(56% 0.27 25 / 0.8),
-      0 0 12px oklch(56% 0.27 25 / 0.4);
+      0 0 6px color-mix(in oklch, var(--crt-accent) 80%, transparent),
+      0 0 12px color-mix(in oklch, var(--crt-accent) 40%, transparent);
   }
   .glow-pos {
     text-shadow:
-      0 0 6px oklch(72% 0.21 145 / 0.8),
-      0 0 12px oklch(72% 0.21 145 / 0.4);
+      0 0 6px color-mix(in oklch, var(--crt-pos) 80%, transparent),
+      0 0 12px color-mix(in oklch, var(--crt-pos) 40%, transparent);
   }
   .glow-neg {
     text-shadow:
-      0 0 6px oklch(62% 0.24 25 / 0.8),
-      0 0 12px oklch(62% 0.24 25 / 0.4);
+      0 0 6px color-mix(in oklch, var(--crt-neg) 80%, transparent),
+      0 0 12px color-mix(in oklch, var(--crt-neg) 40%, transparent);
   }
 
   /* ── Animation utility classes ── */
@@ -370,9 +384,8 @@
   *::before,
   *::after {
     scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation: none !important;
+    transition: none !important;
   }
 
   body::before,
@@ -457,10 +470,10 @@
   }
 
   .cl-formButtonPrimary {
-    background-color: var(--crt-accent) !important;
+    background-color: var(--crt-accent-bg) !important;
     border-color: var(--crt-accent) !important;
     border-radius: 0 !important;
-    color: var(--crt-bg) !important;
+    color: var(--crt-accent-fg) !important;
   }
 
   .cl-formButtonPrimary:hover,
@@ -531,8 +544,8 @@
    ───────────────────────────────────────── */
 
 ::selection {
-  background: var(--crt-accent);
-  color: var(--crt-bg);
+  background: var(--crt-accent-bg);
+  color: var(--crt-accent-fg);
 }
 
 /* ─────────────────────────────────────────

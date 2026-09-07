@@ -11,12 +11,14 @@ import { useCreateCategory } from "@/features/categories/api/use-create-category
 import { useGetCategories } from "@/features/categories/api/use-get-categories";
 import { useNewCategory } from "@/features/categories/hooks/use-new-category";
 import type { CategoryFormValues } from "@/features/categories/lib/category-form-schema";
+import { useFocusRestoration } from "@/hooks/use-focus-restoration";
 
 import { CategoryForm } from "./category-form";
 
 export const NewCategorySheet = () => {
   const { isOpen, onClose } = useNewCategory();
   const mutation = useCreateCategory();
+  const focusRestoration = useFocusRestoration();
 
   const categoriesQuery = useGetCategories();
   const categoryOptions =
@@ -40,7 +42,11 @@ export const NewCategorySheet = () => {
         if (!open && !mutation.isPending) onClose();
       }}
     >
-      <SheetContent className="space-y-4">
+      <SheetContent
+        className="space-y-4"
+        onCloseAutoFocus={focusRestoration.onCloseAutoFocus}
+        onOpenAutoFocus={focusRestoration.onOpenAutoFocus}
+      >
         <SheetHeader>
           <SheetTitle>Nueva categoría</SheetTitle>
 

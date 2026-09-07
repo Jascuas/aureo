@@ -5,14 +5,14 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-none text-[10px] font-bold uppercase tracking-[0.14em] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-40",
+  "inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-none text-[10px] font-bold uppercase tracking-[0.14em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-40",
   {
     variants: {
       variant: {
         default:
-          "border border-crt-accent bg-transparent text-crt-accent hover:bg-crt-accent hover:text-background",
+          "border border-crt-accent bg-transparent text-crt-accent hover:bg-accent hover:text-accent-foreground",
         destructive:
-          "border border-destructive bg-transparent text-destructive hover:bg-destructive hover:text-background",
+          "border border-destructive bg-transparent text-destructive hover:bg-destructive hover:text-destructive-foreground",
         outline:
           "border border-border bg-transparent text-foreground hover:border-crt-accent hover:text-crt-accent",
         secondary:
@@ -23,9 +23,9 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-9 px-4 py-2",
-        sm: "h-7 px-3",
+        sm: "h-11 px-3",
         lg: "h-11 px-8",
-        icon: "h-9 w-9",
+        icon: "h-11 w-11",
       },
     },
     defaultVariants: {

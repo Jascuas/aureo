@@ -87,7 +87,7 @@ export const FileUploadSection = ({
         onDragLeave={handleDragLeave}
         className={cn(
           'relative flex min-h-64 flex-col items-center justify-center border border-dashed bg-card p-6 text-center transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-crt-accent sm:p-12',
-          isDragging && 'border-crt-accent bg-crt-accent/5',
+          isDragging && 'border-crt-accent bg-accent/5',
           !isDragging && 'border-border hover:border-crt-accent',
           isProcessing && 'pointer-events-none opacity-50',
         )}

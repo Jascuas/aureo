@@ -36,7 +36,7 @@ export const PieVariant = ({ data }: PieVariantProps) => {
             outerRadius={90}
             innerRadius={60}
             paddingAngle={2}
-            fill="#8884d8"
+            fill="var(--crt-pie-1)"
             dataKey="value"
             labelLine={false}
           >

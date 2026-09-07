@@ -1,4 +1,5 @@
 import { Info, MinusCircle, PlusCircle } from "lucide-react";
+import { type AriaAttributes, forwardRef } from "react";
 import CurrencyInput from "react-currency-input-field";
 
 import {
@@ -14,14 +15,21 @@ type AmountInputProps = {
   onChange: (value: string | undefined) => void;
   placeholder?: string;
   disabled?: boolean;
+  id?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: AriaAttributes["aria-invalid"];
 };
 
-export const AmountInput = ({
-  value,
-  onChange,
-  placeholder,
-  disabled,
-}: AmountInputProps) => {
+export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
+  ({
+    value,
+    onChange,
+    placeholder,
+    disabled,
+    id,
+    "aria-describedby": ariaDescribedBy,
+    "aria-invalid": ariaInvalid,
+  }, ref) => {
   const parsedValue = parseFloat(value);
   const isIncome = parsedValue > 0;
   const isExpense = parsedValue < 0;
@@ -40,10 +48,11 @@ export const AmountInput = ({
           <TooltipTrigger asChild>
             <button
               type="button"
+              aria-label="Cambiar el signo del importe"
               onClick={onReverseValue}
               disabled={disabled}
               className={cn(
-                "bg-muted absolute left-1.5 top-1.5 flex items-center justify-center rounded-md p-2 text-muted-foreground transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50",
+                "bg-muted absolute top-0.5 left-0.5 flex size-11 items-center justify-center rounded-none p-2 text-muted-foreground transition hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50",
                 isIncome && "bg-crt-pos text-background hover:bg-crt-pos",
                 isExpense && "bg-destructive text-destructive-foreground hover:bg-destructive",
               )}
@@ -59,9 +68,13 @@ export const AmountInput = ({
       </TooltipProvider>
 
       <CurrencyInput
+        ref={ref}
         prefix="€"
-        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pl-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-10 min-h-11 w-full rounded-none border border-input bg-background px-3 py-2 pl-12 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         placeholder={placeholder}
+        id={id}
+        aria-describedby={ariaDescribedBy}
+        aria-invalid={ariaInvalid}
         value={value}
         decimalScale={2}
         decimalsLimit={2}
@@ -70,4 +83,5 @@ export const AmountInput = ({
       />
     </div>
   );
-};
+});
+AmountInput.displayName = "AmountInput";

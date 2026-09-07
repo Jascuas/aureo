@@ -37,17 +37,17 @@ export function PaginatedDataTable<TData, TValue>({
       />
 
       {/* Server-side pagination controls */}
-      <div className="flex items-center justify-between px-4">
+      <div className="flex flex-col gap-3 px-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center space-x-6 lg:space-x-8">
           {/* Page info */}
-          <div className="text-muted-foreground text-sm">
+          <div className="text-muted-foreground text-sm" role="status" aria-live="polite">
             Página {paginationInfo.currentPage} •{" "}
             {paginationInfo.totalItemsLoaded} elementos cargados
           </div>
         </div>
 
         {/* Navigation buttons */}
-        <div className="flex items-center space-x-2">
+        <div className="flex w-full items-center gap-2 sm:w-auto">
           <Button
             variant="outline"
             size="sm"
@@ -56,7 +56,8 @@ export function PaginatedDataTable<TData, TValue>({
               !paginationInfo.hasPreviousPage || paginationInfo.isLoading
             }
           >
-            Anterior
+            <span className="sm:hidden">Atrás</span>
+            <span className="hidden sm:inline">Anterior</span>
           </Button>
           <Button
             variant="outline"

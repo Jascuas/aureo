@@ -80,7 +80,11 @@ export const TransactionForm = ({
   );
   const handleSubmit = (values: TransactionFormValues) => {
     if (!accountOptions.some((option) => option.value === values.accountId)) {
-      form.setError("accountId", { message: "Selecciona una cuenta válida." });
+      form.setError("accountId", {
+        message: "Selecciona una cuenta válida.",
+      }, {
+        shouldFocus: true,
+      });
       return;
     }
 
@@ -90,6 +94,8 @@ export const TransactionForm = ({
     ) {
       form.setError("categoryId", {
         message: "Selecciona una categoría válida o déjala vacía.",
+      }, {
+        shouldFocus: true,
       });
       return;
     }
@@ -101,6 +107,8 @@ export const TransactionForm = ({
     ) {
       form.setError("transactionTypeId", {
         message: "Selecciona un tipo de transacción válido.",
+      }, {
+        shouldFocus: true,
       });
       return;
     }
@@ -133,8 +141,11 @@ export const TransactionForm = ({
           disabled={disabled}
           render={({ field }) => (
             <FormItem>
+              <FormLabel>Fecha</FormLabel>
+
               <FormControl>
                 <DatePicker
+                  ref={field.ref}
                   value={field.value}
                   onChange={field.onChange}
                   disabled={disabled}
@@ -156,6 +167,7 @@ export const TransactionForm = ({
 
               <FormControl>
                 <Select
+                  ref={field.ref}
                   placeholder="Selecciona una cuenta"
                   options={accountOptions}
                   onCreate={onCreateAccount}
@@ -180,6 +192,7 @@ export const TransactionForm = ({
 
               <FormControl>
                 <Select
+                  ref={field.ref}
                   placeholder="Selecciona una categoría"
                   options={categoryOptions}
                   onCreate={onCreateCategory}
@@ -204,6 +217,7 @@ export const TransactionForm = ({
 
               <FormControl>
                 <GenericSelect
+                  ref={field.ref}
                   placeholder="Selecciona un tipo"
                   options={transactionTypeOptions}
                   value={field.value}

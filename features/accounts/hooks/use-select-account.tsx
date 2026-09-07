@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCreateAccount } from "@/features/accounts/api/use-create-account";
 import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
+import { useFocusRestoration } from "@/hooks/use-focus-restoration";
 import type { Account } from "@/lib/api-types";
 
 type AccountOption = {
@@ -46,18 +47,24 @@ const AccountSelectionDialog = ({
   onSelectAccount,
   open,
   selectedAccountId,
-}: AccountSelectionDialogProps) => (
-  <Dialog
-    open={open}
-    onOpenChange={(isOpen) => {
-      if (!isOpen && !isAccountCreationPending) onCancel();
-    }}
-  >
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Selecciona una cuenta</DialogTitle>
-        <DialogDescription>Selecciona una cuenta para continuar.</DialogDescription>
-      </DialogHeader>
+}: AccountSelectionDialogProps) => {
+  const focusRestoration = useFocusRestoration();
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen && !isAccountCreationPending) onCancel();
+      }}
+    >
+      <DialogContent
+        onCloseAutoFocus={focusRestoration.onCloseAutoFocus}
+        onOpenAutoFocus={focusRestoration.onOpenAutoFocus}
+      >
+        <DialogHeader>
+          <DialogTitle>Selecciona una cuenta</DialogTitle>
+          <DialogDescription>Selecciona una cuenta para continuar.</DialogDescription>
+        </DialogHeader>
 
       {isAccountQueryLoading ? (
         <div className="flex justify-center py-4">
@@ -94,9 +101,10 @@ const AccountSelectionDialog = ({
           Confirmar
         </Button>
       </DialogFooter>
-    </DialogContent>
-  </Dialog>
-);
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export const useSelectAccount = (): [
   JSX.Element,

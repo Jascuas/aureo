@@ -1,5 +1,5 @@
 // components/GenericSelect.tsx
-import { ReactNode } from "react";
+import * as React from "react";
 
 import {
   Select,
@@ -18,22 +18,37 @@ type GenericSelectProps<T extends string> = {
   value: T;
   options: Option<T>[];
   placeholder?: string;
-  icon?: ReactNode;
+  icon?: React.ReactNode;
   onChange: (v: T) => void;
   disabled?: boolean;
+  id?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: React.AriaAttributes["aria-invalid"];
 };
 
-export function GenericSelect<T extends string>({
-  value,
-  options,
-  placeholder = "Select…",
-  icon,
-  onChange,
-  disabled,
-}: GenericSelectProps<T>) {
+function GenericSelectInner<T extends string>(
+  {
+    value,
+    options,
+    placeholder = "Select…",
+    icon,
+    onChange,
+    disabled,
+    id,
+    "aria-describedby": ariaDescribedBy,
+    "aria-invalid": ariaInvalid,
+  }: GenericSelectProps<T>,
+  ref: React.ForwardedRef<HTMLButtonElement>,
+) {
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger className="h-9 lg:w-auto">
+      <SelectTrigger
+        ref={ref}
+        id={id}
+        aria-describedby={ariaDescribedBy}
+        aria-invalid={ariaInvalid}
+        className="h-9 lg:w-auto"
+      >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
 
@@ -50,3 +65,9 @@ export function GenericSelect<T extends string>({
     </Select>
   );
 }
+
+export const GenericSelect = React.forwardRef(GenericSelectInner) as <
+  T extends string,
+>(
+  props: GenericSelectProps<T> & React.RefAttributes<HTMLButtonElement>,
+) => React.ReactElement;

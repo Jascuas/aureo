@@ -226,7 +226,9 @@ const getBalanceWindow = async (
 };
 
 // Stored timestamps represent UTC instants; convert to the reporting timezone before formatting.
-const summaryDaySql = sql<string>`to_char(${transactions.date} AT TIME ZONE 'UTC' AT TIME ZONE ${DATE_RANGE_TIME_ZONE}, 'YYYY-MM-DD')`;
+// Keep the constant as one SQL literal so SELECT/GROUP BY/ORDER BY share the same expression.
+const summaryTimeZoneSql = sql.raw(`'${DATE_RANGE_TIME_ZONE}'`);
+const summaryDaySql = sql<string>`to_char(${transactions.date} AT TIME ZONE 'UTC' AT TIME ZONE ${summaryTimeZoneSql}, 'YYYY-MM-DD')`;
 
 const toSummaryMetric = (
   currentMilliunits: number,

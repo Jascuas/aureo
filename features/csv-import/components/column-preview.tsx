@@ -41,7 +41,14 @@ export const ColumnPreview = ({
     <div className="space-y-2">
       <p className="text-sm font-medium">Previsualización corregida</p>
       <div className="overflow-x-auto border">
-        <Table>
+        <Table
+          className="min-w-[680px]"
+          containerProps={{
+            role: "region",
+            "aria-label": "Previsualización corregida",
+            tabIndex: 0,
+          }}
+        >
           <TableHeader>
             <TableRow>
               <TableHead className="w-20 text-center">Fila CSV</TableHead>

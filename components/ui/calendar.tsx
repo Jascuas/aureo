@@ -6,8 +6,6 @@ import * as React from "react";
 import {
   DayPicker,
   type DayPickerProps,
-  labelNext,
-  labelPrevious,
   useDayPicker,
 } from "react-day-picker";
 
@@ -107,7 +105,7 @@ function Calendar({
   const buttonNavClassName = buttonVariants({
     variant: "outline",
     className:
-      "absolute h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+      "absolute h-11 w-11 bg-transparent p-0 opacity-50 after:absolute after:-inset-1 hover:opacity-100",
   });
   const _buttonNextClassName = cn(
     buttonNavClassName,
@@ -128,7 +126,7 @@ function Calendar({
   );
   const _dayButtonClassName = cn(
     buttonVariants({ variant: "ghost" }),
-    "size-8 rounded-md p-0 font-normal transition-none aria-selected:opacity-100",
+    "relative size-8 rounded-md p-0 font-normal transition-none after:absolute after:-inset-2 aria-selected:opacity-100",
     props.dayButtonClassName,
   );
   const buttonRangeClassName =
@@ -144,7 +142,7 @@ function Calendar({
     props.rangeEndClassName,
   );
   const _rangeMiddleClassName = cn(
-    "bg-accent !text-foreground [&>button]:bg-transparent [&>button]:!text-foreground [&>button]:hover:bg-transparent [&>button]:hover:!text-foreground",
+    "bg-accent !text-accent-foreground [&>button]:bg-transparent [&>button]:!text-accent-foreground [&>button]:hover:bg-transparent [&>button]:hover:!text-accent-foreground",
     props.rangeMiddleClassName,
   );
   const _selectedClassName = cn(
@@ -343,16 +341,13 @@ function Nav({
     <nav className={cn("flex items-center", className)}>
       <Button
         variant="outline"
-        className="absolute left-0 h-7 w-7 bg-transparent p-0 opacity-80 hover:opacity-100"
+        className="absolute left-0 h-11 w-11 bg-transparent p-0 opacity-80 hover:opacity-100"
         type="button"
-        tabIndex={isPreviousDisabled ? undefined : -1}
         disabled={isPreviousDisabled}
         aria-label={
           navView === "years"
-            ? `Go to the previous ${
-                displayYears.to - displayYears.from + 1
-              } years`
-            : labelPrevious(previousMonth)
+            ? `Ir a los ${displayYears.to - displayYears.from + 1} años anteriores`
+            : "Ir al mes anterior"
         }
         onClick={handlePreviousClick}
       >
@@ -361,14 +356,13 @@ function Nav({
 
       <Button
         variant="outline"
-        className="absolute right-0 h-7 w-7 bg-transparent p-0 opacity-80 hover:opacity-100"
+        className="absolute right-0 h-11 w-11 bg-transparent p-0 opacity-80 hover:opacity-100"
         type="button"
-        tabIndex={isNextDisabled ? undefined : -1}
         disabled={isNextDisabled}
         aria-label={
           navView === "years"
-            ? `Go to the next ${displayYears.to - displayYears.from + 1} years`
-            : labelNext(nextMonth)
+            ? `Ir a los ${displayYears.to - displayYears.from + 1} años siguientes`
+            : "Ir al mes siguiente"
         }
         onClick={handleNextClick}
       >

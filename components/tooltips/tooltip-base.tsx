@@ -24,7 +24,7 @@ const TooltipItem = ({ label, value, color }: TooltipItemProps) => (
 );
 
 export const TooltipBase = ({ title, children }: TooltipBaseProps) => (
-  <div className="dark:bg-background overflow-hidden rounded-sm border bg-white shadow-sm">
+  <div className="overflow-hidden rounded-sm border bg-popover text-popover-foreground shadow-sm">
     <div className="bg-muted text-muted-foreground p-2 px-3 text-sm">
       {title}
     </div>

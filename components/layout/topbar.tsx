@@ -1,4 +1,5 @@
 import { Navigation } from "@/components/layout/navigation";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 export const Topbar = () => {
   return (
@@ -8,7 +9,10 @@ export const Topbar = () => {
         <span className="text-muted-foreground text-2xs tracking-widest uppercase">
           &gt; AUREO_
         </span>
-        <Navigation />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Navigation />
+        </div>
       </div>
     </header>
   );

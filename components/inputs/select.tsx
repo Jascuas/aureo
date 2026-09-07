@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import ReactSelect, { type SingleValue } from "react-select";
+import { type AriaAttributes, forwardRef, useMemo } from "react";
+import ReactSelect, { type SelectInstance, type SingleValue } from "react-select";
 import CreatableSelect from "react-select/creatable";
 
 type SelectProps = {
@@ -12,18 +12,28 @@ type SelectProps = {
   disabled?: boolean;
   isClearable?: boolean;
   placeholder?: string;
+  id?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: AriaAttributes["aria-invalid"];
 };
 
-export const Select = ({
-  value,
-  onChange,
-  onCreate,
-  options = [],
-  disabled,
-  isClearable,
-  placeholder,
-}: SelectProps) => {
-  const onSelect = (option: SingleValue<{ label: string; value: string }>) => {
+type SelectOption = { label: string; value: string };
+type SelectRef = SelectInstance<SelectOption, false>;
+
+export const Select = forwardRef<SelectRef, SelectProps>(
+  ({
+    value,
+    onChange,
+    onCreate,
+    options = [],
+    disabled,
+    isClearable,
+    placeholder,
+    id,
+    "aria-describedby": ariaDescribedBy,
+    "aria-invalid": ariaInvalid,
+  }, ref) => {
+  const onSelect = (option: SingleValue<SelectOption>) => {
     onChange(option?.value);
   };
 
@@ -33,41 +43,46 @@ export const Select = ({
 
   const selectProps = {
     placeholder,
-    className: "h-10 text-sm",
+    inputId: id,
+    "aria-describedby": ariaDescribedBy,
+    "aria-invalid": ariaInvalid,
+    className: "min-h-11 text-sm",
     styles: {
       control: (base: object) => ({
         ...base,
-        backgroundColor: "hsl(var(--background))",
-        borderColor: "hsl(var(--border))",
+        minHeight: 44,
+        backgroundColor: "var(--crt-bg)",
+        borderColor: "var(--crt-border)",
         ":hover": {
-          borderColor: "hsl(var(--border))",
+          borderColor: "var(--crt-accent)",
         },
       }),
       menu: (base: object) => ({
         ...base,
-        backgroundColor: "hsl(var(--popover))",
+        backgroundColor: "var(--crt-surface)",
       }),
       option: (base: object, state: { isFocused: boolean }) => ({
         ...base,
         backgroundColor: state.isFocused
-          ? "hsl(var(--accent))"
-          : "hsl(var(--popover))",
-        color: "hsl(var(--popover-foreground))",
+          ? "var(--crt-accent-bg)"
+          : "var(--crt-surface)",
+        color: state.isFocused ? "var(--crt-accent-fg)" : "var(--crt-fg)",
         ":active": {
-          backgroundColor: "hsl(var(--accent))",
+          backgroundColor: "var(--crt-accent-bg)",
+          color: "var(--crt-accent-fg)",
         },
       }),
       input: (base: object) => ({
         ...base,
-        color: "hsl(var(--foreground))",
+        color: "var(--crt-fg)",
       }),
       singleValue: (base: object) => ({
         ...base,
-        color: "hsl(var(--foreground))",
+        color: "var(--crt-fg)",
       }),
       placeholder: (base: object) => ({
         ...base,
-        color: "hsl(var(--muted-foreground))",
+        color: "var(--crt-muted)",
       }),
       indicatorSeparator: () => ({
         display: "none",
@@ -81,8 +96,9 @@ export const Select = ({
   };
 
   return onCreate ? (
-    <CreatableSelect {...selectProps} onCreateOption={onCreate} />
+    <CreatableSelect {...selectProps} ref={ref} onCreateOption={onCreate} />
   ) : (
-    <ReactSelect {...selectProps} />
+    <ReactSelect {...selectProps} ref={ref} />
   );
-};
+});
+Select.displayName = "Select";

@@ -67,7 +67,7 @@ export const PayeeChart = () => {
 
                   <div className="bg-muted relative h-2 w-full overflow-hidden rounded-full">
                     <div
-                      className={`absolute inset-y-0 left-0 rounded-full ${i === 0 ? "bg-crt-accent" : "bg-muted-foreground/30"}`}
+                      className={`absolute inset-y-0 left-0 rounded-full ${i === 0 ? "bg-accent" : "bg-muted-foreground/30"}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>

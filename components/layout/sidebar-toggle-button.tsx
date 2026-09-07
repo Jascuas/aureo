@@ -28,6 +28,9 @@ export const SidebarToggleButton = () => {
       ) : (
         <PanelLeftOpen className="size-4" />
       )}
+      <span className="sr-only">
+        {isOpen ? "Ocultar navegación" : "Mostrar navegación"}
+      </span>
     </Button>
   );
 };

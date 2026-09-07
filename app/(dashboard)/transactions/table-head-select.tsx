@@ -9,14 +9,20 @@ import { cn } from "@/lib/utils";
 
 type TableHeadSelectProps = {
   columnIndex: number;
+  headerLabel: string;
   selectedColumns: Record<string, string | null>;
   onChange: (columnIndex: number, value: string | null) => void;
 };
 
-const options = ["amount", "payee", "date"];
+const options = [
+  { value: "amount", label: "Importe" },
+  { value: "payee", label: "Beneficiario" },
+  { value: "date", label: "Fecha" },
+];
 
 export const TableHeadSelect = ({
   columnIndex,
+  headerLabel,
   selectedColumns,
   onChange,
 }: TableHeadSelectProps) => {
@@ -24,33 +30,34 @@ export const TableHeadSelect = ({
 
   return (
     <Select
-      value={currentSelection || ""}
+      value={currentSelection || "skip"}
       onValueChange={(value) => onChange(columnIndex, value)}
     >
       <SelectTrigger
         className={cn(
-          "border-none bg-transparent capitalize outline-none focus:ring-transparent focus:ring-offset-0",
-          currentSelection && "text-blue-500"
+          "min-h-11 border-none bg-transparent capitalize outline-none focus:ring-transparent focus:ring-offset-0",
+          currentSelection && "text-crt-accent",
         )}
+        aria-label={`Asignar columna ${columnIndex + 1}: ${headerLabel || "sin nombre"}`}
       >
-        <SelectValue placeholder="Skip" />
+        <SelectValue placeholder="Ignorar" />
       </SelectTrigger>
 
       <SelectContent>
-        <SelectItem value="skip">Skip</SelectItem>
-        {options.map((option, index) => {
+        <SelectItem value="skip">Ignorar</SelectItem>
+        {options.map((option) => {
           const disabled =
-            Object.values(selectedColumns).includes(option) &&
-            selectedColumns[`column_${columnIndex}`] !== option;
+            Object.values(selectedColumns).includes(option.value) &&
+            selectedColumns[`column_${columnIndex}`] !== option.value;
 
           return (
             <SelectItem
-              key={index}
-              value={option}
+              key={option.value}
+              value={option.value}
               disabled={disabled}
               className="capitalize"
             >
-              {option}
+              {option.label}
             </SelectItem>
           );
         })}

@@ -44,7 +44,7 @@ export default function RootLayout({
                 colorBackground: "var(--crt-surface)",
                 colorInputBackground: "var(--crt-bg)",
                 colorInputText: "var(--crt-fg)",
-                colorPrimary: "var(--crt-accent)",
+                colorPrimary: "var(--crt-accent-bg)",
                 colorText: "var(--crt-fg)",
                 colorTextSecondary: "var(--crt-muted)",
                 borderRadius: "0px",
@@ -62,7 +62,7 @@ export default function RootLayout({
                 formFieldInput:
                   "border-input bg-background text-foreground rounded-none focus:border-crt-accent focus:ring-1 focus:ring-crt-accent",
                 formButtonPrimary:
-                  "border border-crt-accent bg-crt-accent text-background rounded-none hover:bg-transparent hover:text-crt-accent",
+                  "border border-crt-accent bg-accent text-accent-foreground rounded-none hover:bg-transparent hover:text-crt-accent",
                 footerActionLink: "text-crt-accent",
                 formFieldErrorText: "text-destructive",
                 alert: "border-destructive bg-destructive/5 text-destructive rounded-none",

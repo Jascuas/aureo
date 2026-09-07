@@ -47,6 +47,8 @@ export const CategoryForm = ({
     ) {
       form.setError("parentId", {
         message: "Selecciona una categoría principal válida o déjala vacía.",
+      }, {
+        shouldFocus: true,
       });
       return;
     }
@@ -96,6 +98,7 @@ export const CategoryForm = ({
 
               <FormControl>
                 <Select
+                  ref={field.ref}
                   placeholder="Selecciona una categoría principal"
                   options={categoryOptions}
                   value={field.value}

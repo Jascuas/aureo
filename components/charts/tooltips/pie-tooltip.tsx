@@ -30,7 +30,7 @@ export const PieTooltip = ({
       <TooltipBase.Item
         label={label}
         value={formatCurrency(negate ? value * -1 : value)}
-        color="bg-rose-500"
+        color="bg-destructive"
       />
     </TooltipBase>
   );

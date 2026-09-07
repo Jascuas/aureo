@@ -38,7 +38,7 @@ export const AnalysisSection = ({
   return (
     <div className="space-y-6">
       <h3 className="text-foreground text-lg font-medium">{title}</h3>
-      <Progress value={progressValue} className="h-2 [&>div]:bg-crt-accent" />
+      <Progress value={progressValue} className="h-2 [&>div]:bg-accent" />
       <div className="border-border bg-card border p-4">
         <div className="flex items-center justify-between">
           <div>
