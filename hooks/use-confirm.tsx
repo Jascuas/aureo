@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useFocusRestoration } from "@/hooks/use-focus-restoration";
 
 export const useConfirm = (
   title: string,
@@ -36,23 +37,30 @@ export const useConfirm = (
     handleClose();
   };
 
-  const ConfirmationDialog = () => (
-    <Dialog open={promise !== null} onOpenChange={handleCancel}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{message}</DialogDescription>
-        </DialogHeader>
+  const ConfirmationDialog = () => {
+    const focusRestoration = useFocusRestoration();
 
-        <DialogFooter className="pt-2">
-          <Button onClick={handleCancel} variant="outline">
-            Cancelar
-          </Button>
-          <Button onClick={handleConfirm}>Confirmar</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+    return (
+      <Dialog open={promise !== null} onOpenChange={handleCancel}>
+        <DialogContent
+          onCloseAutoFocus={focusRestoration.onCloseAutoFocus}
+          onOpenAutoFocus={focusRestoration.onOpenAutoFocus}
+        >
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>{message}</DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="pt-2">
+            <Button onClick={handleCancel} variant="outline">
+              Cancelar
+            </Button>
+            <Button onClick={handleConfirm}>Confirmar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
 
   return [ConfirmationDialog, confirm];
 };

@@ -1,7 +1,6 @@
 "use client";
 
 import { Loader2, Plus } from "lucide-react";
-import { useEffect, useRef } from "react";
 
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
@@ -16,21 +15,7 @@ const AccountsPage = () => {
   const newAccount = useNewAccount();
   const deleteAccounts = useBulkDeleteAccounts();
   const accountsQuery = useGetAccounts();
-  const addAccountButtonRef = useRef<HTMLButtonElement>(null);
-  const wasAccountSheetOpen = useRef(false);
   const accounts = accountsQuery.data || [];
-
-  useEffect(() => {
-    if (wasAccountSheetOpen.current && !newAccount.isOpen) {
-      const frame = requestAnimationFrame(() => {
-        addAccountButtonRef.current?.focus();
-      });
-
-      return () => cancelAnimationFrame(frame);
-    }
-
-    wasAccountSheetOpen.current = newAccount.isOpen;
-  }, [newAccount.isOpen]);
 
   const isDisabled = accountsQuery.isLoading || deleteAccounts.isPending;
 
@@ -61,7 +46,6 @@ const AccountsPage = () => {
           </CardTitle>
 
           <Button
-            ref={addAccountButtonRef}
             size="sm"
             onClick={newAccount.onOpen}
             className="w-full lg:w-auto"

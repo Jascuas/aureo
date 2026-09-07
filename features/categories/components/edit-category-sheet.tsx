@@ -15,11 +15,13 @@ import { useGetCategory } from "@/features/categories/api/use-get-category";
 import { useOpenCategory } from "@/features/categories/hooks/use-open-category";
 import type { CategoryFormValues } from "@/features/categories/lib/category-form-schema";
 import { useConfirm } from "@/hooks/use-confirm";
+import { useFocusRestoration } from "@/hooks/use-focus-restoration";
 
 import { CategoryForm } from "./category-form";
 
 export const EditCategorySheet = () => {
   const { isOpen, onClose, id } = useOpenCategory();
+  const focusRestoration = useFocusRestoration();
 
   const [ConfirmDialog, confirm] = useConfirm(
     "¿Quieres eliminar la categoría?",
@@ -104,7 +106,11 @@ export const EditCategorySheet = () => {
           if (!open && !isPending) onClose();
         }}
       >
-        <SheetContent className="space-y-4">
+        <SheetContent
+          className="space-y-4"
+          onCloseAutoFocus={focusRestoration.onCloseAutoFocus}
+          onOpenAutoFocus={focusRestoration.onOpenAutoFocus}
+        >
           <SheetHeader>
             <SheetTitle>Editar categoría</SheetTitle>
 

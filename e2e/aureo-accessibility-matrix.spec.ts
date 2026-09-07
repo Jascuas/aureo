@@ -170,6 +170,7 @@ test.describe("AUR-18 authenticated accessibility matrix", () => {
     await expect(transactionDialog.getByRole("alert").first()).toBeVisible();
     await expect(page.getByLabel("Cuenta")).toBeFocused();
     await page.keyboard.press("Escape");
+    await expect(addTransaction).toBeFocused();
 
     await page.goto("/transactions/upload?accountId=e2e-dashboard-positive");
     const csvInput = page.getByLabel("Subir archivo CSV");

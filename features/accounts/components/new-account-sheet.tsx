@@ -8,12 +8,14 @@ import {
 import { useCreateAccount } from "@/features/accounts/api/use-create-account";
 import { useNewAccount } from "@/features/accounts/hooks/use-new-account";
 import type { AccountFormValues } from "@/features/accounts/lib/account-form-schema";
+import { useFocusRestoration } from "@/hooks/use-focus-restoration";
 
 import { AccountForm } from "./account-form";
 
 export const NewAccountSheet = () => {
   const { isOpen, onClose } = useNewAccount();
   const mutation = useCreateAccount();
+  const focusRestoration = useFocusRestoration();
 
   const onSubmit = (values: AccountFormValues) => {
     mutation.mutate(values, {
@@ -30,7 +32,11 @@ export const NewAccountSheet = () => {
         if (!open && !mutation.isPending) onClose();
       }}
     >
-      <SheetContent className="space-y-4">
+      <SheetContent
+        className="space-y-4"
+        onCloseAutoFocus={focusRestoration.onCloseAutoFocus}
+        onOpenAutoFocus={focusRestoration.onOpenAutoFocus}
+      >
         <SheetHeader>
           <SheetTitle>Nueva cuenta</SheetTitle>
 

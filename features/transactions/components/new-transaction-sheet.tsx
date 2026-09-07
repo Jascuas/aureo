@@ -15,12 +15,14 @@ import { useGetTransactionTypes } from "@/features/transaction-types/api/use-get
 import { useCreateTransaction } from "@/features/transactions/api/use-create-transaction";
 import { useNewTransaction } from "@/features/transactions/hooks/use-new-transaction";
 import type { TransactionMutationValues } from "@/features/transactions/lib/transaction-form-schema";
+import { useFocusRestoration } from "@/hooks/use-focus-restoration";
 import type { Account, Category, TransactionType } from "@/lib/api-types";
 
 import { TransactionForm } from "./transaction-form";
 
 export const NewTransactionSheet = () => {
   const { isOpen, onClose } = useNewTransaction();
+  const focusRestoration = useFocusRestoration();
 
   const createMutation = useCreateTransaction();
   const categoryMutation = useCreateCategory();
@@ -80,7 +82,11 @@ export const NewTransactionSheet = () => {
         if (!open && !isPending) onClose();
       }}
     >
-      <SheetContent className="space-y-4">
+      <SheetContent
+        className="space-y-4"
+        onCloseAutoFocus={focusRestoration.onCloseAutoFocus}
+        onOpenAutoFocus={focusRestoration.onOpenAutoFocus}
+      >
         <SheetHeader>
           <SheetTitle>Nueva transacción</SheetTitle>
 

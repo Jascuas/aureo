@@ -22,12 +22,14 @@ import type {
   TransactionMutationValues,
 } from "@/features/transactions/lib/transaction-form-schema";
 import { useConfirm } from "@/hooks/use-confirm";
+import { useFocusRestoration } from "@/hooks/use-focus-restoration";
 import type { Account, Category, TransactionType } from "@/lib/api-types";
 
 import { TransactionForm } from "./transaction-form";
 
 export const EditTransactionSheet = () => {
   const { isOpen, onClose, id } = useOpenTransaction();
+  const focusRestoration = useFocusRestoration();
 
   const [ConfirmDialog, confirm] = useConfirm(
     "¿Quieres eliminar la transacción?",
@@ -135,7 +137,11 @@ export const EditTransactionSheet = () => {
           if (!open && !isPending) onClose();
         }}
       >
-        <SheetContent className="space-y-4">
+        <SheetContent
+          className="space-y-4"
+          onCloseAutoFocus={focusRestoration.onCloseAutoFocus}
+          onOpenAutoFocus={focusRestoration.onOpenAutoFocus}
+        >
           <SheetHeader>
             <SheetTitle>Editar transacción</SheetTitle>
 
