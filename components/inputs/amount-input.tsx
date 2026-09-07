@@ -1,4 +1,5 @@
 import { Info, MinusCircle, PlusCircle } from "lucide-react";
+import type { AriaAttributes } from "react";
 import CurrencyInput from "react-currency-input-field";
 
 import {
@@ -14,6 +15,9 @@ type AmountInputProps = {
   onChange: (value: string | undefined) => void;
   placeholder?: string;
   disabled?: boolean;
+  id?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: AriaAttributes["aria-invalid"];
 };
 
 export const AmountInput = ({
@@ -21,6 +25,9 @@ export const AmountInput = ({
   onChange,
   placeholder,
   disabled,
+  id,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
 }: AmountInputProps) => {
   const parsedValue = parseFloat(value);
   const isIncome = parsedValue > 0;
@@ -40,6 +47,7 @@ export const AmountInput = ({
           <TooltipTrigger asChild>
             <button
               type="button"
+              aria-label="Cambiar el signo del importe"
               onClick={onReverseValue}
               disabled={disabled}
               className={cn(
@@ -62,6 +70,9 @@ export const AmountInput = ({
         prefix="€"
         className="flex h-10 min-h-11 w-full rounded-none border border-input bg-background px-3 py-2 pl-12 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         placeholder={placeholder}
+        id={id}
+        aria-describedby={ariaDescribedBy}
+        aria-invalid={ariaInvalid}
         value={value}
         decimalScale={2}
         decimalsLimit={2}

@@ -343,7 +343,6 @@ function Nav({
         variant="outline"
         className="absolute left-0 h-11 w-11 bg-transparent p-0 opacity-80 hover:opacity-100"
         type="button"
-        tabIndex={isPreviousDisabled ? undefined : -1}
         disabled={isPreviousDisabled}
         aria-label={
           navView === "years"
@@ -359,7 +358,6 @@ function Nav({
         variant="outline"
         className="absolute right-0 h-11 w-11 bg-transparent p-0 opacity-80 hover:opacity-100"
         type="button"
-        tabIndex={isNextDisabled ? undefined : -1}
         disabled={isNextDisabled}
         aria-label={
           navView === "years"

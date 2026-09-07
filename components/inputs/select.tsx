@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { type AriaAttributes, useMemo } from "react";
 import ReactSelect, { type SingleValue } from "react-select";
 import CreatableSelect from "react-select/creatable";
 
@@ -12,6 +12,9 @@ type SelectProps = {
   disabled?: boolean;
   isClearable?: boolean;
   placeholder?: string;
+  id?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: AriaAttributes["aria-invalid"];
 };
 
 export const Select = ({
@@ -22,6 +25,9 @@ export const Select = ({
   disabled,
   isClearable,
   placeholder,
+  id,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
 }: SelectProps) => {
   const onSelect = (option: SingleValue<{ label: string; value: string }>) => {
     onChange(option?.value);
@@ -33,6 +39,9 @@ export const Select = ({
 
   const selectProps = {
     placeholder,
+    inputId: id,
+    "aria-describedby": ariaDescribedBy,
+    "aria-invalid": ariaInvalid,
     className: "min-h-11 text-sm",
     styles: {
       control: (base: object) => ({

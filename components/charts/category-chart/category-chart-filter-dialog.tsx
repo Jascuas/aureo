@@ -68,6 +68,7 @@ export const CategoryChartFilterDialog = ({ value, onChange }: Props) => {
         <Button
           size="sm"
           variant="outline"
+          aria-label="Filtros de categorías"
           className="relative h-9 gap-2 rounded-md px-3"
         >
           <Filter className="size-4" />

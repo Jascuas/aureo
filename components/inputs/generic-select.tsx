@@ -21,6 +21,9 @@ type GenericSelectProps<T extends string> = {
   icon?: ReactNode;
   onChange: (v: T) => void;
   disabled?: boolean;
+  id?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: React.AriaAttributes["aria-invalid"];
 };
 
 export function GenericSelect<T extends string>({
@@ -30,10 +33,18 @@ export function GenericSelect<T extends string>({
   icon,
   onChange,
   disabled,
+  id,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
 }: GenericSelectProps<T>) {
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger className="h-9 lg:w-auto">
+      <SelectTrigger
+        id={id}
+        aria-describedby={ariaDescribedBy}
+        aria-invalid={ariaInvalid}
+        className="h-9 lg:w-auto"
+      >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
 

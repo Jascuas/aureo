@@ -42,7 +42,16 @@ export const columns: ColumnDef<ResponseType>[] = [
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => {
+            const sorted = column.getIsSorted();
+
+            if (sorted === "desc") {
+              column.clearSorting();
+              return;
+            }
+
+            column.toggleSorting(sorted === "asc");
+          }}
           aria-label={`Ordenar por nombre: ${
             column.getIsSorted() === "asc"
               ? "descendente"

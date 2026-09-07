@@ -133,6 +133,8 @@ export const TransactionForm = ({
           disabled={disabled}
           render={({ field }) => (
             <FormItem>
+              <FormLabel>Fecha</FormLabel>
+
               <FormControl>
                 <DatePicker
                   value={field.value}

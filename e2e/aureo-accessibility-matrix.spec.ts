@@ -95,13 +95,24 @@ test.describe("AUR-18 authenticated accessibility matrix", () => {
     await expect(resultsRegion).toHaveAttribute("tabindex", "0");
 
     const nameSortButton = page.getByRole("button", {
-      name: "Ordenar por nombre: ascendente",
+      name: /Ordenar por nombre:/,
     });
     const nameHeader = page.getByRole("columnheader").filter({ hasText: "Nombre" });
     await expect(nameHeader).toHaveAttribute("aria-sort", "none");
     await nameSortButton.focus();
     await nameSortButton.press("Enter");
     await expect(nameHeader).toHaveAttribute("aria-sort", "ascending");
+    await expect(
+      page.getByRole("button", { name: "Ordenar por nombre: descendente" }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { name: "Ordenar por nombre: descendente" })
+      .press("Enter");
+    await expect(nameHeader).toHaveAttribute("aria-sort", "descending");
+    await page
+      .getByRole("button", { name: "Ordenar por nombre: sin orden" })
+      .press("Enter");
+    await expect(nameHeader).toHaveAttribute("aria-sort", "none");
 
     await page.goto("/transactions");
     const dateFilter = page.getByRole("button").filter({ hasText: / - / }).first();
@@ -112,6 +123,19 @@ test.describe("AUR-18 authenticated accessibility matrix", () => {
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Ir al mes siguiente" }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+
+    const addTransaction = page.getByRole("button", { name: "Añadir transacción" });
+    await addTransaction.click();
+    const transactionDialog = page.getByRole("dialog");
+    await expect(transactionDialog).toBeVisible();
+    await expect(page.getByLabel("Fecha")).toBeVisible();
+    await expect(page.getByLabel("Cuenta")).toBeVisible();
+    await expect(page.getByLabel("Tipo")).toBeVisible();
+    await expect(page.getByLabel("Importe")).toBeVisible();
+    await expect(
+      transactionDialog.getByRole("button", { name: "Cambiar el signo del importe" }),
     ).toBeVisible();
     await page.keyboard.press("Escape");
 

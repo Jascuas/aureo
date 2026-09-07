@@ -16,14 +16,27 @@ type DatePickerProps = {
   value?: Date;
   onChange?: SelectSingleEventHandler;
   disabled?: boolean;
+  id?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: React.AriaAttributes["aria-invalid"];
 };
 
-export const DatePicker = ({ value, onChange, disabled }: DatePickerProps) => {
+export const DatePicker = ({
+  value,
+  onChange,
+  disabled,
+  id,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
+}: DatePickerProps) => {
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button
           disabled={disabled}
+          id={id}
+          aria-describedby={ariaDescribedBy}
+          aria-invalid={ariaInvalid}
           variant="outline"
           className={cn(
             "w-full justify-start text-left font-normal",
@@ -31,7 +44,7 @@ export const DatePicker = ({ value, onChange, disabled }: DatePickerProps) => {
           )}
         >
           <CalendarIcon className="mr-2 size-4" />
-          {value ? format(value, "PPP") : <span>Pick a date</span>}
+          {value ? format(value, "PPP") : <span>Selecciona una fecha</span>}
         </Button>
       </PopoverTrigger>
 
