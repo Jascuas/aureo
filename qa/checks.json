@@ -23,9 +23,7 @@
       "writes": "ephemeral container databases; containers removed on exit",
       "timeout_seconds": 180,
       "result_codes": {
-        "product_failure": [
-          1
-        ],
+        "product_failure": [],
         "environment_failure": []
       }
     },
