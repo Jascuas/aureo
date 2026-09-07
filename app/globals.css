@@ -22,7 +22,7 @@
   --color-accent: var(--crt-accent);
   --color-accent-foreground: var(--crt-accent-fg);
   --color-destructive: var(--crt-neg);
-  --color-destructive-foreground: var(--crt-fg);
+  --color-destructive-foreground: var(--crt-neg-fg);
   --color-border: var(--crt-border);
   --color-input: var(--crt-surface-2);
   --color-ring: var(--crt-accent);
@@ -75,6 +75,7 @@
     --crt-accent-fg: oklch(100% 0 0);
     --crt-pos: oklch(36% 0.21 145);
     --crt-neg: oklch(48% 0.24 25);
+    --crt-neg-fg: oklch(100% 0 0);
     --crt-amber: oklch(44% 0.18 75);
 
     /* ── Pie chart palette — 15 steps, amber/green/cyan/blue/violet ── */
@@ -116,6 +117,7 @@
     --crt-accent-fg: oklch(100% 0 0);
     --crt-pos: oklch(72% 0.21 145);
     --crt-neg: oklch(62% 0.24 25);
+    --crt-neg-fg: oklch(0% 0 0);
     --crt-amber: oklch(76% 0.16 75);
 
     /* ── Pie chart palette — 15 steps, amber/green/cyan/blue/violet ── */
