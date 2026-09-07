@@ -41,7 +41,7 @@ export const ProgressVariant = ({ data }: ProgressVariantProps) => {
 
             <div className="bg-muted-foreground relative h-0.5 w-full overflow-hidden">
               <div
-                className={`absolute inset-y-0 left-0 ${i === 0 ? "bg-crt-accent" : "bg-foreground"}`}
+                className={`absolute inset-y-0 left-0 ${i === 0 ? "bg-accent" : "bg-foreground"}`}
                 style={{ width: `${barPct}%` }}
               />
             </div>

@@ -130,7 +130,7 @@ export const DuplicateComparison = ({
           <ArrowRight className="text-muted-foreground size-6" />
         </div>
 
-        <Card className="border-crt-accent/40 bg-crt-accent/5 border">
+        <Card className="border-crt-accent/40 bg-accent/5 border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
               <span className="text-crt-accent">Transacción existente</span>

@@ -80,7 +80,7 @@ export const CategoryChartFilterDialog = ({ value, onChange }: Props) => {
           <Filter className="size-4" />
           <span className="hidden sm:inline">Filtros</span>
           {isDirty && (
-            <span className="bg-crt-accent absolute top-1 right-1 size-2 rounded-full" />
+            <span className="bg-accent absolute top-1 right-1 size-2 rounded-full" />
           )}
         </Button>
       </DialogTrigger>

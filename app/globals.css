@@ -19,7 +19,7 @@
   --color-muted: var(--crt-surface-2);
   --color-muted-foreground: var(--crt-muted);
   --color-success: var(--crt-pos);
-  --color-accent: var(--crt-accent);
+  --color-accent: var(--crt-accent-bg);
   --color-accent-foreground: var(--crt-accent-fg);
   --color-destructive: var(--crt-neg);
   --color-destructive-foreground: var(--crt-neg-fg);
@@ -72,6 +72,7 @@
     --crt-border: oklch(78% 0.008 85);
     --crt-overlay: oklch(18% 0.01 85);
     --crt-accent: oklch(46% 0.27 25);
+    --crt-accent-bg: oklch(46% 0.27 25);
     --crt-accent-fg: oklch(100% 0 0);
     --crt-pos: oklch(36% 0.21 145);
     --crt-neg: oklch(48% 0.24 25);
@@ -113,7 +114,8 @@
     --crt-dim: oklch(34% 0 0);
     --crt-border: oklch(22% 0 0);
     --crt-overlay: oklch(0% 0 0);
-    --crt-accent: oklch(56% 0.27 25);
+    --crt-accent: oklch(64% 0.20 25);
+    --crt-accent-bg: oklch(48% 0.24 25);
     --crt-accent-fg: oklch(100% 0 0);
     --crt-pos: oklch(72% 0.21 145);
     --crt-neg: oklch(62% 0.24 25);
@@ -468,10 +470,10 @@
   }
 
   .cl-formButtonPrimary {
-    background-color: var(--crt-accent) !important;
+    background-color: var(--crt-accent-bg) !important;
     border-color: var(--crt-accent) !important;
     border-radius: 0 !important;
-    color: var(--crt-bg) !important;
+    color: var(--crt-accent-fg) !important;
   }
 
   .cl-formButtonPrimary:hover,
@@ -542,8 +544,8 @@
    ───────────────────────────────────────── */
 
 ::selection {
-  background: var(--crt-accent);
-  color: var(--crt-bg);
+  background: var(--crt-accent-bg);
+  color: var(--crt-accent-fg);
 }
 
 /* ─────────────────────────────────────────

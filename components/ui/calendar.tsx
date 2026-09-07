@@ -142,7 +142,7 @@ function Calendar({
     props.rangeEndClassName,
   );
   const _rangeMiddleClassName = cn(
-    "bg-accent !text-foreground [&>button]:bg-transparent [&>button]:!text-foreground [&>button]:hover:bg-transparent [&>button]:hover:!text-foreground",
+    "bg-accent !text-accent-foreground [&>button]:bg-transparent [&>button]:!text-accent-foreground [&>button]:hover:bg-transparent [&>button]:hover:!text-accent-foreground",
     props.rangeMiddleClassName,
   );
   const _selectedClassName = cn(

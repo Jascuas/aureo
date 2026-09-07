@@ -52,7 +52,7 @@ export const AmountInput = forwardRef<HTMLInputElement, AmountInputProps>(
               onClick={onReverseValue}
               disabled={disabled}
               className={cn(
-                "bg-muted absolute top-0.5 left-0.5 flex size-11 items-center justify-center rounded-none p-2 text-muted-foreground transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50",
+                "bg-muted absolute top-0.5 left-0.5 flex size-11 items-center justify-center rounded-none p-2 text-muted-foreground transition hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50",
                 isIncome && "bg-crt-pos text-background hover:bg-crt-pos",
                 isExpense && "bg-destructive text-destructive-foreground hover:bg-destructive",
               )}

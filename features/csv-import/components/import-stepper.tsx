@@ -41,7 +41,7 @@ const STATUS_LABELS: Record<ImportStepStatus, string> = {
 const STATUS_CLASSES: Record<ImportStepStatus, string> = {
   completed: "border-crt-pos bg-crt-pos text-background",
   active:
-    "border-crt-accent bg-crt-accent text-background ring-2 ring-crt-accent/30",
+    "border-crt-accent bg-accent text-accent-foreground ring-2 ring-crt-accent/30",
   available: "border-crt-accent bg-card text-crt-accent",
   blocked: "border-border bg-card text-muted-foreground",
   failed:
