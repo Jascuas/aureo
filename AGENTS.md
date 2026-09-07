@@ -70,7 +70,8 @@ pnpm db:up                                    # Upgrade Drizzle metadata; mutati
 
 `qa/checks.json` is the executable QA catalog and effect contract. Managed QA
 requires both `HERMES_QA_RUN_ID` and `HERMES_QA_ENVIRONMENT_FILE`; partial
-activation fails closed and never loads `.env.local`. The descriptor contains
+activation fails closed and rejects any environment file Next would auto-load
+before the server starts. The descriptor contains
 resource identity only. The launcher sets `HERMES_QA_TARGET_VALIDATED=1` only
 after trusted inventory validation; this is a handoff guard, while dedicated
 resource credentials remain the authority. Credentials stay in process

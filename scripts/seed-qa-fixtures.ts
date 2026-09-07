@@ -27,7 +27,11 @@ const [foreignReservation] = await sql`
       AND (user_id <> ${fixture.primaryUserId} OR account_id <> ${fixture.importTemplate.accountId})) AS foreign_templates,
     (SELECT COUNT(*) FROM transactions
       WHERE id IN (${income.id}, ${expense.id}, ${secondaryIncome.id})
-        AND account_id NOT IN (${income.accountId}, ${expense.accountId}, ${secondaryIncome.accountId})) AS foreign_transactions
+        AND NOT (
+          (id = ${income.id} AND account_id = ${income.accountId}) OR
+          (id = ${expense.id} AND account_id = ${expense.accountId}) OR
+          (id = ${secondaryIncome.id} AND account_id = ${secondaryIncome.accountId})
+        )) AS foreign_transactions
 `;
 if (
   Number(foreignReservation.foreign_accounts) !== 0 ||

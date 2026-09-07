@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path, { resolve } from "node:path";
 
 import { config } from "dotenv";
@@ -32,6 +32,7 @@ type ResolveOptions = {
   environment?: Record<string, string | undefined>;
   readDescriptor?: (filePath: string) => string;
   loadLocalEnvironment?: (filePath: string) => void;
+  listDirectory?: (directory: string) => string[];
 };
 
 const MANAGED_ENVIRONMENT_FILE = "HERMES_QA_ENVIRONMENT_FILE";
@@ -39,6 +40,7 @@ const MANAGED_RUN_ID = "HERMES_QA_RUN_ID";
 const RUN_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/;
 const SHA_PATTERN = /^[a-f0-9]{40}$/;
 const SECRET_KEY_PATTERN = /(secret|token|password|private.?key|database.?url|connection.?string)/i;
+const NEXT_ENV_FILE_PATTERN = /^\.env(?:\.local|\.(?:development|production|test)(?:\.local)?)?$/;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -200,6 +202,11 @@ export const resolveE2EEnvironment = (options: ResolveOptions): E2EEnvironment =
   if (descriptorPath || runId) {
     if (!descriptorPath || !runId) throw new Error(`Managed QA requires both ${MANAGED_ENVIRONMENT_FILE} and ${MANAGED_RUN_ID}`);
     if (!path.isAbsolute(descriptorPath)) throw new Error(`${MANAGED_ENVIRONMENT_FILE} must be an absolute path`);
+    const listDirectory = options.listDirectory ?? readdirSync;
+    const nextEnvironmentFile = listDirectory(cwd).find((name) => NEXT_ENV_FILE_PATTERN.test(name));
+    if (nextEnvironmentFile) {
+      throw new Error(`Managed QA checkout contains Next-loadable environment file: ${nextEnvironmentFile}`);
+    }
     const readDescriptor = options.readDescriptor ?? ((filePath: string) => readFileSync(filePath, "utf8"));
     const descriptor = parseQaEnvironmentDescriptor(readDescriptor(descriptorPath), options.project);
     if (descriptor.run_id !== runId) throw new Error("HERMES_QA_RUN_ID does not match the QA descriptor");

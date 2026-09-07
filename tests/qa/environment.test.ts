@@ -71,6 +71,19 @@ test("managed QA refuses partial activation and mismatched database identity", (
   );
 });
 
+test("managed QA refuses files that Next would load after Playwright resolves the target", () => {
+  assert.throws(
+    () => resolveE2EEnvironment({
+      project: "aureo",
+      defaultPort: 4100,
+      environment: { ...managedEnvironment },
+      readDescriptor: () => JSON.stringify(descriptor),
+      listDirectory: () => [".env.EXAMPLE", ".env.local"],
+    }),
+    /Next-loadable environment file: \.env\.local/,
+  );
+});
+
 test("pilot policy can forbid local environment fallback", () => {
   assert.throws(
     () => resolveE2EEnvironment({

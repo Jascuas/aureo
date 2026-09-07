@@ -39,6 +39,7 @@ const docker = (args: string[], input?: string) =>
     encoding: "utf8",
     input,
     stdio: input === undefined ? ["ignore", "pipe", "pipe"] : ["pipe", "pipe", "pipe"],
+    timeout: 30_000,
   });
 const runSql = (database: string, query: string) =>
   docker(
