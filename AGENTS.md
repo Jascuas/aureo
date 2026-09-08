@@ -57,11 +57,25 @@ pnpm build                                    # Production build
 pnpm start                                    # Serve the production build
 pnpm lint                                     # ESLint; must finish without warnings
 pnpm exec tsc --noEmit --incremental false    # Standalone TypeScript check
+pnpm test                                     # Run the offline unit tier
+pnpm test:unit                                # Offline tests with stubbed database adapters
+pnpm test:db                                  # Replay migrations and SQL contracts in local Docker
+pnpm test:e2e                                 # Run Playwright against an explicitly prepared environment
+pnpm qa:fixtures                              # Mutate only a validated managed-QA Neon branch
 pnpm db:generate                              # Generate a Drizzle migration
 pnpm db:migrate                               # Apply pending migrations; mutating
 pnpm db:studio                                # Drizzle Studio on port 5000
 pnpm db:up                                    # Upgrade Drizzle metadata; mutating
 ```
+
+`qa/checks.json` is the executable QA catalog and effect contract. Managed QA
+requires both `HERMES_QA_RUN_ID` and `HERMES_QA_ENVIRONMENT_FILE`; partial
+activation fails closed and rejects any environment file Next would auto-load
+before the server starts. The descriptor contains
+resource identity only. The launcher sets `HERMES_QA_TARGET_VALIDATED=1` only
+after trusted inventory validation; this is a handoff guard, while dedicated
+resource credentials remain the authority. Credentials stay in process
+environment variables.
 
 Database commands operate on configured infrastructure. Inspect their target
 and obtain explicit approval before running a mutating command. Never read or
@@ -364,13 +378,12 @@ Match verification to risk and report exactly what ran:
 - Code: `pnpm lint` and `pnpm exec tsc --noEmit --incremental false`.
 - Cross-cutting, routing, configuration, dependency, or release-sensitive work:
   also run `pnpm build`.
-- Pure logic: run the narrowest existing deterministic script or check that
-  exercises the changed interface. The repository currently has no formal test
-  command; do not claim a test suite ran when it did not.
-- When a formal test runner is introduced, deterministic module tests live
-  beside the owning module as `*.test.ts` or `*.test.tsx` unless that runner
-  defines a dedicated location. Files named `scripts/test-*` are diagnostic
-  scripts, not a formal suite.
+- Pure logic: run `pnpm test:unit` or the narrowest explicit subset that
+  exercises the changed interface. Deterministic domain tests live beside the
+  owning module as `*.test.ts` or `*.test.tsx`; QA infrastructure tests live in
+  `tests/qa/`.
+- Files named `scripts/test-*` outside the commands declared by
+  `qa/checks.json` remain diagnostic scripts and must not be discovered by glob.
 - Database changes: run `pnpm db:generate`, review the migration, and obtain
   explicit approval before applying it to any configured database.
 - UI changes: verify the affected flow, keyboard operation, responsive behavior,
