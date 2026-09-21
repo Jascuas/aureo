@@ -57,25 +57,14 @@ pnpm build                                    # Production build
 pnpm start                                    # Serve the production build
 pnpm lint                                     # ESLint; must finish without warnings
 pnpm exec tsc --noEmit --incremental false    # Standalone TypeScript check
-pnpm test                                     # Run the offline unit tier
-pnpm test:unit                                # Offline tests with stubbed database adapters
-pnpm test:db                                  # Replay migrations and SQL contracts in local Docker
-pnpm test:e2e                                 # Run Playwright against an explicitly prepared environment
-pnpm qa:fixtures                              # Mutate only a validated managed-QA Neon branch
+pnpm test                                     # Run the curated offline core test tier
+pnpm test:unit                                # 15 deterministic authorization, money, CSV, and domain-boundary tests
+pnpm check                                    # Lint, standalone TypeScript, and the offline test tier
 pnpm db:generate                              # Generate a Drizzle migration
 pnpm db:migrate                               # Apply pending migrations; mutating
 pnpm db:studio                                # Drizzle Studio on port 5000
 pnpm db:up                                    # Upgrade Drizzle metadata; mutating
 ```
-
-`qa/checks.json` is the executable QA catalog and effect contract. Managed QA
-requires both `HERMES_QA_RUN_ID` and `HERMES_QA_ENVIRONMENT_FILE`; partial
-activation fails closed and rejects any environment file Next would auto-load
-before the server starts. The descriptor contains
-resource identity only. The launcher sets `HERMES_QA_TARGET_VALIDATED=1` only
-after trusted inventory validation; this is a handoff guard, while dedicated
-resource credentials remain the authority. Credentials stay in process
-environment variables.
 
 Database commands operate on configured infrastructure. Inspect their target
 and obtain explicit approval before running a mutating command. Never read or
@@ -378,17 +367,25 @@ Match verification to risk and report exactly what ran:
 - Code: `pnpm lint` and `pnpm exec tsc --noEmit --incremental false`.
 - Cross-cutting, routing, configuration, dependency, or release-sensitive work:
   also run `pnpm build`.
-- Pure logic: run `pnpm test:unit` or the narrowest explicit subset that
-  exercises the changed interface. Deterministic domain tests live beside the
-  owning module as `*.test.ts` or `*.test.tsx`; QA infrastructure tests live in
-  `tests/qa/`.
-- Files named `scripts/test-*` outside the commands declared by
-  `qa/checks.json` remain diagnostic scripts and must not be discovered by glob.
-- Database changes: run `pnpm db:generate`, review the migration, and obtain
-  explicit approval before applying it to any configured database.
-- UI changes: verify the affected flow, keyboard operation, responsive behavior,
-  `docs/PRODUCT.md`, `docs/DESIGN.md`, contrast, and reduced motion in proportion
-  to the change.
+- Pure logic: run `pnpm test` or the narrowest explicit subset that exercises
+  the changed interface. The curated suite is an explicit list of deterministic
+  tests; domain tests live beside the owning module as `*.test.ts` or
+  `*.test.tsx`.
+- Files named `scripts/test-*` outside the curated package commands remain
+  operator diagnostics and must not be discovered by glob or added to CI.
+- Database changes: run `pnpm db:generate`, review the generated SQL offline,
+  and obtain Human Approval before applying it to any configured database. Do
+  not add a test database or database replay to automated checks.
+- UI changes: run `pnpm check` and verify the affected flow, keyboard operation,
+  responsive behavior, `docs/PRODUCT.md`, `docs/DESIGN.md`, contrast, and
+  reduced motion in proportion to the change. Manual browser validation is an
+  explicitly authorized, protected activity; it is not required for every UI
+  change and does not belong to the automated suite.
+- The GitHub Actions job named `check` installs with
+  `pnpm install --frozen-lockfile --ignore-scripts`, then runs `pnpm check` and
+  `pnpm build`. It needs no database, browser, credentials, or provider access.
+  Configure it as a protected-branch required check only through a separately
+  authorized GitHub settings change, then verify the live branch protection.
 
 Treat build and standalone TypeScript as separate signals. Report pre-existing
 or unrelated failures separately, and never describe an unrun or failing check
