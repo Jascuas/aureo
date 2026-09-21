@@ -381,6 +381,11 @@ Match verification to risk and report exactly what ran:
   reduced motion in proportion to the change. Manual browser validation is an
   explicitly authorized, protected activity; it is not required for every UI
   change and does not belong to the automated suite.
+- The GitHub Actions job named `check` installs with
+  `pnpm install --frozen-lockfile --ignore-scripts`, then runs `pnpm check` and
+  `pnpm build`. It needs no database, browser, credentials, or provider access.
+  Configure it as a protected-branch required check only through a separately
+  authorized GitHub settings change, then verify the live branch protection.
 
 Treat build and standalone TypeScript as separate signals. Report pre-existing
 or unrelated failures separately, and never describe an unrun or failing check
