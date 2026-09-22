@@ -5,17 +5,22 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db/drizzle";
 import { accounts, transactions } from "@/db/schema";
 import {
+  canonicalizeTransactionTypeId,
+  isTransactionTypeInputId,
   normalizeTransactionAmount,
-  type SupportedTransactionTypeId,
+  type TransactionTypeInputId,
 } from "@/features/transaction-types/lib/transaction-types";
 
-import { ensureOwnedReferences } from "./owned-references";
+import {
+  ensureOwnedReferences,
+  resolveStoredTransactionTypeIds,
+} from "./owned-references";
 
 export type TransactionWriteValues = Omit<
   InferInsertModel<typeof transactions>,
   "id" | "importKey" | "transactionTypeId"
 > & {
-  transactionTypeId: SupportedTransactionTypeId;
+  transactionTypeId: TransactionTypeInputId;
 };
 
 export type TransactionResponse = {
@@ -55,13 +60,18 @@ const transactionReferences = (
   transactionTypeIds: values.map((value) => value.transactionTypeId),
 });
 
-const normalizeTransactionWriteValues = (
+const prepareTransactionWriteValues = (
+  storedIds: ReadonlyMap<TransactionTypeInputId, string>,
   values: TransactionWriteValues & { importKey?: unknown },
-): TransactionWriteValues => {
+): TransactionWriteValues | undefined => {
+  const storedId = storedIds.get(values.transactionTypeId);
+  if (!storedId) return undefined;
+
   const { importKey: _importKey, ...transactionValues } = values;
 
   return {
     ...transactionValues,
+    transactionTypeId: storedId as TransactionTypeInputId,
     amount: normalizeTransactionAmount(
       transactionValues.transactionTypeId,
       transactionValues.amount,
@@ -80,8 +90,18 @@ const transactionProjection = {
   transactionTypeId: transactions.transactionTypeId,
 };
 
+const toTransactionResponse = (
+  value: TransactionResponse,
+): TransactionResponse => ({
+  ...value,
+  transactionTypeId: isTransactionTypeInputId(value.transactionTypeId)
+    ? canonicalizeTransactionTypeId(value.transactionTypeId)
+    : value.transactionTypeId,
+});
+
 export type TransactionWriteDependencies = {
   authorizeReferences: typeof ensureOwnedReferences;
+  resolveStoredTransactionTypeIds?: typeof resolveStoredTransactionTypeIds;
   create: (values: TransactionWriteValues) => Promise<TransactionResponse>;
   createMany: (
     values: TransactionWriteValues[],
@@ -103,6 +123,7 @@ export type TransactionWriteDependencies = {
 
 const transactionWriteDependencies: TransactionWriteDependencies = {
   authorizeReferences: ensureOwnedReferences,
+  resolveStoredTransactionTypeIds,
   create: async (values) => {
     const [data] = await db
       .insert(transactions)
@@ -188,6 +209,11 @@ const transactionWriteDependencies: TransactionWriteDependencies = {
   },
 };
 
+const preserveRequestedTransactionTypeIds = async (
+  ids: readonly TransactionTypeInputId[],
+): Promise<Map<TransactionTypeInputId, string>> =>
+  new Map(ids.map((id) => [id, id]));
+
 export const createTransactionWriteOperations = (
   dependencies: TransactionWriteDependencies = transactionWriteDependencies,
 ) => ({
@@ -195,8 +221,13 @@ export const createTransactionWriteOperations = (
     userId: string,
     values: TransactionWriteValues,
   ): Promise<TransactionWriteResult> => {
+    const storedIds = await (
+      dependencies.resolveStoredTransactionTypeIds ?? preserveRequestedTransactionTypeIds
+    )([values.transactionTypeId]);
+    const prepared = prepareTransactionWriteValues(storedIds, values);
+    if (!prepared) return { ok: false, reason: "not_found" };
     const authorization = await dependencies.authorizeReferences(
-      transactionReferences(userId, [values]),
+      transactionReferences(userId, [prepared]),
     );
 
     if (!authorization.ok) {
@@ -205,15 +236,25 @@ export const createTransactionWriteOperations = (
 
     return {
       ok: true,
-      data: await dependencies.create(normalizeTransactionWriteValues(values)),
+      data: toTransactionResponse(await dependencies.create(prepared)),
     };
   },
   createTransactions: async (
     userId: string,
     values: TransactionWriteValues[],
   ): Promise<TransactionBulkWriteResult> => {
+    const storedIds = await (
+      dependencies.resolveStoredTransactionTypeIds ?? preserveRequestedTransactionTypeIds
+    )(values.map((value) => value.transactionTypeId));
+    const prepared = values.map((value) =>
+      prepareTransactionWriteValues(storedIds, value),
+    );
+    if (prepared.some((value) => value === undefined)) {
+      return { ok: false, reason: "not_found" };
+    }
+    const preparedValues = prepared as TransactionWriteValues[];
     const authorization = await dependencies.authorizeReferences(
-      transactionReferences(userId, values),
+      transactionReferences(userId, preparedValues),
     );
 
     if (!authorization.ok) {
@@ -222,7 +263,9 @@ export const createTransactionWriteOperations = (
 
     return {
       ok: true,
-      data: await dependencies.createMany(values.map(normalizeTransactionWriteValues)),
+      data: (await dependencies.createMany(preparedValues)).map(
+        toTransactionResponse,
+      ),
     };
   },
   updateTransaction: async (
@@ -230,8 +273,13 @@ export const createTransactionWriteOperations = (
     id: string,
     values: TransactionWriteValues,
   ): Promise<TransactionWriteResult> => {
+    const storedIds = await (
+      dependencies.resolveStoredTransactionTypeIds ?? preserveRequestedTransactionTypeIds
+    )([values.transactionTypeId]);
+    const prepared = prepareTransactionWriteValues(storedIds, values);
+    if (!prepared) return { ok: false, reason: "not_found" };
     const authorization = await dependencies.authorizeReferences(
-      transactionReferences(userId, [values]),
+      transactionReferences(userId, [prepared]),
     );
 
     if (!authorization.ok) {
@@ -241,14 +289,14 @@ export const createTransactionWriteOperations = (
     const data = await dependencies.update(
       userId,
       id,
-      normalizeTransactionWriteValues(values),
+      prepared,
     );
 
     if (!data) {
       return { ok: false, reason: "not_found" };
     }
 
-    return { ok: true, data };
+    return { ok: true, data: toTransactionResponse(data) };
   },
   deleteTransaction: async (
     userId: string,

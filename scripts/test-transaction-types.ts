@@ -6,6 +6,9 @@ import type { MiddlewareHandler } from "hono";
 import { createCsvImportApp } from "../app/api/[[...route]]/csv-import.ts";
 import { createTransactionsApp } from "../app/api/[[...route]]/transactions.ts";
 import {
+  canonicalizeTransactionTypeId,
+  getStoredTransactionTypeIdCandidates,
+  getSummaryStoredTransactionTypeIds,
   getSummaryTransactionTypeIds,
   getTransactionSummaryAmounts,
   getTransactionTypeForAmount,
@@ -14,6 +17,7 @@ import {
   SUPPORTED_TRANSACTION_TYPE_IDS,
   SUPPORTED_TRANSACTION_TYPES,
   supportedTransactionTypeIdSchema,
+  transactionTypeInputIdSchema,
 } from "../features/transaction-types/lib/transaction-types.ts";
 import type { AppEnv } from "../lib/hono-env.ts";
 import {
@@ -53,14 +57,20 @@ const expectInvalidForeignKey = async (response: Response) => {
   });
 };
 
-test("canonical IDs are case-sensitive storage values with canonical display names", () => {
-  assert.deepEqual(SUPPORTED_TRANSACTION_TYPE_IDS, ["income", "expense", "refund"]);
+test("canonical IDs include Transfer and accept audited legacy IDs during cutover", () => {
+  assert.deepEqual(SUPPORTED_TRANSACTION_TYPE_IDS, [
+    "income",
+    "expense",
+    "refund",
+    "transfer",
+  ]);
   assert.deepEqual(
     SUPPORTED_TRANSACTION_TYPES.map(({ id, name }) => ({ id, name })),
     [
       { id: "income", name: "Income" },
       { id: "expense", name: "Expense" },
       { id: "refund", name: "Refund" },
+      { id: "transfer", name: "Transfer" },
     ],
   );
 
@@ -69,9 +79,22 @@ test("canonical IDs are case-sensitive storage values with canonical display nam
     assert.equal(isSupportedTransactionTypeId(id), true);
   }
 
+  for (const [legacyId, canonicalId] of [
+    ["txd4b7kzpn2lmjv6cuqf9s3yw", "expense"],
+    ["txp8azr12yckwhv9odnb30elu", "income"],
+    ["uo4hd5voxicrkfovkx0bo8xg", "transfer"],
+  ] as const) {
+    assert.equal(supportedTransactionTypeIdSchema.safeParse(legacyId).success, false);
+    assert.equal(transactionTypeInputIdSchema.safeParse(legacyId).success, true);
+    assert.equal(canonicalizeTransactionTypeId(legacyId), canonicalId);
+    assert.deepEqual(getStoredTransactionTypeIdCandidates(canonicalId), [
+      canonicalId,
+      legacyId,
+    ]);
+  }
+
   for (const unsupportedId of [
     "",
-    "transfer",
     "Transfer",
     "INCOME",
     "Income",
@@ -91,6 +114,15 @@ test("amount inference and summary selection use canonical IDs rather than label
   assert.deepEqual(getSummaryTransactionTypeIds("Expense"), ["expense", "refund"]);
   assert.deepEqual(getSummaryTransactionTypeIds("Refund"), ["refund"]);
   assert.deepEqual(getSummaryTransactionTypeIds("All"), SUPPORTED_TRANSACTION_TYPE_IDS);
+  assert.deepEqual(getSummaryStoredTransactionTypeIds("Income"), [
+    "income",
+    "txp8azr12yckwhv9odnb30elu",
+  ]);
+  assert.deepEqual(getSummaryStoredTransactionTypeIds("Expense"), [
+    "expense",
+    "txd4b7kzpn2lmjv6cuqf9s3yw",
+    "refund",
+  ]);
 });
 
 test("Refund and Expense amounts reconcile across normalized balance and summary semantics", () => {
@@ -121,6 +153,30 @@ test("Refund and Expense amounts reconcile across normalized balance and summary
   assert.equal(normalizeTransactionAmount("refund", -20_000), 20_000);
 });
 
+test("Transfer preserves its signed balance effect and stays out of income and expense totals", () => {
+  const outgoingTransfer = getTransactionSummaryAmounts("transfer", -12_345);
+  const incomingTransfer = getTransactionSummaryAmounts(
+    "uo4hd5voxicrkfovkx0bo8xg",
+    12_345,
+  );
+
+  assert.deepEqual(outgoingTransfer, {
+    balanceDelta: -12_345,
+    expenses: 0,
+    income: 0,
+  });
+  assert.deepEqual(incomingTransfer, {
+    balanceDelta: 12_345,
+    expenses: 0,
+    income: 0,
+  });
+  assert.equal(normalizeTransactionAmount("transfer", -12_345), -12_345);
+  assert.equal(
+    normalizeTransactionAmount("uo4hd5voxicrkfovkx0bo8xg", 12_345),
+    12_345,
+  );
+});
+
 test("currency conversion preserves signed cents through milliunit round-trips", () => {
   for (const [currency, milliunits] of [
     ["12.99", 12_990],
@@ -137,8 +193,8 @@ test("currency conversion preserves signed cents through milliunit round-trips",
   }
 });
 
-test("transaction write endpoints reject empty, unknown, and Transfer IDs before persistence", async () => {
-  for (const transactionTypeId of ["", "unknown", "transfer", "Transfer"]) {
+test("transaction write endpoints reject empty, unknown, and display-label IDs before persistence", async () => {
+  for (const transactionTypeId of ["", "unknown", "Transfer"]) {
     await expectInvalidForeignKey(
       await transactionsApp.request("/", {
         body: JSON.stringify({ ...transactionWrite, transactionTypeId }),
@@ -158,7 +214,7 @@ test("transaction write endpoints reject empty, unknown, and Transfer IDs before
 
   await expectInvalidForeignKey(
     await transactionsApp.request("/transaction-1", {
-      body: JSON.stringify({ ...transactionWrite, transactionTypeId: "transfer" }),
+      body: JSON.stringify({ ...transactionWrite, transactionTypeId: "Transfer" }),
       headers: { "content-type": "application/json" },
       method: "PATCH",
     }),
@@ -166,7 +222,7 @@ test("transaction write endpoints reject empty, unknown, and Transfer IDs before
 });
 
 test("CSV import endpoint rejects unsupported transaction type writes", async () => {
-  for (const transactionTypeId of ["", "unknown", "transfer", "Transfer"]) {
+  for (const transactionTypeId of ["", "unknown", "Transfer"]) {
     await expectInvalidForeignKey(
       await csvImportApp.request("/import", {
         body: JSON.stringify({

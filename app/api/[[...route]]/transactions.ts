@@ -3,7 +3,7 @@ import { Hono, type MiddlewareHandler } from "hono";
 import { z } from "zod";
 
 import { insertTransactionSchema } from "@/db/schema";
-import { supportedTransactionTypeIdSchema } from "@/features/transaction-types/lib/transaction-types";
+import { transactionTypeInputIdSchema } from "@/features/transaction-types/lib/transaction-types";
 import {
   TRANSACTION_BULK_LIMIT,
   transactionIdsSchema,
@@ -32,7 +32,7 @@ const transactionValuesSchema = insertTransactionSchema.omit({
   date: z.string().date().transform((value) => new Date(value)),
 });
 const transactionWriteSchema = transactionValuesSchema.extend({
-  transactionTypeId: supportedTransactionTypeIdSchema,
+  transactionTypeId: transactionTypeInputIdSchema,
 }).strict();
 
 export const createTransactionsApp = (

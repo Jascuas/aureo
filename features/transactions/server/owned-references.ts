@@ -2,6 +2,11 @@ import { and, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
 import { accounts, categories, transactionTypes } from "@/db/schema";
+import {
+  canonicalizeTransactionTypeId,
+  getStoredTransactionTypeIdCandidates,
+  type TransactionTypeInputId,
+} from "@/features/transaction-types/lib/transaction-types";
 
 import {
   authorizeOwnedReferences,
@@ -41,3 +46,27 @@ export const ensureOwnedReferences = (
   input: OwnedReferenceInput,
 ): Promise<OwnedReferenceAuthorization> =>
   authorizeOwnedReferences(ownedReferenceLookup, input);
+
+// Prefer canonical IDs once the forward reconciliation has inserted them, but
+// keep resolving the audited legacy IDs until that cutover has completed.
+export const resolveStoredTransactionTypeIds = async (
+  ids: readonly TransactionTypeInputId[],
+): Promise<Map<TransactionTypeInputId, string>> => {
+  const candidates = [...new Set(ids.flatMap(getStoredTransactionTypeIdCandidates))];
+  const rows = await db
+    .select({ id: transactionTypes.id })
+    .from(transactionTypes)
+    .where(inArray(transactionTypes.id, candidates));
+  const available = new Set(rows.map((row) => row.id));
+
+  return new Map(
+    ids.flatMap((id) => {
+      const canonicalId = canonicalizeTransactionTypeId(id);
+      const storedId = available.has(canonicalId)
+        ? canonicalId
+        : getStoredTransactionTypeIdCandidates(id).find((candidate) => available.has(candidate));
+
+      return storedId ? [[id, storedId] as const] : [];
+    }),
+  );
+};

@@ -265,6 +265,55 @@ test("transaction writes discard import idempotency keys before persistence", as
   );
 });
 
+test("transaction writes use legacy references before cutover and return canonical IDs", async () => {
+  const persistedValues: TransactionWriteValues[] = [];
+  const operations = createTransactionWriteOperations({
+    authorizeReferences: async () => ({ ok: true }),
+    resolveStoredTransactionTypeIds: async (ids) =>
+      new Map(
+        ids.map((id) => [
+          id,
+          id === "transfer"
+            ? "uo4hd5voxicrkfovkx0bo8xg"
+            : "txp8azr12yckwhv9odnb30elu",
+        ]),
+      ),
+    create: async (values) => {
+      persistedValues.push(values);
+      return transactionResponse(values);
+    },
+    createMany: async (values) => values.map(transactionResponse),
+    update: async (_userId, _id, values) => transactionResponse(values),
+    delete: async (_userId, id) => ({ id }),
+    deleteMany: async (_userId, ids) => ids.map((id) => ({ id })),
+  });
+
+  const result = await operations.createTransaction("user-1", {
+    ...sameUserTransaction,
+    amount: -1_000,
+    transactionTypeId: "transfer",
+  });
+
+  assert.deepEqual(persistedValues, [
+    {
+      ...sameUserTransaction,
+      amount: -1_000,
+      transactionTypeId: "uo4hd5voxicrkfovkx0bo8xg",
+    },
+  ]);
+  assert.deepEqual(result, {
+    data: {
+      ...transactionResponse({
+        ...sameUserTransaction,
+        amount: -1_000,
+        transactionTypeId: "transfer",
+      }),
+      transactionTypeId: "transfer",
+    },
+    ok: true,
+  });
+});
+
 test("category create and update reject foreign or empty parent references before writing", async () => {
   const writes = { create: 0, update: 0 };
   const operations = createCategoryWriteOperations({

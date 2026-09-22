@@ -7,9 +7,12 @@ import { db } from "@/db/drizzle";
 import { categories, importTemplates, transactions } from "@/db/schema";
 import {
   normalizeTransactionAmount,
-  type SupportedTransactionTypeId,
+  type TransactionTypeInputId,
 } from "@/features/transaction-types/lib/transaction-types";
-import { ensureOwnedReferences } from "@/features/transactions/server/owned-references";
+import {
+  ensureOwnedReferences,
+  resolveStoredTransactionTypeIds,
+} from "@/features/transactions/server/owned-references";
 
 export type ImportTemplateWriteValues = Omit<
   InferInsertModel<typeof importTemplates>,
@@ -20,7 +23,7 @@ export type ImportTransactionValues = Omit<
   InferInsertModel<typeof transactions>,
   "accountId" | "id" | "importKey" | "transactionTypeId"
 > & {
-  transactionTypeId: SupportedTransactionTypeId;
+  transactionTypeId: TransactionTypeInputId;
 };
 
 export type ImportTransactionInput = ImportTransactionValues & {
@@ -102,6 +105,7 @@ const normalizeImportTransactionValues = (
 
 export type CsvImportWriteDependencies = {
   authorizeReferences: typeof ensureOwnedReferences;
+  resolveStoredTransactionTypeIds?: typeof resolveStoredTransactionTypeIds;
   createTemplate: (
     userId: string,
     values: ImportTemplateWriteValues,
@@ -130,6 +134,7 @@ export type CsvImportWriteDependencies = {
 
 const csvImportWriteDependencies: CsvImportWriteDependencies = {
   authorizeReferences: ensureOwnedReferences,
+  resolveStoredTransactionTypeIds,
   createTemplate: async (userId, values) => {
     const [data] = await db
       .insert(importTemplates)
@@ -215,6 +220,11 @@ const csvImportWriteDependencies: CsvImportWriteDependencies = {
   },
 };
 
+const preserveRequestedTransactionTypeIds = async (
+  ids: readonly TransactionTypeInputId[],
+): Promise<Map<TransactionTypeInputId, string>> =>
+  new Map(ids.map((id) => [id, id]));
+
 export const createCsvImportWriteOperations = (
   dependencies: CsvImportWriteDependencies = csvImportWriteDependencies,
 ) => ({
@@ -290,10 +300,21 @@ export const createCsvImportWriteOperations = (
     accountId: string,
     rows: ImportTransactionInput[],
   ): Promise<ImportTransactionsResult> => {
+    const storedTypeIds = await (dependencies.resolveStoredTransactionTypeIds ??
+      preserveRequestedTransactionTypeIds)(
+      rows.map((row) => row.transactionTypeId),
+    );
+    if (rows.some((row) => !storedTypeIds.has(row.transactionTypeId))) {
+      return { ok: false, reason: "not_found" };
+    }
+    const resolvedRows = rows.map((row) => ({
+      ...row,
+      transactionTypeId: storedTypeIds.get(row.transactionTypeId) as TransactionTypeInputId,
+    }));
     const authorization = await dependencies.authorizeReferences({
       userId,
       accountIds: [accountId],
-      transactionTypeIds: rows.map((row) => row.transactionTypeId),
+      transactionTypeIds: resolvedRows.map((row) => row.transactionTypeId),
     });
 
     if (!authorization.ok) {
@@ -313,7 +334,7 @@ export const createCsvImportWriteOperations = (
     const importedSignatures = new Set<string>();
     const outcomes: ImportRowOutcome[] = [];
 
-    for (const row of rows) {
+    for (const row of resolvedRows) {
       const {
         csvRowIndex,
         duplicateResolution,

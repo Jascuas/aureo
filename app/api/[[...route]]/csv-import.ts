@@ -12,7 +12,7 @@ import {
   listImportTemplates,
   updateImportTemplate,
 } from "@/features/csv-import/server/csv-import-write-operations";
-import { supportedTransactionTypeIdSchema } from "@/features/transaction-types/lib/transaction-types";
+import { transactionTypeInputIdSchema } from "@/features/transaction-types/lib/transaction-types";
 import { API_ERRORS } from "@/lib/api-errors";
 import { requireAuth as defaultRequireAuth } from "@/lib/auth-middleware";
 import { isRateLimitError } from "@/lib/errors";
@@ -72,7 +72,7 @@ const importTransactionsSchema = z.object({
         amount: z.number().int(), // Milliunits
         notes: z.string().optional(),
         payee: z.string().min(1),
-        transactionTypeId: supportedTransactionTypeIdSchema,
+        transactionTypeId: transactionTypeInputIdSchema,
       }),
     )
     .min(1)

@@ -1,13 +1,23 @@
 import { sql } from "drizzle-orm";
 
-import { SUPPORTED_TRANSACTION_TYPE_IDS } from "@/features/transaction-types/lib/transaction-types";
+import {
+  getStoredTransactionTypeIdCandidates,
+  SUPPORTED_TRANSACTION_TYPE_IDS,
+  type SupportedTransactionTypeId,
+} from "@/features/transaction-types/lib/transaction-types";
 
 import { transactions } from "./schema";
+
+const transactionTypeIdMatches = (id: SupportedTransactionTypeId) =>
+  sql`${transactions.transactionTypeId} IN (${sql.join(
+    getStoredTransactionTypeIdCandidates(id).map((candidate) => sql`${candidate}`),
+    sql`, `,
+  )})`;
 
 export const incomeAmountSql = sql`
   SUM(
     CASE
-      WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[0]}
+      WHEN ${transactionTypeIdMatches(SUPPORTED_TRANSACTION_TYPE_IDS[0])}
       THEN ABS(${transactions.amount})
       ELSE 0
     END
@@ -17,9 +27,9 @@ export const incomeAmountSql = sql`
 export const expensesAmountSql = sql`
   SUM(
     CASE
-      WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[1]}
+      WHEN ${transactionTypeIdMatches(SUPPORTED_TRANSACTION_TYPE_IDS[1])}
       THEN ABS(${transactions.amount})
-      WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[2]}
+      WHEN ${transactionTypeIdMatches(SUPPORTED_TRANSACTION_TYPE_IDS[2])}
       THEN -ABS(${transactions.amount})
       ELSE 0
     END
@@ -28,10 +38,13 @@ export const expensesAmountSql = sql`
 
 export const transactionBalanceDeltaCaseSql = sql`
   CASE
-    WHEN ${transactions.transactionTypeId} IN (${SUPPORTED_TRANSACTION_TYPE_IDS[0]}, ${SUPPORTED_TRANSACTION_TYPE_IDS[2]})
+    WHEN ${transactionTypeIdMatches(SUPPORTED_TRANSACTION_TYPE_IDS[0])}
+      OR ${transactionTypeIdMatches(SUPPORTED_TRANSACTION_TYPE_IDS[2])}
     THEN ABS(${transactions.amount})
-    WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[1]}
+    WHEN ${transactionTypeIdMatches(SUPPORTED_TRANSACTION_TYPE_IDS[1])}
     THEN -ABS(${transactions.amount})
+    WHEN ${transactionTypeIdMatches(SUPPORTED_TRANSACTION_TYPE_IDS[3])}
+    THEN ${transactions.amount}
     ELSE 0
   END
 `;
@@ -42,9 +55,9 @@ export const transactionBalanceDeltaSql = sql`
 
 export const categoryAmountSql = sql`
   CASE
-    WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[0]} THEN ABS(${transactions.amount})
-    WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[1]} THEN ABS(${transactions.amount})
-    WHEN ${transactions.transactionTypeId} = ${SUPPORTED_TRANSACTION_TYPE_IDS[2]} THEN -ABS(${transactions.amount})
+    WHEN ${transactionTypeIdMatches(SUPPORTED_TRANSACTION_TYPE_IDS[0])} THEN ABS(${transactions.amount})
+    WHEN ${transactionTypeIdMatches(SUPPORTED_TRANSACTION_TYPE_IDS[1])} THEN ABS(${transactions.amount})
+    WHEN ${transactionTypeIdMatches(SUPPORTED_TRANSACTION_TYPE_IDS[2])} THEN -ABS(${transactions.amount})
     ELSE 0
   END
 `;

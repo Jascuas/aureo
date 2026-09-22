@@ -117,6 +117,43 @@ test("normalizes confidence when AI returns a category outside the user category
   }]);
 });
 
+test("uses a legacy transaction type as canonical historical payee evidence", async () => {
+  const dependencies: CsvImportAnalysisDependencies = {
+    categorizeWithAI: async () => {
+      throw new Error("AI must not run when legacy history auto-resolves the row");
+    },
+    findExactDuplicateRows: async () => [],
+    findExactPayeeRows: async () => [{
+      categoryId: "category-transfers",
+      csvRowIndex: 0,
+      matchCount: 2,
+      transactionTypeId: "uo4hd5voxicrkfovkx0bo8xg",
+    }],
+    findFewShotRows: async () => [],
+    findFuzzyDuplicateRows: async () => [],
+    findFuzzyPayeeRows: async () => [],
+    getUserCategories: async () => [{ id: "category-transfers", name: "Transfers" }],
+    now: () => 0,
+    onComplete: () => {},
+  };
+  const { analyzeCsvImport } = createCsvImportAnalysisOperations(dependencies);
+
+  const result = await analyzeCsvImport("user-1", [{
+    amount: -10_000,
+    csvRowIndex: 0,
+    date: "2026-09-06",
+    payee: "Transferencia",
+  }]);
+
+  assert.deepEqual(result.categorizations, [{
+    categoryId: "category-transfers",
+    confidence: 1,
+    csvRowIndex: 0,
+    normalizedPayee: "Transferencia",
+    transactionTypeId: "transfer",
+  }]);
+});
+
 test("analyzes a maximum-size import with six persistence phases, not row queries", async () => {
   const calls = new Map<string, number>();
   const record = (name: string) => {

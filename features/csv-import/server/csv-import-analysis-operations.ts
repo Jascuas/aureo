@@ -12,9 +12,10 @@ import type {
   TransactionForAnalysis,
 } from "@/features/csv-import/types/import-types";
 import {
+  canonicalizeTransactionTypeId,
+  getSummaryStoredTransactionTypeIds,
   getTransactionTypeForAmount,
-  isSupportedTransactionTypeId,
-  SUPPORTED_TRANSACTION_TYPE_IDS,
+  isTransactionTypeInputId,
   type SupportedTransactionTypeId,
 } from "@/features/transaction-types/lib/transaction-types";
 import type { CategorizationResult as AIProviderCategorizationResult } from "@/lib/ai/types";
@@ -293,7 +294,7 @@ const findPayeeRows = (
       WHERE account.user_id = ${userId}
         AND transaction.category_id IS NOT NULL
         AND transaction.transaction_type_id IN (${sql.join(
-          SUPPORTED_TRANSACTION_TYPE_IDS.map((id) => sql`${id}`),
+          getSummaryStoredTransactionTypeIds("All").map((id) => sql`${id}`),
           sql`, `,
         )})
       GROUP BY input."csvRowIndex", transaction.category_id, transaction.transaction_type_id
@@ -412,7 +413,7 @@ const toPayeeCategoryMatches = (
   return rows.flatMap((row) => {
     if (
       row.categoryId === null ||
-      !isSupportedTransactionTypeId(row.transactionTypeId)
+      !isTransactionTypeInputId(row.transactionTypeId)
     ) {
       return [];
     }
@@ -423,7 +424,7 @@ const toPayeeCategoryMatches = (
       matchCount: row.matchCount,
       matchType,
       totalMatches,
-      transactionTypeId: row.transactionTypeId,
+      transactionTypeId: canonicalizeTransactionTypeId(row.transactionTypeId),
     }];
   });
 };
