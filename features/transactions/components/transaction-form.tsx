@@ -54,6 +54,9 @@ const getTransactionTypeDescription = (transactionTypeId: string) => {
   if (transactionTypeId === "income") return "Se registrará como un ingreso.";
   if (transactionTypeId === "expense") return "Se registrará como un gasto.";
   if (transactionTypeId === "refund") return "Se registrará como un reembolso.";
+  if (transactionTypeId === "transfer") {
+    return "Transfer keeps its signed amount and is excluded from income and expense totals.";
+  }
 
   return "Selecciona un tipo de transacción para ver cómo se registrará el importe.";
 };

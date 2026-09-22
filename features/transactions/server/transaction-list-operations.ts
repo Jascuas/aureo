@@ -2,6 +2,10 @@ import { and, desc, eq, gte, lt, or } from "drizzle-orm";
 
 import { db } from "@/db/drizzle";
 import { accounts, categories, transactions } from "@/db/schema";
+import {
+  canonicalizeTransactionTypeId,
+  isTransactionTypeInputId,
+} from "@/features/transaction-types/lib/transaction-types";
 import type { TransactionListQuery } from "@/features/transactions/lib/transaction-list-input";
 import { getDateRange, getExclusiveEndDate } from "@/lib/date-range";
 
@@ -108,14 +112,29 @@ const transactionListDependencies: TransactionListDependencies = {
 export const createTransactionListOperations = (
   dependencies: TransactionListDependencies = transactionListDependencies,
 ) => ({
-  getTransaction: (userId: string, id: string) => dependencies.findById(userId, id),
+  getTransaction: async (userId: string, id: string) => {
+    const transaction = await dependencies.findById(userId, id);
+    if (!transaction) return undefined;
+
+    return {
+      ...transaction,
+      transactionTypeId: isTransactionTypeInputId(transaction.transactionTypeId)
+        ? canonicalizeTransactionTypeId(transaction.transactionTypeId)
+        : transaction.transactionTypeId,
+    };
+  },
   listTransactions: async (
     userId: string,
     input: TransactionListQuery,
   ): Promise<TransactionListResult> => {
     const rows = await dependencies.list(userId, input);
     const hasMore = rows.length > input.limit;
-    const data = hasMore ? rows.slice(0, input.limit) : rows;
+    const data = (hasMore ? rows.slice(0, input.limit) : rows).map((row) => ({
+      ...row,
+      transactionTypeId: isTransactionTypeInputId(row.transactionTypeId)
+        ? canonicalizeTransactionTypeId(row.transactionTypeId)
+        : row.transactionTypeId,
+    }));
     const lastTransaction = data.at(-1);
 
     return {

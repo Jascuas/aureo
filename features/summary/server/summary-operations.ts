@@ -20,7 +20,10 @@ import {
   type SummaryDateRangeInput,
   type SummaryPayeeQuery,
 } from "@/features/summary/lib/summary-input";
-import { getSummaryTransactionTypeIds } from "@/features/transaction-types/lib/transaction-types";
+import {
+  getStoredTransactionTypeIdCandidates,
+  getSummaryStoredTransactionTypeIds,
+} from "@/features/transaction-types/lib/transaction-types";
 import {
   addCalendarDays,
   DATE_RANGE_TIME_ZONE,
@@ -110,8 +113,14 @@ const financialTotalsSql = ({ endDate, startDate }: SummaryDateRange) => ({
       CASE
         WHEN ${transactions.date} >= ${startDate} AND ${transactions.date} < ${getExclusiveEndDate(endDate)}
         THEN CASE
-          WHEN ${transactions.transactionTypeId} = 'expense' THEN ABS(${transactions.amount})
-          WHEN ${transactions.transactionTypeId} = 'refund' THEN -ABS(${transactions.amount})
+          WHEN ${transactions.transactionTypeId} IN (${sql.join(
+            getStoredTransactionTypeIdCandidates("expense").map((id) => sql`${id}`),
+            sql`, `,
+          )}) THEN ABS(${transactions.amount})
+          WHEN ${transactions.transactionTypeId} IN (${sql.join(
+            getStoredTransactionTypeIdCandidates("refund").map((id) => sql`${id}`),
+            sql`, `,
+          )}) THEN -ABS(${transactions.amount})
           ELSE 0
         END
         ELSE 0
@@ -122,7 +131,10 @@ const financialTotalsSql = ({ endDate, startDate }: SummaryDateRange) => ({
     COALESCE(SUM(
       CASE
         WHEN ${transactions.date} >= ${startDate} AND ${transactions.date} < ${getExclusiveEndDate(endDate)}
-          AND ${transactions.transactionTypeId} = 'income'
+          AND ${transactions.transactionTypeId} IN (${sql.join(
+            getStoredTransactionTypeIdCandidates("income").map((id) => sql`${id}`),
+            sql`, `,
+          )})
         THEN ABS(${transactions.amount})
         ELSE 0
       END
@@ -395,7 +407,7 @@ export const getSummaryCategoryBreakdown = async (
       WHERE ${transactionScope(userId, getSummaryDateRange(input), input.accountId)}
         AND ${inArray(
           transactions.transactionTypeId,
-          getSummaryTransactionTypeIds(input.type),
+          getSummaryStoredTransactionTypeIds(input.type),
         )}
       GROUP BY ${transactions.categoryId}, ${categories.name}
     ), ranked_categories AS (
@@ -444,7 +456,10 @@ export const getSummaryPayeeBreakdown = async (
     .where(
       and(
         transactionScope(userId, getSummaryDateRange(input), input.accountId),
-        inArray(transactions.transactionTypeId, getSummaryTransactionTypeIds(input.type)),
+        inArray(
+          transactions.transactionTypeId,
+          getSummaryStoredTransactionTypeIds(input.type),
+        ),
       ),
     )
     .groupBy(transactions.payee)
