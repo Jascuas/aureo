@@ -145,7 +145,7 @@ BEGIN
   IF (SELECT tgenabled FROM pg_trigger
       WHERE tgrelid = 'transactions'::regclass
         AND tgname = 'transactions_balance_trigger') <> 'O'
-    OR (SELECT pg_get_triggerdef(oid) FROM pg_trigger
+    OR (SELECT pg_get_triggerdef(oid, true) FROM pg_trigger
         WHERE tgrelid = 'transactions'::regclass
           AND tgname = 'transactions_balance_trigger') <>
        'CREATE TRIGGER transactions_balance_trigger AFTER INSERT OR DELETE OR UPDATE ON transactions FOR EACH ROW EXECUTE FUNCTION update_account_balance()'
@@ -154,15 +154,15 @@ BEGIN
     RAISE EXCEPTION 'The active balance-trigger definition differs from the audited baseline';
   END IF;
 
-  IF (SELECT array_agg(conname ORDER BY conname) FROM pg_constraint
+  IF (SELECT array_agg(conname::text ORDER BY conname) FROM pg_constraint
       WHERE conrelid = 'transactions'::regclass) IS DISTINCT FROM expected_transaction_constraints
-    OR (SELECT array_agg(indexname ORDER BY indexname) FROM pg_indexes
+    OR (SELECT array_agg(indexname::text ORDER BY indexname) FROM pg_indexes
         WHERE schemaname = 'public' AND tablename = 'transactions')
        IS DISTINCT FROM ARRAY['transactions_pkey'] THEN
     RAISE EXCEPTION 'The reviewed transaction constraint/index names changed';
   END IF;
 
-  IF (SELECT array_agg(indexname ORDER BY indexname) FROM pg_indexes
+  IF (SELECT array_agg(indexname::text ORDER BY indexname) FROM pg_indexes
       WHERE schemaname = 'public' AND tablename = 'accounts')
      IS DISTINCT FROM ARRAY['accounts_pkey'] THEN
     RAISE EXCEPTION 'The reviewed accounts index names changed';
