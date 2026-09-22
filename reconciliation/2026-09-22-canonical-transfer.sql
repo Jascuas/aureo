@@ -161,6 +161,12 @@ BEGIN
        IS DISTINCT FROM ARRAY['transactions_pkey'] THEN
     RAISE EXCEPTION 'The reviewed transaction constraint/index names changed';
   END IF;
+
+  IF (SELECT array_agg(indexname ORDER BY indexname) FROM pg_indexes
+      WHERE schemaname = 'public' AND tablename = 'accounts')
+     IS DISTINCT FROM ARRAY['accounts_pkey'] THEN
+    RAISE EXCEPTION 'The reviewed accounts index names changed';
+  END IF;
 END
 $$;
 
@@ -206,6 +212,8 @@ CREATE INDEX transactions_account_date_id_idx
   ON transactions (account_id, date, id);
 CREATE INDEX transactions_account_transaction_type_date_idx
   ON transactions (account_id, transaction_type_id, date);
+CREATE INDEX accounts_user_id_idx
+  ON accounts (user_id);
 
 -- Preserve the active production trigger's name-based semantics. This keeps
 -- Transfer signed for both its canonical and retained legacy IDs, including a

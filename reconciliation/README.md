@@ -27,8 +27,9 @@ signed Transfer path. No historical balance is recalculated. A session-local,
 aggregate-only guard compares account count, sum, minimum, and maximum before
 and after the transaction; it does not read or print account-level data.
 
-The `bigint`, `import_key`, and transaction indexes are included because the
-schema-only audit proved each is absent while source code already depends on it.
+The `bigint`, `import_key`, transaction indexes, and `accounts.user_id` index
+are included because the schema-only audit proved each is absent while source
+code already depends on it.
 The current `accounts.balance` default and NOT NULL constraint are deliberately
 preserved even though the checked-out Drizzle declaration is looser; changing
 those properties is outside this data reconciliation. The source's
