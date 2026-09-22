@@ -1,9 +1,9 @@
 # Aureo Finance Platform
 
-> **A modern, production-ready personal finance management SaaS built with Next.js 15, Hono, and PostgreSQL.**
+> **A modern, production-ready personal finance management SaaS built with Next.js 16, Hono, and PostgreSQL.**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ---
@@ -51,7 +51,7 @@ Aureo is a full-stack personal finance platform designed for individuals who wan
 - 📱 **Responsive Design** - Mobile-first approach with adaptive layouts
 - 🛡️ **Production-Ready** - Comprehensive error handling and data integrity
 
-### Coming Soon (🚧 See [ROADMAP.md](ROADMAP.md))
+### Coming Soon (🚧 See [future features](docs/future-features.md))
 
 - 🔗 **Plaid Integration** - Automatic bank account sync
 - 💰 **Budgets & Alerts** - Set spending limits with notifications
@@ -64,7 +64,7 @@ Aureo is a full-stack personal finance platform designed for individuals who wan
 
 ### Frontend
 
-- **[Next.js 15](https://nextjs.org/)** - React framework with App Router
+- **[Next.js 16](https://nextjs.org/)** - React framework with App Router
 - **[React 19](https://react.dev/)** - UI library
 - **[TypeScript 5](https://www.typescriptlang.org/)** - Type safety
 - **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first styling
@@ -94,26 +94,15 @@ Aureo is a full-stack personal finance platform designed for individuals who wan
 
 - **[Vercel](https://vercel.com/)** - Hosting & CI/CD
 
-## Project Setup
+## Getting Started
 
 Follow these steps to set up the project locally:
 
 **Clone the repository**:
 
-````bash
-git clone https://github.com/JosueIsOffline/finance-saas-platform.git
-cd finance-saas-platform
-
-## Getting Started
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+git clone https://github.com/Jascuas/aureo.git
+cd aureo
+pnpm install --frozen-lockfile --ignore-scripts
 pnpm dev
-# or
-bun dev
-
-````
+```
