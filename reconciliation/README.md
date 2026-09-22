@@ -1,7 +1,25 @@
 # Canonical transaction-type reconciliation
 
-This directory is a reviewed, forward-only production proposal; it is not a
-Drizzle migration and no command in this branch invokes it. It reconciles the
+The exact forward SQL was applied and verified on 2026-09-22 against Aureo's
+production Neon endpoint `ep-withered-cherry-a2txq1lc`, project
+`billowing-thunder-74965762`, branch `br-curly-tree-a2h11wys`. It is not a
+Drizzle migration and no build or application command invokes it. Do not replay it.
+
+Executed source: `a1108300fdc545f7c8d73f225a8f0d7c052df111`.
+SQL SHA-256: `a9d34688dbd16b7d3107d2bfc0eaf1bdc29f5953ea333be139ffa76e369108cf`.
+Postflight verified all 1,134 canonical references, all 138 Transfers, zero legacy
+transaction references, the enabled compatible trigger, intended schema/indexes,
+and an unchanged account-balance fingerprint. The historical journal remains
+unchanged. A pre-cutover Neon snapshot was retained.
+
+Execution evidence is in
+`/Users/javiersanchez/Personal/hermes-rollout-2026-09-22/production-cutover/aureo-cutover-v2-apply-receipt.json`
+and `aureo-cutover-v2-postflight.json` beside it. The first operation stopped on
+an overly strict trigger-definition guard and rolled back unchanged; its receipt
+and SQL were preserved. The corrected exact preflight passed natively before the
+single successful execution. The SQL file's original review-only header is
+preserved to keep the executed artifact's hash stable; this execution record
+supersedes that historical status. It reconciles the
 observed production schema with the current application contract without using
 `pnpm db:migrate`, because the production Drizzle journal has eight hashes that
 do not align with the checked-out nine-entry journal.
@@ -37,9 +55,9 @@ transaction-type name-unique constraint is intentionally deferred: adding it
 would require deleting or renaming retained legacy catalog rows, neither of
 which is needed for this canonical-ID cutover.
 
-Do not run this proposal until an approved operator has repeated the read-only
-preflight with the exact target connection and reviewed the source migration
-tree as clean. Run the SQL as one explicit transaction with an error-stopping
+For any future reconciliation, require a new reviewed artifact, an approved
+operator, a fresh target preflight and a recovery point. This artifact has already
+run and its original preconditions will now reject replay. Run the SQL as one explicit transaction with an error-stopping
 client; do not substitute `pnpm db:migrate`, `db:push`, or a deployment build.
 The script never writes `drizzle.__drizzle_migrations`, so the migration ledger
 continues to describe the real, non-batch history.
